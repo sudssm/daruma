@@ -19,16 +19,13 @@ def share(secret, threshold, total_shares):
 
 def reconstruct(shares):
     """
-    Reconstruct a secret if possible from the given shares.
+    Reconstruct a secret if possible from the given shares.  If the given number of shares is less than the recreation threshold, garbage data will still be returned.
 
     Args:
         shares: a list of binary strings.
 
     Returns:
-        A byte representation of the reconstructed secret if the reconstruction was successful.
-
-    Raises:
-        CryptoError: Decryption or authentication was unsuccessful.
+        A byte representation of the reconstructed secret.
     """
     secret = SecretSharer.recover_secret(shares)
     return binascii.unhexlify(secret)
