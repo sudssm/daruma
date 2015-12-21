@@ -27,7 +27,9 @@ def test_malicious_ciphertext():
     plaintext = "FOO BAR woohoo!"
     ciphertext, key = algos.encryption.encrypt(plaintext)
 
-    # Then attempt to decrypt
+    # Then corrupt ciphertext
     malicious_ciphertext = ciphertext[0:5] + 'C' + ciphertext[6:]
+
+    # Then attempt to decrypt
     with pytest.raises(algos.encryption.DecryptError):
         algos.encryption.decrypt(malicious_ciphertext, key)
