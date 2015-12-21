@@ -2,6 +2,12 @@ import binascii
 from secretsharing import SecretSharer
 
 
+class SecretReconstructionError(Exception):
+    """
+    Exception for errors in decoding a secret
+    """
+
+
 def share(secret, threshold, total_shares):
     """
     Construct shares of the given secret such that shares below the threshold yield no information, but shares above the threshold recreate the secret.
@@ -19,13 +25,19 @@ def share(secret, threshold, total_shares):
 
 def reconstruct(shares):
     """
-    Reconstruct a secret if possible from the given shares.  If the given number of shares is less than the recreation threshold, garbage data will still be returned.
+    Reconstruct a secret if possible from the given shares.  If the shares are corrupt or the given number of shares is less than the recreation threshold, invalid data will be returned.
 
     Args:
-        shares: a list of binary strings.
+        shares: a list of properly formatted binary strings.
 
     Returns:
         A byte representation of the reconstructed secret.
+
+    Raises:
+        SecretReconstructionError: Decoding the secret was unsuccessful (e.g. the shares were improperly formatted).
     """
-    secret = SecretSharer.recover_secret(shares)
+    try:
+        secret = SecretSharer.recover_secret(shares)
+    except ValueError:
+        raise SecretReconstructionError
     return binascii.unhexlify(secret)
