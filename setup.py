@@ -6,6 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "PyNaCl==0.3.0",
-        "secretsharing==0.2.6"
+        "secretsharing==0.2.6",
+        "PyECLib==1.1.1"
     ]
 )
