@@ -72,12 +72,12 @@ def test_manifest_line():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
     attributes = {"true_name": "clark_kent.txt", "random_name": "abcde", "size": 25, "aes_key": key}
     manifest = ops.manifest.ManifestEntry(attributes=attributes)
-    assert "clark_kent.txt\tabcde\t25\t" + key == manifest.stringify()
+    assert "clark_kent.txt,abcde,25," + key == manifest.stringify()
 
 
 def test_entry_from_string():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    str_entry = "clark_kent.txt\tabcde\t10\t" + key
+    str_entry = "clark_kent.txt,abcde,10," + key
     entry = ops.manifest.ManifestEntry(str_line=str_entry)
     assert entry.attributes == {"true_name": "clark_kent.txt", "random_name": "abcde",
                                 "size": 10, "aes_key": key}
@@ -93,7 +93,7 @@ def test_entry_from_attributes():
 
 def test_entry_from_both():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    str_entry = "clark_kent.txt\tabcde\t10\t" + key
+    str_entry = "clark_kent.txt,abcde,10," + key
     attrs = {"true_name": "clark_kent", "random_name": "abcde",
              "size": 10, "aes_key": key}
     with pytest.raises(ops.exceptions.IllegalArgumentException):

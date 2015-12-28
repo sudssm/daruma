@@ -73,7 +73,7 @@ class Manifest:
 
 
 class ManifestEntry:
-    DELIM = "\t"    # switch to comma (,)
+    DELIM = ","
 
     # @param atributes: {"true_name": "", "random_name": "", "size": , "aes_key": }
         # true_name: string of true name
@@ -96,7 +96,6 @@ class ManifestEntry:
         else:
             return {"true_name": terms[0], "random_name": terms[1],
                     "size": float(terms[2]), "aes_key": terms[3]}
-
 
     # @return: string representation of entry
     def stringify(self):
