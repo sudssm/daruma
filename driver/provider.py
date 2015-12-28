@@ -1,6 +1,14 @@
 # stub for a provider
 # interface that allows cloud and local providers
-import exceptions
+
+
+class ProviderFileNotFound(EnvironmentError):
+    pass
+
+
+class ProviderConnectionError(EnvironmentError):
+    pass
+
 
 class Provider(object):
   def __init__(self):
