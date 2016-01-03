@@ -8,84 +8,565 @@ import pytest
 # Manifest tests
 
 
-def test_empty_ls():
-    with pytest.raises(ops.exceptions.IllegalArgumentException):
-        ops.manifest.Manifest(content="")
-
-
-def test_standard_ls():
+def test_regex_standard():
     key1 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
     key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    manifest = ""
     entries = []
 
-    attributes = {"true_name": "clark_kent.txt", "random_name": "abcdefg", "size": 34, "aes_key": key1}
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
     entries.append(ops.manifest.ManifestEntry(attributes=attributes))
 
-    attributes = {"true_name": "superman.pdf", "random_name": "hijklmn", "size": 45, "aes_key": key2}
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_newline_start():
+    key1 = '\n\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_newline_mid():
+    key1 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_newline_end():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_comma_start():
+    key1 = ',\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_comma_mid():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>,\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_comma_end():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.lines) == sorted(entries)
+
+
+def test_regex_no_true():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = ",ABCDEFGHIJ,34" + key1 + "\n" + \
+              "SUPERMAN.PDF,HIJKLMNOPQ,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_no_random():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_no_size():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,HIJKLMNOPQ,," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_no_key():
+    key1 = ''
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,HIJKLMNOPQ,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_random_long():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,ABCDEFGHIJKLMNOPQRS,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_random_short():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,ABC,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_key_long():
+    key1 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xd7k\xb6\xd5\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,HIJKLMNOPQ,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_key_short():
+    key1 = '\xc2\x95\x1b\xbe\x80jb\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key1 + "\n" + \
+              "SUPERMAN.PDF,HIJKLMNOPQ,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_regex_missing_delim():
+    key1 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    content = "CLARK_KENT.TXT,ABCDEFGHIJ,34" + key1 + "\n" + \
+              "SUPERMAN.PDF,HIJKLMNOPQ,45," + key2 + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(content=content)
+
+
+def test_empty_ls():
+    empty = ops.manifest.Manifest(content="")
+    assert empty.ls() == []
+
+
+def test_standard_ls_lines():
+    key1 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
     entries.append(ops.manifest.ManifestEntry(attributes=attributes))
 
     manifest = ops.manifest.Manifest(lines=entries)
 
-    assert manifest.ls() == ["clark_kent.txt", "superman.pdf"]
+    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+
+
+def test_standard_ls_content():
+    key1 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+
+    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+
+
+def test_newline_mid_ls_lines():
+    key1 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    key2 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    manifest = ops.manifest.Manifest(lines=entries)
+
+    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+
+
+def test_newline_end_ls_lines():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    manifest = ops.manifest.Manifest(lines=entries)
+
+    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+
+
+def test_newline_mid_ls_content():
+    key1 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    key2 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+
+
+def test_newline_end_ls_content():
+    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
+    key2 = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    entries = []
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key1}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key2}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+
+    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
 
 
 def test_manifest_from_list():
-    pass
+    entries = []
+    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 45, "aes_key": key}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    manifest = ops.manifest.Manifest(lines=entries)
+    assert manifest.stringify() == "CLARK_KENT.TXT,ABCDEFGHIJ,34," + key + "\n" + \
+                                   "SUPERMAN.PDF,HIJKLMNOPQ,45," + key + "\n"
 
 
 def test_manifest_from_content():
-    pass
+    entries = []
+    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    attributes = {"true_name": "FIREFLY.TXT", "random_name": "AD2BC_EF5J", "size": 34, "aes_key": key}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+    attributes = {"true_name": "SERENITY.PDF", "random_name": "78ILM_OPQ1", "size": 45, "aes_key": key}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    manifest = ops.manifest.Manifest(content=content)
+    assert manifest.stringify() == "FIREFLY.TXT,AD2BC_EF5J,34," + key + "\n" + \
+                                   "SERENITY.PDF,78ILM_OPQ1,45," + key + "\n"
 
 
 def test_manifest_from_both():
-    pass
+    entries = []
+    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    attributes = {"true_name": "FIREFLY.TXT", "random_name": "AD2BC_EF5J", "size": 34, "aes_key": key}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+    attributes = {"true_name": "SERENITY.PDF", "random_name": "78ILM_OPQ1", "size": 45, "aes_key": key}
+    entries.append(ops.manifest.ManifestEntry(attributes=attributes))
+
+    content = ""
+    for entry in entries:
+        content += entry.stringify() + "\n"
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest(lines=entries, content=content)
 
 
 def test_manifest_from_neither():
-    pass
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.Manifest()
 
 
 def test_manifest_from_list_empty():
-    pass
+    entries = []
+    manifest = ops.manifest.Manifest(lines=entries)
+    assert manifest.lines == []
 
 
 def test_manifest_from_content_empty():
-    pass
-
-
-def test_manifest_stringify():
-    pass
+    content = ""
+    manifest = ops.manifest.Manifest(content=content)
+    assert manifest.lines == []
 
 
 def test_standard_get_line():
-    pass
+    keys = []
+    for i in range(5):
+        keys.append(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
+    attributes = []
+    entries = []
+
+    attributes.append({"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEABCDE", "size": 9345, "aes_key": keys[0]})
+    attributes.append({"true_name": "SUPERMAN.PDF", "random_name": "FU75KFU75K", "size": 345, "aes_key": keys[1]})
+    attributes.append({"true_name": "WONDERWOMAN.EXT", "random_name": "K86TJK86TJ", "size": 52345, "aes_key": keys[2]})
+    attributes.append({"true_name": "BATMAN.DOC", "random_name": "12T4512T45", "size": 586, "aes_key": keys[3]})
+    attributes.append({"true_name": "IF3685.TIOY4ET", "random_name": "6H7K96H7K9", "size": 90, "aes_key": keys[4]})
+
+    for attr in attributes:
+        entries.append(ops.manifest.ManifestEntry(attributes=attr))
+
+    manifest = ops.manifest.Manifest(lines=entries)
+    assert manifest.get_line("WONDERWOMAN.EXT") == ops.manifest.ManifestEntry(attributes={"true_name": "WONDERWOMAN.EXT", "random_name": "K86TJK86TJ", "size": 52345, "aes_key": keys[2]})
 
 
 def test_missing_get_line():
-    pass
+    keys = []
+    for i in range(5):
+        keys.append(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
+    attributes = []
+    entries = []
+
+    attributes.append({"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEABCDE", "size": 9345, "aes_key": keys[0]})
+    attributes.append({"true_name": "SUPERMAN.PDF", "random_name": "FU75KFU75K", "size": 345, "aes_key": keys[1]})
+    attributes.append({"true_name": "WONDERWOMAN.EXT", "random_name": "K86TJK86TJ", "size": 52345, "aes_key": keys[2]})
+    attributes.append({"true_name": "BATMAN.DOC", "random_name": "12T4512T45", "size": 586, "aes_key": keys[3]})
+    attributes.append({"true_name": "IF3685.TIOY4ET", "random_name": "6H7K96H7K9", "size": 90, "aes_key": keys[4]})
+
+    for attr in attributes:
+        entries.append(ops.manifest.ManifestEntry(attributes=attr))
+
+    manifest = ops.manifest.Manifest(lines=entries)
+    assert manifest.get_line("DIANA.EXT") is None
 
 
 # ManifestEntry tests
 
+
+def test_entry_regex_no_true():
+    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+
+    attributes = {"true_name": "", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_no_random():
+    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "", "size": 45, "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_invalid_size():
+    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 'A', "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_no_key():
+    key = ''
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key}
+
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_random_long():
+    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "ABCDEFGHIJKLMNOPQRS", "size": 45, "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_random_short():
+    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "ABC", "size": 45, "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_key_long():
+    key = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xd7k\xb6\xd5\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 34, "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_key_short():
+    key = '\xc2\x95\x1b\xbe\x80jb\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+
+    attributes = {"true_name": "SUPERMAN.PDF", "random_name": "HIJKLMNOPQ", "size": 'A', "aes_key": key}
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(attributes=attributes)
+
+
+def test_entry_regex_missing_delim():
+    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    str_line = "CLARK_KENT.TXT,ABCDEFGHIJ,34" + key
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry(str_line=str_line)
+
+
+def test_parse_newline_mid():
+    key = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
+    str_line = 'CLARK_KENT.TXT,ABCDEFGHIJ,10,' + key
+    entry = ops.manifest.ManifestEntry(str_line=str_line)
+    assert entry.attributes == {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ",
+                                "size": 10, "aes_key": key}
+
+
+def test_parse_newline_end():
+    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
+    str_line = 'CLARK_KENT.TXT,ABCDEFGHIJ,10,' + key
+    entry = ops.manifest.ManifestEntry(str_line=str_line)
+    assert entry.attributes == {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ",
+                                "size": 10, "aes_key": key}
+
+
 def test_manifest_line():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    attributes = {"true_name": "clark_kent.txt", "random_name": "abcde", "size": 25, "aes_key": key}
+    attributes = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ", "size": 25, "aes_key": key}
     manifest = ops.manifest.ManifestEntry(attributes=attributes)
-    assert "clark_kent.txt,abcde,25," + key == manifest.stringify()
+    assert "CLARK_KENT.TXT,ABCDEFGHIJ,25," + key == manifest.stringify()
 
 
 def test_entry_from_string():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    str_entry = "clark_kent.txt,abcde,10," + key
+    str_entry = "CLARK_KENT.TXT,ABCDEFGHIJ,10," + key
     entry = ops.manifest.ManifestEntry(str_line=str_entry)
-    assert entry.attributes == {"true_name": "clark_kent.txt", "random_name": "abcde",
+    assert entry.attributes == {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ",
                                 "size": 10, "aes_key": key}
 
 
 def test_entry_from_attributes():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    attrs = {"true_name": "clark_kent", "random_name": "abcde",
+    attrs = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ",
              "size": 10, "aes_key": key}
     entry = ops.manifest.ManifestEntry(attributes=attrs)
     assert entry.attributes == attrs
@@ -93,50 +574,30 @@ def test_entry_from_attributes():
 
 def test_entry_from_both():
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    str_entry = "clark_kent.txt,abcde,10," + key
-    attrs = {"true_name": "clark_kent", "random_name": "abcde",
+    str_entry = "CLARK_KENT.TXT,ABCDEFGHIJ,10," + key
+    attrs = {"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEFGHIJ",
              "size": 10, "aes_key": key}
     with pytest.raises(ops.exceptions.IllegalArgumentException):
         ops.manifest.ManifestEntry(str_line=str_entry, attributes=attrs)
 
 
 def test_entry_from_neither():
-    pass
-
-
-def test_entry_from_invalid_string():
-    pass
-
-
-def test_entry_from_invalid_attributes():
-    pass
-
-
-def test_entry_stringify():
-    pass
-
-
-def test_standard_entry_parse():
-    pass
-
-
-def test_invalid_entry_parse():
-    pass
+    with pytest.raises(ops.exceptions.IllegalArgumentException):
+        ops.manifest.ManifestEntry()
 
 
 def test_replace_manifest_update():
     keys = []
     for i in range(5):
         keys.append(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
-    manifest = ""
     attributes = []
     entries = []
 
-    attributes.append({"true_name": "clark_kent.txt", "random_name": "abcde", "size": 9345, "aes_key": keys[0]})
-    attributes.append({"true_name": "superman.pdf", "random_name": "fu75k", "size": 345, "aes_key": keys[1]})
-    attributes.append({"true_name": "wonderwoman.ext", "random_name": "k86tj", "size": 52345, "aes_key": keys[2]})
-    attributes.append({"true_name": "batman.doc", "random_name": "12t45", "size": 586, "aes_key": keys[3]})
-    attributes.append({"true_name": "if3685.tioy4et", "random_name": "6h7k9", "size": 90, "aes_key": keys[4]})
+    attributes.append({"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEABCDE", "size": 9345, "aes_key": keys[0]})
+    attributes.append({"true_name": "SUPERMAN.PDF", "random_name": "FU75KFU75K", "size": 345, "aes_key": keys[1]})
+    attributes.append({"true_name": "WONDERWOMAN.EXT", "random_name": "K86TJK86TJ", "size": 52345, "aes_key": keys[2]})
+    attributes.append({"true_name": "BATMAN.DOC", "random_name": "12T4512T45", "size": 586, "aes_key": keys[3]})
+    attributes.append({"true_name": "IF3685.TIOY4ET", "random_name": "6H7K96H7K9", "size": 90, "aes_key": keys[4]})
 
     for attr in attributes:
         entries.append(ops.manifest.ManifestEntry(attributes=attr))
@@ -145,27 +606,26 @@ def test_replace_manifest_update():
     old_manifest = copy.deepcopy(manifest)
 
     new_key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    old_random_name = manifest.update_manifest("superman.pdf", "snafu", 52, new_key)  # TODO: assumes we do not rotate keys
-    superman = manifest.remove_line("superman.pdf")
-    old_manifest.remove_line("superman.pdf")
+    old_random_name = manifest.update_manifest("SUPERMAN.PDF", "SNAFUSNAFU", 52, new_key)  # TODO: assumes we do not rotate keys
+    superman = manifest.remove_line("SUPERMAN.PDF")
+    old_manifest.remove_line("SUPERMAN.PDF")
 
-    assert old_random_name == "fu75k" and manifest == old_manifest and \
-        superman.attributes["random_name"] == "snafu" and superman.attributes["size"] == 52
+    assert old_random_name == "FU75KFU75K" and manifest == old_manifest and \
+        superman.attributes["random_name"] == "SNAFUSNAFU" and superman.attributes["size"] == 52
 
 
 def test_create_manifest_update():
     keys = []
     for i in range(5):
         keys.append(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
-    manifest = ""
     attributes = []
     entries = []
 
-    attributes.append({"true_name": "clark_kent.txt", "random_name": "abcde", "size": 9345, "aes_key": keys[0]})
-    attributes.append({"true_name": "superman.pdf", "random_name": "fu75k", "size": 345, "aes_key": keys[1]})
-    attributes.append({"true_name": "wonderwoman.ext", "random_name": "k86tj", "size": 52345, "aes_key": keys[2]})
-    attributes.append({"true_name": "batman.doc", "random_name": "12t45", "size": 586, "aes_key": keys[3]})
-    attributes.append({"true_name": "if3685.tioy4et", "random_name": "6h7k9", "size": 90, "aes_key": keys[4]})
+    attributes.append({"true_name": "CLARK_KENT.TXT", "random_name": "ABCDEABCDE", "size": 9345, "aes_key": keys[0]})
+    attributes.append({"true_name": "SUPERMAN.PDF", "random_name": "FU75KFU75K", "size": 345, "aes_key": keys[1]})
+    attributes.append({"true_name": "WONDERWOMAN.EXT", "random_name": "K86TJK86TJ", "size": 52345, "aes_key": keys[2]})
+    attributes.append({"true_name": "BATMAN.DOC", "random_name": "12T4512T45", "size": 586, "aes_key": keys[3]})
+    attributes.append({"true_name": "IF3685.TIOY4ET", "random_name": "6H7K96H7K9", "size": 90, "aes_key": keys[4]})
 
     for attr in attributes:
         entries.append(ops.manifest.ManifestEntry(attributes=attr))
@@ -175,8 +635,8 @@ def test_create_manifest_update():
 
     # TODO: assumes we do not rotate keys
     new_key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-    old_random_name = manifest.update_manifest("diana.pdf", "fubar", 52, new_key)
-    diana = manifest.remove_line("diana.pdf")
+    old_random_name = manifest.update_manifest("DIANA.PDF", "FUBARFUBAR", 52, new_key)
+    diana = manifest.remove_line("DIANA.PDF")
 
     assert old_random_name is None and old_manifest == manifest and \
-        diana.attributes["random_name"] == "fubar" and diana.attributes["size"] == 52
+        diana.attributes["random_name"] == "FUBARFUBAR" and diana.attributes["size"] == 52

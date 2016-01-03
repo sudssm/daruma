@@ -1,27 +1,99 @@
 import exceptions
+import re
 
 
-class Manifest:
-    NEWLINE = "\n"
+class ManifestEntry:
+    DELIM = ","
+    TRUENAME = '[A-Z0-9_\.]+'
+    RANDOMNAME = '[A-Z0-9_]{10}'
+    SIZE = '[0-9]+'
+    KEY = '.{32}'
 
-    def __init__(self, lines=None, content=None):
-        if lines is not None and content is None:
-            self.lines = lines
-        elif content is not None and lines is None:
-            self.lines = []
-            for str_line in content.split(self.NEWLINE):
-                self.lines.append(ManifestEntry(str_line=str_line))
+    STRREGEX = '(' + TRUENAME + ')' + DELIM + '(' + RANDOMNAME + ')' + \
+        DELIM + '(' + SIZE + ')' + DELIM + '(' + KEY + ')'
+
+    REGEX = re.compile(STRREGEX, re.DOTALL)
+
+    # @param atributes: {"true_name": "", "random_name": "", "size": , "aes_key": }
+        # true_name: string of true name
+        # random_name: string of random name
+        # size: decimal value of size
+        # aes_key: byte rep of key
+    # @param str: string representation of entry
+    def __init__(self, attributes=None, str_line=None):
+        if attributes is not None and str_line is None:
+            self.attributes = attributes
+
+            test_str = self.stringify()
+            test_attr = self.parse(test_str)
+            if (test_attr != attributes):
+                raise exceptions.IllegalArgumentException
+        elif str_line is not None and attributes is None:
+            self.attributes = self.parse(str_line)
         else:
             raise exceptions.IllegalArgumentException
 
     def __eq__(self, other):
-        # TODO: want a faster runtime?
+        return self.attributes == other.attributes
+
+    # returns a negative integer if self < other, zero if self == other, and positive if self > other
+    def __cmp__(self, other):
+        return cmp(self.attributes["true_name"], other.attributes["true_name"])
+
+    def parse(self, str_line):
+        res = self.REGEX.match(str_line)
+        if res is None or res.group(0) != str_line:
+            raise exceptions.IllegalArgumentException
+        attrs = res.groups()
+        if (len(attrs) != 4):
+            raise exceptions.IllegalArgumentException
+        else:
+            return {"true_name": attrs[0], "random_name": attrs[1],
+                    "size": int(attrs[2]), "aes_key": attrs[3]}
+
+    # @return: string representation of entry
+    def stringify(self):
+        return self.attributes["true_name"] + self.DELIM + self.attributes["random_name"] + self.DELIM + \
+            str(self.attributes["size"]) + self.DELIM + self.attributes["aes_key"]
+
+
+class Manifest:
+    NEWLINE = "\n"
+    STRREGEX = "(" + ManifestEntry.TRUENAME + ManifestEntry.DELIM + ManifestEntry.RANDOMNAME + \
+        ManifestEntry.DELIM + ManifestEntry.SIZE + ManifestEntry.DELIM + ManifestEntry.KEY + \
+        NEWLINE + ")"
+    REGEX = re.compile(STRREGEX, re.DOTALL)
+
+    def __init__(self, lines=None, content=None):
+        if lines is not None and content is None:
+            test_content = ""
+            for line in lines:
+                test_content += line.stringify() + self.NEWLINE
+            if lines.sort() != self.parse(test_content).sort():
+                raise exceptions.IllegalArgumentException
+
+            self.lines = lines
+        elif content is not None and lines is None:
+            self.lines = self.parse(content)
+        else:
+            raise exceptions.IllegalArgumentException
+
+    def __eq__(self, other):
         return self.lines.sort() == other.lines.sort()
+
+    def parse(self, content):
+        lines = []
+        str_lines = self.REGEX.findall(content)
+        if "".join(str_lines) != content:
+            raise exceptions.IllegalArgumentException  # any invalid text will result in failure
+        for str_line in str_lines:
+            lines.append(ManifestEntry(str_line=str_line[:-1]))  # remove terminating newline
+        return lines
 
     def stringify(self):
         str_lines = [line.stringify() for line in self.lines]
         # TODO: should we randomize line order with each call?
-        str_manifest = str_lines.join(self.NEWLINE)
+        str_manifest = self.NEWLINE.join(str_lines) + self.NEWLINE
         return str_manifest
 
     def ls(self):
@@ -59,7 +131,7 @@ class Manifest:
             old_random_name = attributes["random_name"]
             attributes["random_name"] = new_random_name
             attributes["size"] = size
-            # TODO: update aes_key if we choose to rotate keys
+            # TODO: update aes_key if we choose to rotate keys - note that if we don't attacker gets update pattern
 
             self.lines.append(ManifestEntry(attributes))  # add the updated line back in
         else:  # the file does not exist
@@ -70,34 +142,3 @@ class Manifest:
 
         # return old random_name and new manifest
         return old_random_name
-
-
-class ManifestEntry:
-    DELIM = ","
-
-    # @param atributes: {"true_name": "", "random_name": "", "size": , "aes_key": }
-        # true_name: string of true name
-        # random_name: string of random name
-        # size: decimal value of size
-        # aes_key: byte rep of key
-    # @param str: string representation of entry
-    def __init__(self, attributes=None, str_line=None):
-        if attributes is not None and str_line is None:
-            self.attributes = attributes
-        elif str_line is not None and attributes is None:
-            self.attributes = self.parse(str_line)
-        else:
-            raise exceptions.IllegalArgumentException
-
-    def parse(self, str_line):
-        terms = str_line.split(self.DELIM)
-        if (len(terms) != 4):
-            raise exceptions.IllegalArgumentException
-        else:
-            return {"true_name": terms[0], "random_name": terms[1],
-                    "size": float(terms[2]), "aes_key": terms[3]}
-
-    # @return: string representation of entry
-    def stringify(self):
-        return self.attributes["true_name"] + self.DELIM + self.attributes["random_name"] + self.DELIM + \
-            str(self.attributes["size"]) + self.DELIM + self.attributes["aes_key"]
