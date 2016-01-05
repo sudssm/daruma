@@ -79,5 +79,7 @@ class FileManager:
 
     def delete(self, name):
         entry = self.manifest.remove_line(name)
+        if entry == None:
+            return
         self.distribute_manifest()
         self.distributor.delete(entry.attributes["code_name"])
