@@ -1,6 +1,7 @@
 import binascii
 from secretsharing import SecretSharer
 from custom_exceptions.exceptions import SecretReconstructionError
+import nacl.secret
 
 
 def share(secret, threshold, total_shares):
@@ -35,4 +36,6 @@ def reconstruct(shares):
         secret = SecretSharer.recover_secret(shares)
     except ValueError:
         raise SecretReconstructionError
+    while len(secret) < nacl.secret.SecretBox.KEY_SIZE * 2:
+        secret = "0" + secret
     return binascii.unhexlify(secret)

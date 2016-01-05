@@ -1,11 +1,11 @@
 import crypto.shamir_secret_sharing
 from custom_exceptions import exceptions
+from crypto.encryption import generate_key
 import pytest
 
-
+secret = generate_key()
 def test_min_shares():
     # First share
-    secret = "FOO BAR WOOHOO!"
     shares = crypto.shamir_secret_sharing.share(secret, 2, 5)
 
     # Then attempt to recover
@@ -15,7 +15,6 @@ def test_min_shares():
 
 def test_max_shares():
     # First share
-    secret = "FOO BAR WOOHOO!"
     shares = crypto.shamir_secret_sharing.share(secret, 2, 5)
 
     # Then attempt to recover
@@ -25,7 +24,6 @@ def test_max_shares():
 
 def test_invalid_share_formatting():
     # First share
-    secret = "FOO BAR WOOHOO!"
     shares = crypto.shamir_secret_sharing.share(secret, 2, 5)
 
     # Then corrupt shares
