@@ -2,12 +2,12 @@
 # interface that allows cloud and local providers
 
 class BaseProvider(object):
+    # the path to our files on the cloud provider
+    ROOT_DIR = "secretbox"
     def __init__(self):
         # this function will not be overridden
         # but rather called by other constructors that take parameters
 
-        # the path to our files on the cloud provider
-        self.root_dir = "secretbox"
         self.connect()
 
     def connect(self):

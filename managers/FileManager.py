@@ -44,7 +44,7 @@ class FileManager:
         pass
         # for every file, perform a self.get() and self.put()
         # to fetch it, re-encode it with the new list of providers, and put it
-        # used most often for reprovisioning
+        # used most often for reprovisioning new or broken provider
 
     def ls(self):
         return self.manifest.ls()
@@ -65,10 +65,17 @@ class FileManager:
 
     def get(self, name):
         entry = self.manifest.get_line(name)
+
+        if entry is None:
+            return None
+
         codename = entry.attributes["code_name"]
         key = entry.attributes["aes_key"]
 
-        return self.distributor.get(codename, key)
+        try:
+            return self.distributor.get(codename, key)
+        except exceptions.FileNotFound:
+            return None
 
     def delete(self, name):
         entry = self.manifest.remove_line(name)

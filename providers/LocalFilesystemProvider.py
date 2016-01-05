@@ -19,7 +19,7 @@ class LocalFilesystemProvider(BaseProvider):
         super(LocalFilesystemProvider, self).__init__()
 
     def __get_translated_filepath(self, relative_filename):
-        return os.path.join(self.provider_path, self.root_dir, relative_filename)
+        return os.path.join(self.provider_path, self.ROOT_DIR, relative_filename)
 
     def setup(self):
         try:
