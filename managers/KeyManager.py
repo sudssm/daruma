@@ -1,7 +1,7 @@
 # This file handles keys using SSSS
-import algos.shamir_secret_sharing
-from algos.encryption import generate_key
-from ..provider import ProviderFileNotFound
+import crypto.shamir_secret_sharing
+from crypto.encryption import generate_key
+from providers.BaseProvider import ProviderFileNotFound
 
 class KeyManager:
     KEY_FILE_NAME = "mellon"
@@ -31,7 +31,7 @@ class KeyManager:
             #return None  # TODO: return error condition to indicate that there are too few shares to reconstruct key
 
         # attempt to recover key
-        secret_key = algos.shamir_secret_sharing.reconstruct(shares)
+        secret_key = crypto.shamir_secret_sharing.reconstruct(shares)
 
         success = True
         # if there were providers that had invalid or missing shares
@@ -47,7 +47,7 @@ class KeyManager:
         key = generate_key()
 
         # compute new shares using len(providers) and k_key
-        shares = algos.shamir_secret_sharing.share(key, self.k, len(self.providers))
+        shares = crypto.shamir_secret_sharing.share(key, self.k, len(self.providers))
 
         # write shares to providers
         for provider, share in zip(self.providers, shares):

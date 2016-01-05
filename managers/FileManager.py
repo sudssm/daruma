@@ -1,8 +1,8 @@
 # This file handles files using RS
 # this thingy should also eventually handle striping
 import exceptions
-from ..Distributor import FileDistributor, FileNotFound
-from ops.manifest import Manifest
+from Distributor import FileDistributor, FileNotFound
+from manifest import Manifest
 from uuid import uuid4
 
 class FileManager:

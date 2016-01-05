@@ -2,10 +2,8 @@
 
 #TODO note to self: think about caching
 
-from stubs.KeyManager import KeyManager
-from stubs.FileManager import FileManager
-import algos
-
+from managers.KeyManager import KeyManager
+from managers.FileManager import FileManager
 
 class SecretBox:
 

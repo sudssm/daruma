@@ -1,5 +1,5 @@
-from algos import encryption, erasure_encoding 
-from provider import ProviderFileNotFound
+from crypto import encryption, erasure_encoding 
+from providers.BaseProvider import ProviderFileNotFound
 # For RS distributing files
 # TODO make resistant to provider going down and other error cases
 
@@ -29,7 +29,7 @@ class FileDistributor:
         return key
 
     def get (self, filename, key):
-        def getShare (provider):
+        def get_share (provider):
             try:
                 return provider.get(filename)
             except ProviderFileNotFound:
@@ -37,7 +37,7 @@ class FileDistributor:
             # TODO except other things?
 
         # download shares
-        shares = [getShare(provider) for provider in self.providers]
+        shares = [get_share(provider) for provider in self.providers]
         shares = [share for share in shares if share != None]
         if len(shares) == 0:
             # no shares found - assume file doesn't exist

@@ -10,7 +10,7 @@ class ProviderConnectionError(EnvironmentError):
     pass
 
 
-class Provider(object):
+class BaseProvider(object):
   def __init__(self):
     # this function will not be overridden
     # but rather called by other constructors that take parameters

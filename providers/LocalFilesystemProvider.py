@@ -1,13 +1,12 @@
 import errno
 import os
-from driver.provider import Provider
-from driver.provider import ProviderFileNotFound
 import shutil
+from providers.BaseProvider import BaseProvider, ProviderFileNotFound
 
 DIRECTORY_MODE = 0o700  # RW only for current user
 
 
-class LocalFilesystemProvider(Provider):
+class LocalFilesystemProvider(BaseProvider):
     def __init__(self, provider_path=""):
         """
         Initialize a non-networked provider backed by the local filesystem.
