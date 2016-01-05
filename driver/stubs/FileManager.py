@@ -50,7 +50,7 @@ class FileManager:
         return self.manifest.ls()
 
     def put(self, name, data):
-        codename = str(uuid4()).replace('-','')
+        codename = str(uuid4()).replace('-','').upper()
         key = self.distributor.put(codename, data)
         # TODO len(data) probably isn't good enough for file size
         # should maybe make a class for a file

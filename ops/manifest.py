@@ -5,7 +5,7 @@ import re
 class ManifestEntry:
     DELIM = ","
     TRUENAME = '[a-zA-Z0-9_\.]+'
-    CODENAME = '[a-zA-Z0-9_]{32}'
+    CODENAME = '[A-Z0-9_]{32}'
     SIZE = '[0-9]+'
     KEY = '.{32}'
 
