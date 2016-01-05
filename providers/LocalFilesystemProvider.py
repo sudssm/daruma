@@ -2,6 +2,7 @@ import errno
 import os
 from driver.provider import Provider
 from driver.provider import ProviderFileNotFound
+import shutil
 
 DIRECTORY_MODE = 0o700  # RW only for current user
 
@@ -29,6 +30,7 @@ class LocalFilesystemProvider(Provider):
                 raise
 
     def connect(self):
+        self.setup()
         pass  # Does nothing - we're always connected to the filesystem!
 
     def get(self, filename):
@@ -56,3 +58,11 @@ class LocalFilesystemProvider(Provider):
                 raise ProviderFileNotFound
             else:
                 raise
+
+    def wipe(self):
+        translated_root_dir = self.__get_translated_filepath("")
+        try:
+            shutil.rmtree(translated_root_dir)
+            os.makedirs(translated_root_dir, DIRECTORY_MODE)
+        except Exception:
+            raise

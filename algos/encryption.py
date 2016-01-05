@@ -9,17 +9,18 @@ class DecryptError(Exception):
     """
 
 
-def encrypt(plaintext):
+def encrypt(plaintext, key = None):
     """
     Encrypt the given plaintext with an automatically generated key using an authenticated encryption scheme.
 
     Args:
         plaintext: a string or other byte representation of the plaintext to be encrypted.
-
+        key: an optional key; one will be generated if not provided
     Returns:
         A tuple (ciphertext, key) containing values suitable to be passed to the decrypt function.
     """
-    key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    if key is None:
+      key = generate_key()
     box = nacl.secret.SecretBox(key)
 
     # A new random nonce is selected for each encryption - this may not be
@@ -30,6 +31,8 @@ def encrypt(plaintext):
 
     return ciphertext, key
 
+def generate_key():
+  return nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
 
 def decrypt(ciphertext, key):
     """

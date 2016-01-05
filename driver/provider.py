@@ -32,3 +32,6 @@ class Provider(object):
 
   def delete(self, filename):
     pass
+
+  def wipe (self):
+    pass

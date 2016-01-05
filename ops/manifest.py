@@ -4,19 +4,18 @@ import re
 
 class ManifestEntry:
     DELIM = ","
-    TRUENAME = '[A-Z0-9_\.]+'
-    RANDOMNAME = '[A-Z0-9_]{10}'
+    TRUENAME = '[a-zA-Z0-9_\.]+'
+    CODENAME = '[a-zA-Z0-9_]{32}'
     SIZE = '[0-9]+'
     KEY = '.{32}'
 
-    STRREGEX = '(' + TRUENAME + ')' + DELIM + '(' + RANDOMNAME + ')' + \
+    STRREGEX = '(' + TRUENAME + ')' + DELIM + '(' + CODENAME + ')' + \
         DELIM + '(' + SIZE + ')' + DELIM + '(' + KEY + ')'
-
     REGEX = re.compile(STRREGEX, re.DOTALL)
 
-    # @param atributes: {"true_name": "", "random_name": "", "size": , "aes_key": }
+    # @param atributes: {"true_name": "", "code_name": "", "size": , "aes_key": }
         # true_name: string of true name
-        # random_name: string of random name
+        # code_name: string of code name
         # size: decimal value of size
         # aes_key: byte rep of key
     # @param str: string representation of entry
@@ -48,23 +47,27 @@ class ManifestEntry:
         if (len(attrs) != 4):
             raise exceptions.IllegalArgumentException
         else:
-            return {"true_name": attrs[0], "random_name": attrs[1],
+            return {"true_name": attrs[0], "code_name": attrs[1],
                     "size": int(attrs[2]), "aes_key": attrs[3]}
 
+    # TODO: note - make stringify methods __str__ so that str(manifest) works, unless you have good reason?
     # @return: string representation of entry
     def stringify(self):
-        return self.attributes["true_name"] + self.DELIM + self.attributes["random_name"] + self.DELIM + \
+        return self.attributes["true_name"] + self.DELIM + self.attributes["code_name"] + self.DELIM + \
             str(self.attributes["size"]) + self.DELIM + self.attributes["aes_key"]
-
 
 class Manifest:
     NEWLINE = "\n"
-    STRREGEX = "(" + ManifestEntry.TRUENAME + ManifestEntry.DELIM + ManifestEntry.RANDOMNAME + \
+    STRREGEX = "(" + ManifestEntry.TRUENAME + ManifestEntry.DELIM + ManifestEntry.CODENAME + \
         ManifestEntry.DELIM + ManifestEntry.SIZE + ManifestEntry.DELIM + ManifestEntry.KEY + \
         NEWLINE + ")"
     REGEX = re.compile(STRREGEX, re.DOTALL)
 
     def __init__(self, lines=None, content=None):
+        # if both are none, make an empty manifest
+        if lines is None and content is None:
+            lines = []
+
         if lines is not None and content is None:
             test_content = ""
             for line in lines:
@@ -91,6 +94,8 @@ class Manifest:
         return lines
 
     def stringify(self):
+        if len(self.lines) == 0:
+            return ""
         str_lines = [line.stringify() for line in self.lines]
         # TODO: should we randomize line order with each call?
         str_manifest = self.NEWLINE.join(str_lines) + self.NEWLINE
@@ -117,28 +122,23 @@ class Manifest:
 
     # Updates the manifest in place
     # @param: string representing the true filename
-    # @param: string representing the new random filename
+    # @param: string representing the new file code name
     # @param: decimal representation of size
     # @param: byte representation of the AES key
-    # @return: old random file name
-    def update_manifest(self, true_name, new_random_name, size, aes_key):
+    # @return: old code file name
+    def update_manifest(self, true_name, new_code_name, size, aes_key):
         # TODO: are we rotating AES keys when we update an old file?
 
         # search the manifest with the provided true_name
         line = self.remove_line(true_name)
-        if line is not None:
-            attributes = line.attributes
-            old_random_name = attributes["random_name"]
-            attributes["random_name"] = new_random_name
-            attributes["size"] = size
-            # TODO: update aes_key if we choose to rotate keys - note that if we don't attacker gets update pattern
+        
+        attributes = {"true_name": true_name, "code_name": new_code_name,
+                      "size": size, "aes_key": aes_key}
+        if line:
+            old_code_name = line.attributes["code_name"]
+        else:
+            old_code_name = None
+        self.lines.append(ManifestEntry(attributes))
 
-            self.lines.append(ManifestEntry(attributes))  # add the updated line back in
-        else:  # the file does not exist
-            attributes = {"true_name": true_name, "random_name": new_random_name,
-                          "size": size, "aes_key": aes_key}
-            old_random_name = None
-            self.lines.append(ManifestEntry(attributes))
-
-        # return old random_name and new manifest
-        return old_random_name
+        # return old code_name and new manifest
+        return old_code_name
