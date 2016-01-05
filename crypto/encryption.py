@@ -1,13 +1,7 @@
 import nacl.secret
 import nacl.utils
 import nacl.exceptions
-
-
-class DecryptError(Exception):
-    """
-    Exception for errors in decryption and/or authentication
-    """
-
+from custom_exceptions.exceptions import DecryptError
 
 def encrypt(plaintext, key = None):
     """
@@ -46,7 +40,7 @@ def decrypt(ciphertext, key):
         A byte representation of the decrypted plaintext if the decryption was successful.
 
     Raises:
-        CryptoError: Decryption or authentication was unsuccessful.
+        DecryptError: Decryption or authentication was unsuccessful.
     """
     box = nacl.secret.SecretBox(key)
 

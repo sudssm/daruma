@@ -1,7 +1,8 @@
 import errno
 import os
 import shutil
-from providers.BaseProvider import BaseProvider, ProviderFileNotFound
+from custom_exceptions import exceptions
+from providers.BaseProvider import BaseProvider
 
 DIRECTORY_MODE = 0o700  # RW only for current user
 
@@ -39,7 +40,7 @@ class LocalFilesystemProvider(BaseProvider):
                 return target_file.read()
         except IOError as error:
             if error.errno is errno.ENOENT:
-                raise ProviderFileNotFound
+                raise exceptions.ProviderFileNotFound
             else:
                 raise
 
@@ -54,7 +55,7 @@ class LocalFilesystemProvider(BaseProvider):
             os.remove(translated_filepath)
         except OSError as error:
             if error.errno is errno.ENOENT:
-                raise ProviderFileNotFound
+                raise exceptions.ProviderFileNotFound
             else:
                 raise
 

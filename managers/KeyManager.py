@@ -1,7 +1,7 @@
 # This file handles keys using SSSS
 import crypto.shamir_secret_sharing
 from crypto.encryption import generate_key
-from providers.BaseProvider import ProviderFileNotFound
+from custom_exceptions import exceptions
 
 class KeyManager:
     KEY_FILE_NAME = "mellon"
@@ -19,7 +19,7 @@ class KeyManager:
         def get_share(provider):
             try:
                 return provider.get(self.KEY_FILE_NAME)
-            except ProviderFileNotFound:
+            except exceptions.ProviderFileNotFound:
                 return None
         # get all shares from providers in parallel
         shares_map = {}

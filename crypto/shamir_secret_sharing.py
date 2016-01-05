@@ -1,11 +1,6 @@
 import binascii
 from secretsharing import SecretSharer
-
-
-class SecretReconstructionError(Exception):
-    """
-    Exception for errors in decoding a secret
-    """
+from custom_exceptions.exceptions import SecretReconstructionError
 
 
 def share(secret, threshold, total_shares):

@@ -1,4 +1,5 @@
 import crypto.erasure_encoding
+from custom_exceptions import exceptions
 import pytest
 
 
@@ -28,7 +29,7 @@ def test_insufficient_shares():
     shares = crypto.erasure_encoding.share(message, 2, 5)
 
     # Then attempt to recover
-    with pytest.raises(crypto.erasure_encoding.DecodeError):
+    with pytest.raises(exceptions.DecodeError):
         crypto.erasure_encoding.reconstruct(shares[0:1], 2, 5)
 
 
@@ -44,5 +45,5 @@ def test_corrupt_shares_wrong_sizes():
     new_shares = [shares1[0], shares2[0], shares1[1], shares1[2]]
 
     # Then attempt to decode
-    with pytest.raises(crypto.erasure_encoding.DecodeError):
+    with pytest.raises(exceptions.DecodeError):
         crypto.erasure_encoding.reconstruct(new_shares, 2, 5)

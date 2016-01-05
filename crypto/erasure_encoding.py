@@ -2,13 +2,7 @@ from pyeclib.ec_iface import ECDriver
 from pyeclib.ec_iface import ECInsufficientFragments
 from pyeclib.ec_iface import ECInvalidFragmentMetadata
 from pyeclib.ec_iface import ECDriverError
-
-
-class DecodeError(Exception):
-    """
-    Exception for errors in decoding an erasure code
-    """
-
+from custom_exceptions.exceptions import DecodeError
 
 def __get_ecdriver(threshold, total_shares):
     return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')

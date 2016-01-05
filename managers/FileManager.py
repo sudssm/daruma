@@ -1,7 +1,7 @@
 # This file handles files using RS
 # this thingy should also eventually handle striping
-import exceptions
-from Distributor import FileDistributor, FileNotFound
+from custom_exceptions import exceptions
+from Distributor import FileDistributor
 from manifest import Manifest
 from uuid import uuid4
 
@@ -30,7 +30,7 @@ class FileManager:
         try:
             manifest_str = self.distributor.get(self.MANIFEST_NAME, self.master_key)
             self.manifest = Manifest(content=manifest_str)
-        except FileNotFound:
+        except exceptions.FileNotFound:
             # make a new manifest and distribute it
             self.manifest = Manifest()
             self.distribute_manifest()

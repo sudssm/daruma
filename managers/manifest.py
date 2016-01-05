@@ -1,4 +1,4 @@
-import exceptions
+from custom_exceptions import exceptions
 import re
 
 

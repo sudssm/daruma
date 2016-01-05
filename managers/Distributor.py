@@ -1,5 +1,6 @@
+from custom_exceptions import exceptions
 from crypto import encryption, erasure_encoding 
-from providers.BaseProvider import ProviderFileNotFound
+
 # For RS distributing files
 # TODO make resistant to provider going down and other error cases
 
@@ -32,7 +33,7 @@ class FileDistributor:
         def get_share (provider):
             try:
                 return provider.get(filename)
-            except ProviderFileNotFound:
+            except exceptions.ProviderFileNotFound:
                 return None
             # TODO except other things?
 
@@ -41,7 +42,7 @@ class FileDistributor:
         shares = [share for share in shares if share != None]
         if len(shares) == 0:
             # no shares found - assume file doesn't exist
-            raise FileNotFound
+            raise exceptions.FileNotFound
         # un RS
         ciphertext = erasure_encoding.reconstruct(shares, self.k, self.n)
         # decrypt
@@ -53,8 +54,5 @@ class FileDistributor:
         for provider in self.providers:
             try:
                 provider.delete(filename)
-            except ProviderFileNotFound:
+            except exceptions.ProviderFileNotFound:
                 pass
-
-class FileNotFound(Exception):
-    pass
