@@ -5,6 +5,7 @@ from Distributor import FileDistributor
 from manifest import Manifest
 from uuid import uuid4
 
+
 class FileManager:
     # the name of the manifest file
     MANIFEST_NAME = "manifest"
@@ -35,9 +36,8 @@ class FileManager:
             self.manifest = Manifest()
             self.distribute_manifest()
 
-
     def distribute_manifest(self):
-        content = self.manifest.stringify()
+        content = str(self.manifest)
         self.distributor.put(self.MANIFEST_NAME, content, self.master_key)
 
     def refresh(self):
@@ -50,7 +50,7 @@ class FileManager:
         return self.manifest.ls()
 
     def put(self, name, data):
-        codename = str(uuid4()).replace('-','').upper()
+        codename = str(uuid4()).replace('-', '').upper()
         key = self.distributor.put(codename, data)
         # TODO len(data) probably isn't good enough for file size
         # should maybe make a class for a file
@@ -61,7 +61,6 @@ class FileManager:
 
         if old_codename is not None:
             self.distributor.delete(old_codename)
-
 
     def get(self, name):
         entry = self.manifest.get_line(name)

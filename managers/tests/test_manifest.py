@@ -26,7 +26,7 @@ def test_regex_standard():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -45,7 +45,7 @@ def test_regex_newline_start():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -64,7 +64,7 @@ def test_regex_newline_mid():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -83,7 +83,7 @@ def test_regex_newline_end():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -102,7 +102,7 @@ def test_regex_comma_start():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -121,7 +121,7 @@ def test_regex_comma_mid():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -140,7 +140,7 @@ def test_regex_comma_end():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.lines) == sorted(entries)
@@ -150,8 +150,8 @@ def test_regex_no_true():
     key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
     key2 = generate_key()
 
-    content = codename1 + key1 + "\n" + \
-              "SUPERMAN.PDF" + codename2 + "," + key2 + "\n"
+    content = codename1 + key1 + "\n" + "SUPERMAN.PDF" + \
+        codename2 + "," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -279,7 +279,7 @@ def test_standard_ls_content():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
 
@@ -331,7 +331,7 @@ def test_newline_mid_ls_content():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
     assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
@@ -350,7 +350,7 @@ def test_newline_end_ls_content():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
 
@@ -367,8 +367,8 @@ def test_manifest_from_list():
     entries.append(managers.manifest.ManifestEntry(attributes=attributes))
 
     manifest = managers.manifest.Manifest(lines=entries)
-    assert manifest.stringify() == "CLARK_KENT.TXT," + codename1 + ",34," + key + "\n" + \
-                                   "SUPERMAN.PDF," + codename2 + ",45," + key + "\n"
+    assert str(manifest) == "CLARK_KENT.TXT," + codename1 + ",34," + key + "\n" + \
+                            "SUPERMAN.PDF," + codename2 + ",45," + key + "\n"
 
 
 def test_manifest_from_content():
@@ -382,11 +382,11 @@ def test_manifest_from_content():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     manifest = managers.manifest.Manifest(content=content)
-    assert manifest.stringify() == "FIREFLY.TXT," + codename1 + ",34," + key + "\n" + \
-                                   "SERENITY.PDF," + codename2 + ",45," + key + "\n"
+    assert str(manifest) == "FIREFLY.TXT," + codename1 + ",34," + key + "\n" + \
+                            "SERENITY.PDF," + codename2 + ",45," + key + "\n"
 
 
 def test_manifest_from_both():
@@ -400,7 +400,7 @@ def test_manifest_from_both():
 
     content = ""
     for entry in entries:
-        content += entry.stringify() + "\n"
+        content += str(entry) + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(lines=entries, content=content)
@@ -427,8 +427,7 @@ def test_roundtrip_empty():
     content = ""
     manifest = managers.manifest.Manifest(content=content)
 
-    assert manifest.stringify() == content
-
+    assert str(manifest) == content
 
 
 def test_standard_get_line():
@@ -566,7 +565,7 @@ def test_manifest_line():
     key = generate_key()
     attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 25, "aes_key": key}
     manifest = managers.manifest.ManifestEntry(attributes=attributes)
-    assert "CLARK_KENT.TXT," + codename1 + ",25," + key == manifest.stringify()
+    assert "CLARK_KENT.TXT," + codename1 + ",25," + key == str(manifest)
 
 
 def test_entry_from_string():

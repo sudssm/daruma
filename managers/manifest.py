@@ -30,6 +30,10 @@ class ManifestEntry:
     def __eq__(self, other):
         return self.attributes == other.attributes
 
+    def __str__(self):
+        return self.attributes["true_name"] + self.DELIM + self.attributes["code_name"] + \
+            self.DELIM + str(self.attributes["size"]) + self.DELIM + self.attributes["aes_key"]
+
     # returns a negative integer if self < other, zero if self == other, and positive if self > other
     def __cmp__(self, other):
         return cmp(self.attributes["true_name"], other.attributes["true_name"])
@@ -71,12 +75,6 @@ class ManifestEntry:
             return {"true_name": attrs[0], "code_name": attrs[1],
                     "size": int(attrs[2]), "aes_key": attrs[3]}
 
-    # TODO: note - make stringify methods __str__ so that str(manifest) works, unless you have good reason?
-    # @return: string representation of entry
-    def stringify(self):
-        return self.attributes["true_name"] + self.DELIM + self.attributes["code_name"] + self.DELIM + \
-            str(self.attributes["size"]) + self.DELIM + self.attributes["aes_key"]
-
 
 class Manifest:
     NEWLINE = "\n"
@@ -90,7 +88,7 @@ class Manifest:
         if lines is None and content is None:
             self.lines = []
         elif lines is not None and content is None:
-            self.lines = self.assign_lines(lines)
+            self.lines = lines  # the ManifestEntries have already been validated
         elif content is not None and lines is None:
             self.lines = self.parse(content)
         else:
@@ -99,14 +97,14 @@ class Manifest:
     def __eq__(self, other):
         return self.lines.sort() == other.lines.sort()
 
-    def assign_lines(self, lines):
-        test_content = ""
-        for line in lines:
-            test_content += line.stringify() + self.NEWLINE
-        if lines.sort() != self.parse(test_content).sort():
-            raise exceptions.IllegalArgumentException
+    def __str__(self):
+        if len(self.lines) == 0:
+            return ""
+        str_lines = [str(line) for line in self.lines]
 
-        return lines
+        # TODO: should we randomize line order with each call?
+        str_manifest = self.NEWLINE.join(str_lines) + self.NEWLINE
+        return str_manifest
 
     def parse(self, content):
         lines = []
@@ -117,14 +115,6 @@ class Manifest:
         for tup_line in tup_lines:
             lines.append(ManifestEntry(str_line=tup_line[0]))  # remove terminating newline
         return lines
-
-    def stringify(self):
-        if len(self.lines) == 0:
-            return ""
-        str_lines = [line.stringify() for line in self.lines]
-        # TODO: should we randomize line order with each call?
-        str_manifest = self.NEWLINE.join(str_lines) + self.NEWLINE
-        return str_manifest
 
     def ls(self):
         names = []
