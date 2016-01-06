@@ -150,8 +150,8 @@ def test_regex_no_true():
     key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
     key2 = generate_key()
 
-    content = codename1 + key1 + "\n" + "SUPERMAN.PDF" + \
-        codename2 + "," + key2 + "\n"
+    content = "," + codename1 + ",34," + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -161,7 +161,7 @@ def test_regex_no_random():
     key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
+    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
               "SUPERMAN.PDF,,45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
@@ -172,8 +172,8 @@ def test_regex_no_size():
     key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
-              "SUPERMAN.PDFcodename2," + key2 + "\n"
+    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename2 + ",," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -183,8 +183,8 @@ def test_regex_no_key():
     key1 = ''
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
-              "SUPERMAN.PDF" + codename2 + "," + key2 + "\n"
+    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -194,8 +194,8 @@ def test_regex_random_long():
     key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
-              "SUPERMAN.PDF" + codename1 + ",45," + key2 + "\n"
+    content = "CLARK_KENT.TXT," + codename1 + "," + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename1 + ",45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -205,7 +205,7 @@ def test_regex_random_short():
     key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
+    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
               "SUPERMAN.PDF,ABC,45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
@@ -216,8 +216,8 @@ def test_regex_key_long():
     key1 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xd7k\xb6\xd5\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
-              "SUPERMAN.PDF" + codename2 + "," + key2 + "\n"
+    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -227,8 +227,8 @@ def test_regex_key_short():
     key1 = '\xc2\x95\x1b\xbe\x80jb\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "," + key1 + "\n" + \
-              "SUPERMAN.PDF" + codename2 + "," + key2 + "\n"
+    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -238,8 +238,8 @@ def test_regex_missing_delim():
     key1 = generate_key()
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT" + codename1 + "" + key1 + "\n" + \
-              "SUPERMAN.PDF" + codename2 + "," + key2 + "\n"
+    content = "CLARK_KENT.TXT," + codename1 + ",34" + key1 + "\n" + \
+              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
 
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.Manifest(content=content)
@@ -540,7 +540,7 @@ def test_entry_regex_key_short():
 def test_entry_regex_missing_delim():
     key = generate_key()
 
-    str_line = "CLARK_KENT.TXT" + codename1 + "10" + key
+    str_line = "CLARK_KENT.TXT," + codename1 + ",34" + key
     with pytest.raises(exceptions.IllegalArgumentException):
         managers.manifest.ManifestEntry(str_line=str_line)
 
