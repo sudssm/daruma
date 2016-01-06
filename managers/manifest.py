@@ -4,13 +4,13 @@ import re
 
 class ManifestEntry:
     DELIM = ","
-    TRUENAME = '[a-zA-Z0-9_\.]+'
-    CODENAME = '[A-Z0-9_]{32}'
-    SIZE = '[0-9]+'
-    KEY = '.{32}'
+    TRUENAME = re.compile('[a-zA-Z0-9_\.]+')
+    CODENAME = re.compile('[A-Z0-9_]{32}')
+    SIZE = re.compile('[0-9]+')
+    KEY = re.compile('.{32}', re.DOTALL)
 
-    STRREGEX = '(' + TRUENAME + ')' + DELIM + '(' + CODENAME + ')' + \
-        DELIM + '(' + SIZE + ')' + DELIM + '(' + KEY + ')'
+    STRREGEX = '(' + TRUENAME.pattern + ')' + DELIM + '(' + CODENAME.pattern + ')' + \
+        DELIM + '(' + SIZE.pattern + ')' + DELIM + '(' + KEY.pattern + ')'
     REGEX = re.compile(STRREGEX, re.DOTALL)
 
     # @param atributes: {"true_name": "", "code_name": "", "size": , "aes_key": }
@@ -21,12 +21,7 @@ class ManifestEntry:
     # @param str: string representation of entry
     def __init__(self, attributes=None, str_line=None):
         if attributes is not None and str_line is None:
-            self.attributes = attributes
-
-            test_str = self.stringify()
-            test_attr = self.parse(test_str)
-            if (test_attr != attributes):
-                raise exceptions.IllegalArgumentException
+            self.attributes = self.assign_attributes(attributes)
         elif str_line is not None and attributes is None:
             self.attributes = self.parse(str_line)
         else:
@@ -38,6 +33,32 @@ class ManifestEntry:
     # returns a negative integer if self < other, zero if self == other, and positive if self > other
     def __cmp__(self, other):
         return cmp(self.attributes["true_name"], other.attributes["true_name"])
+
+    def verify_truename(self, truename):
+        match = self.TRUENAME.match(truename)
+        return match and match.group(0) == truename
+
+    def verify_codename(self, codename):
+        match = self.CODENAME.match(codename)
+        return match and match.group(0) == codename
+
+    def verify_size(self, size):
+        match = self.SIZE.match(size)
+        return match and match.group(0) == size
+
+    def verify_aeskey(self, aeskey):
+        match = self.KEY.match(aeskey)
+        return match and match.group(0) == aeskey
+
+    def verify_attributes(self, attributes):
+        return self.verify_truename(attributes["true_name"]) and self.verify_codename(attributes["code_name"]) and \
+            self.verify_size(str(attributes["size"])) and self.verify_aeskey(attributes["aes_key"])
+
+    def assign_attributes(self, attributes):
+        if (self.verify_attributes(attributes)):
+            return attributes
+        else:
+            raise exceptions.IllegalArgumentException
 
     def parse(self, str_line):
         res = self.REGEX.match(str_line)
@@ -56,26 +77,20 @@ class ManifestEntry:
         return self.attributes["true_name"] + self.DELIM + self.attributes["code_name"] + self.DELIM + \
             str(self.attributes["size"]) + self.DELIM + self.attributes["aes_key"]
 
+
 class Manifest:
     NEWLINE = "\n"
-    STRREGEX = "(" + ManifestEntry.TRUENAME + ManifestEntry.DELIM + ManifestEntry.CODENAME + \
-        ManifestEntry.DELIM + ManifestEntry.SIZE + ManifestEntry.DELIM + ManifestEntry.KEY + \
-        NEWLINE + ")"
+    STRREGEX = "(" + ManifestEntry.TRUENAME.pattern + ManifestEntry.DELIM + ManifestEntry.CODENAME.pattern + \
+        ManifestEntry.DELIM + ManifestEntry.SIZE.pattern + ManifestEntry.DELIM + ManifestEntry.KEY.pattern + \
+        ")" + "(" + NEWLINE + ")"
     REGEX = re.compile(STRREGEX, re.DOTALL)
 
     def __init__(self, lines=None, content=None):
         # if both are none, make an empty manifest
         if lines is None and content is None:
-            lines = []
-
-        if lines is not None and content is None:
-            test_content = ""
-            for line in lines:
-                test_content += line.stringify() + self.NEWLINE
-            if lines.sort() != self.parse(test_content).sort():
-                raise exceptions.IllegalArgumentException
-
-            self.lines = lines
+            self.lines = []
+        elif lines is not None and content is None:
+            self.lines = self.assign_lines(lines)
         elif content is not None and lines is None:
             self.lines = self.parse(content)
         else:
@@ -84,13 +99,23 @@ class Manifest:
     def __eq__(self, other):
         return self.lines.sort() == other.lines.sort()
 
+    def assign_lines(self, lines):
+        test_content = ""
+        for line in lines:
+            test_content += line.stringify() + self.NEWLINE
+        if lines.sort() != self.parse(test_content).sort():
+            raise exceptions.IllegalArgumentException
+
+        return lines
+
     def parse(self, content):
         lines = []
-        str_lines = self.REGEX.findall(content)
-        if "".join(str_lines) != content:
+        tup_lines = self.REGEX.findall(content)
+        reconstruction = [tup_line[0] + tup_line[1] for tup_line in tup_lines]
+        if "".join(reconstruction) != content:
             raise exceptions.IllegalArgumentException  # any invalid text will result in failure
-        for str_line in str_lines:
-            lines.append(ManifestEntry(str_line=str_line[:-1]))  # remove terminating newline
+        for tup_line in tup_lines:
+            lines.append(ManifestEntry(str_line=tup_line[0]))  # remove terminating newline
         return lines
 
     def stringify(self):
@@ -131,7 +156,7 @@ class Manifest:
 
         # search the manifest with the provided true_name
         line = self.remove_line(true_name)
-        
+
         attributes = {"true_name": true_name, "code_name": new_code_name,
                       "size": size, "aes_key": aes_key}
         if line:
@@ -140,5 +165,5 @@ class Manifest:
             old_code_name = None
         self.lines.append(ManifestEntry(attributes))
 
-        # return old code_name and new manifest
+        # return old code_name
         return old_code_name

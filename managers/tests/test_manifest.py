@@ -12,6 +12,7 @@ codename4 = "12T4512T4512T4512T4512T4512T4512"
 codename5 = "6H7K96H7K96H7K96H7K96H7K96H7K96H"
 codename6 = "SNAFUSNAFUSNAFUSNAFUSNAFUSNAFUSN"
 
+
 def test_regex_standard():
     key1 = generate_key()
     key2 = generate_key()
