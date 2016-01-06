@@ -13,9 +13,11 @@ class FileDistributor:
     # returns the key that this file was shared with
     # key is an optional key to use to encrypt
     # in practice, key should only be defined for the manifest, since we must use the master key
-    def put (self, filename, data, key=None):
+    def put(self, filename, data, key=None):
         # encrypt
-        ciphertext,key = encryption.encrypt(data, key)
+        if key is None:
+            key = encryption.generate_key()
+        ciphertext = encryption.encrypt(data, key)
 
         # compute RS
         shares = erasure_encoding.share(ciphertext, self.k, self.n)

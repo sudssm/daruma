@@ -6,7 +6,8 @@ import pytest
 def test_standard_usage():
     # First encrypt
     plaintext = "FOO BAR WOOHOO!"
-    ciphertext, key = crypto.encryption.encrypt(plaintext)
+    key = crypto.encryption.generate_key()
+    ciphertext = crypto.encryption.encrypt(plaintext, key)
 
     # Then attempt to decrypt
     recovered_plaintext = crypto.encryption.decrypt(ciphertext, key)
@@ -16,7 +17,8 @@ def test_standard_usage():
 def test_empty_plaintext():
     # First encrypt
     plaintext = ""
-    ciphertext, key = crypto.encryption.encrypt(plaintext)
+    key = crypto.encryption.generate_key()
+    ciphertext = crypto.encryption.encrypt(plaintext, key)
 
     # Then attempt to decrypt
     recovered_plaintext = crypto.encryption.decrypt(ciphertext, key)
@@ -26,7 +28,8 @@ def test_empty_plaintext():
 def test_malicious_ciphertext():
     # First encrypt
     plaintext = "FOO BAR woohoo!"
-    ciphertext, key = crypto.encryption.encrypt(plaintext)
+    key = crypto.encryption.generate_key()
+    ciphertext = crypto.encryption.encrypt(plaintext, key)
 
     # Then corrupt ciphertext
     malicious_ciphertext = ciphertext[0:5] + 'C' + ciphertext[6:]
