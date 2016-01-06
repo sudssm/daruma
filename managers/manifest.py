@@ -95,7 +95,7 @@ class Manifest:
             raise exceptions.IllegalArgumentException
 
     def __eq__(self, other):
-        return self.lines.sort() == other.lines.sort()
+        return other is not None and self.lines.sort() == other.lines.sort()
 
     def __str__(self):
         if len(self.lines) == 0:
