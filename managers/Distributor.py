@@ -6,10 +6,10 @@ from crypto import encryption, erasure_encoding
 
 
 class FileDistributor:
-    def __init__(self, providers, k_file):
+    def __init__(self, providers, file_reconstruction_threshold):
         self.providers = providers
-        self.n = len(providers)
-        self.k = k_file
+        self.num_providers = len(providers)
+        self.file_reconstruction_threshold = file_reconstruction_threshold
 
     # returns the key that this file was shared with
     # key is an optional key to use to encrypt
@@ -21,7 +21,7 @@ class FileDistributor:
         ciphertext = encryption.encrypt(data, key)
 
         # compute RS
-        shares = erasure_encoding.share(ciphertext, self.k, self.n)
+        shares = erasure_encoding.share(ciphertext, self.file_reconstruction_threshold, self.num_providers)
 
         # TODO, parallel?
         # callback function?
@@ -52,7 +52,7 @@ class FileDistributor:
         # TODO: address the case where some providers don't return shares?
 
         # un RS
-        ciphertext = erasure_encoding.reconstruct(shares, self.k, self.n)
+        ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
         # decrypt
         data = encryption.decrypt(ciphertext, key)  # TODO: deal with failed auth
 

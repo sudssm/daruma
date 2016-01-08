@@ -7,17 +7,17 @@ from managers.FileManager import FileManager
 
 class SecretBox:
 
-    def __init__(self, providers, k_key, k_file):
-        # k_key: the number of providers that need to be up to recover the key
-        # k_file: the number of providers that need to be up to read files, given the key
+    def __init__(self, providers, key_reconstruction_threshold, file_reconstruction_threshold):
+        # key_reconstruction_threshold: the number of providers that need to be up to recover the key
+        # file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
         # providers: a list of providers
 
         self.providers = providers
-        self.k_key = k_key
-        self.k_file = k_file
+        self.key_reconstruction_threshold = key_reconstruction_threshold
+        self.file_reconstruction_threshold = file_reconstruction_threshold
 
         # the key manager uses SSSS
-        self.key_manager = KeyManager(self.providers, self.k_key)
+        self.key_manager = KeyManager(self.providers, self.key_reconstruction_threshold)
         self.file_manager = None
 
     # start from scratch and create a new key
@@ -25,14 +25,14 @@ class SecretBox:
         for provider in self.providers:
             provider.wipe()
 
-        self.master_key = self.key_manager.distribute_key()
-        self.file_manager = FileManager(self.providers, self.k_file, self.master_key)
+        self.master_key = self.key_manager.distribute_new_key()
+        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
         
         '''
         except ProvidersUnconfigured:
             # case where no provider has a keyshare
             self.master_key = self.key_manager.create_master_key()
-            self.key_manager.distribute_key(self.master_key)
+            self.key_manager.distribute_new_key(self.master_key)
             # TODO probably should catch connection errors
         except ProvidersDown:
             # case where some providers have keyshares, and others don't
@@ -43,7 +43,7 @@ class SecretBox:
     # alternative to provision, when we are resuming a previous session
     def start(self):
         self.master_key = self.key_manager.recover_key()
-        self.file_manager = FileManager(self.providers, self.k_file, self.master_key)
+        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
 
   # public methods
 
@@ -53,7 +53,7 @@ class SecretBox:
         # TODO
         '''
         self.providers.append(provider)
-        self.key_manager.distribute_key(self.master_key)
+        self.key_manager.distribute_new_key(self.master_key)
         self.file_manager.refresh()
         '''
 

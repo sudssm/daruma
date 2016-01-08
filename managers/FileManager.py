@@ -10,11 +10,11 @@ class FileManager:
     # the name of the manifest file
     MANIFEST_NAME = "manifest"
 
-    def __init__(self, providers, k_file, master_key):
+    def __init__(self, providers, file_reconstruction_threshold, master_key):
         self.providers = providers
-        self.k = k_file
+        self.file_reconstruction_threshold = file_reconstruction_threshold
         self.master_key = master_key
-        self.distributor = FileDistributor(providers, k_file)
+        self.distributor = FileDistributor(providers, file_reconstruction_threshold)
 
         self.get_manifest()
 

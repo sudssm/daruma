@@ -7,9 +7,9 @@ from custom_exceptions import exceptions
 class KeyManager:
     KEY_FILE_NAME = "mellon"
 
-    def __init__(self, providers, k_key):
+    def __init__(self, providers, key_reconstruction_threshold):
         self.providers = providers
-        self.k = k_key
+        self.key_reconstruction_threshold = key_reconstruction_threshold
 
     # un SSSS the key from the providers
     # returns the recovered key from all the shares
@@ -27,7 +27,7 @@ class KeyManager:
         for provider in self.providers:
             shares_map[provider] = get_share(provider)
         shares = [value for value in shares_map.values() if value is not None]
-        if len(shares) < self.k:
+        if len(shares) < self.key_reconstruction_threshold:
             raise Exception
             #return None  # TODO: return error condition to indicate that there are too few shares to reconstruct key
 
@@ -46,11 +46,11 @@ class KeyManager:
 
     # distributes a new key to all providers
     # probably throws exception if the provider's put method fails
-    def distribute_key(self):
+    def distribute_new_key(self):
         key = generate_key()
 
-        # compute new shares using len(providers) and k_key
-        shares = crypto.shamir_secret_sharing.share(key, self.k, len(self.providers))
+        # compute new shares using len(providers) and key_reconstruction_threshold
+        shares = crypto.shamir_secret_sharing.share(key, self.key_reconstruction_threshold, len(self.providers))
 
         # write shares to providers
         for provider, share in zip(self.providers, shares):
