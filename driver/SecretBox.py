@@ -5,6 +5,7 @@
 from managers.KeyManager import KeyManager
 from managers.FileManager import FileManager
 
+
 class SecretBox:
 
     def __init__(self, providers, key_reconstruction_threshold, file_reconstruction_threshold):
@@ -26,8 +27,9 @@ class SecretBox:
             provider.wipe()
 
         self.master_key = self.key_manager.distribute_new_key()
+        # TODO: error handling if we can't upload key shares
         self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
-        
+
         '''
         except ProvidersUnconfigured:
             # case where no provider has a keyshare
@@ -43,6 +45,7 @@ class SecretBox:
     # alternative to provision, when we are resuming a previous session
     def start(self):
         self.master_key = self.key_manager.recover_key()
+        # TODO: error handling if we can't recover the key
         self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
 
   # public methods
@@ -50,10 +53,13 @@ class SecretBox:
   # add a new provider
   # TODO we get annoying edge cases if the user adds a provider, and then tries to add another before we update providers to reflect the first add
     def add_provider(self, provider):
-        # TODO
+        # TODO: use Doron's storage equation to determine if adding a new provider is worthwhile
+            # will need to make calls to know the capacity of each provider
         '''
         self.providers.append(provider)
         self.key_manager.distribute_new_key(self.master_key)
+        # TODO: also need to update the file manager with the new master key
+        # or make a new file manager
         self.file_manager.refresh()
         '''
 
