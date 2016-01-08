@@ -4,6 +4,7 @@
 
 from managers.KeyManager import KeyManager
 from managers.FileManager import FileManager
+from custom_exceptions import exceptions
 
 
 class SecretBox:
@@ -13,6 +14,9 @@ class SecretBox:
         # file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
         # providers: a list of providers
 
+        if (not self.verify_parameters(providers, key_reconstruction_threshold, file_reconstruction_threshold)):
+            raise exceptions.InvalidParametersException
+
         self.providers = providers
         self.key_reconstruction_threshold = key_reconstruction_threshold
         self.file_reconstruction_threshold = file_reconstruction_threshold
@@ -20,6 +24,14 @@ class SecretBox:
         # the key manager uses SSSS
         self.key_manager = KeyManager(self.providers, self.key_reconstruction_threshold)
         self.file_manager = None
+
+    # TODO: update with other bad cases
+    def verify_parameters(self, providers, key_reconstruction_threshold, file_reconstruction_threshold):
+        return key_reconstruction_threshold > 2 and \
+            file_reconstruction_threshold > 2 and \
+            len(providers) > 2 and \
+            key_reconstruction_threshold < len(providers) and \
+            file_reconstruction_threshold < len(providers)
 
     # start from scratch and create a new key
     def provision(self):

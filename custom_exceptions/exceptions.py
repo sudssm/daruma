@@ -17,6 +17,14 @@ class SecretReconstructionError(Exception):
     """
 
 
+# secretbox exceptions
+class InvalidParametersException(Exception):
+    '''
+    Exception indicating that provided parameters will case
+    secret sharing or erasure encoding to fail or be meaningless
+    '''
+
+
 # distributor exceptions
 class ProvidersDown(Exception):
     pass
