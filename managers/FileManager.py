@@ -30,7 +30,7 @@ class FileManager:
 
         try:
             manifest_str = self.distributor.get(self.MANIFEST_NAME, self.master_key)
-            self.manifest = Manifest(content=manifest_str)
+            self.manifest = Manifest(content=manifest_str)  # TODO: handle possible IllegalArgument
         except exceptions.FileNotFound:
             # make a new manifest and distribute it
             self.manifest = Manifest()
@@ -74,6 +74,10 @@ class FileManager:
         try:
             return self.distributor.get(codename, key)
         except exceptions.FileNotFound:
+            # TODO: throw an exception when this occurs because
+            # this situation implies that we expected to see
+            # a file with the given codename and but cannot retrieve shares
+            # which is "bad news bears" indeed
             return None
 
     def delete(self, name):

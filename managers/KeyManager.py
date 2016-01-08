@@ -3,6 +3,7 @@ import crypto.shamir_secret_sharing
 from crypto.encryption import generate_key
 from custom_exceptions import exceptions
 
+
 class KeyManager:
     KEY_FILE_NAME = "mellon"
 
@@ -20,7 +21,7 @@ class KeyManager:
             try:
                 return provider.get(self.KEY_FILE_NAME)
             except exceptions.ProviderFileNotFound:
-                return None
+                return None  # TODO: we should throw an exception here? (see get in FM)
         # get all shares from providers in parallel
         shares_map = {}
         for provider in self.providers:
@@ -33,6 +34,8 @@ class KeyManager:
         # attempt to recover key
         secret_key = crypto.shamir_secret_sharing.reconstruct(shares)
 
+        # TODO: determine what behavior we want here
+        # probably do it with exceptions rather than success value? which currently does nothing
         success = True
         # if there were providers that had invalid or missing shares
         if len(shares) < len(self.providers):
@@ -51,6 +54,6 @@ class KeyManager:
 
         # write shares to providers
         for provider, share in zip(self.providers, shares):
-            provider.put(self.KEY_FILE_NAME, share)
+            provider.put(self.KEY_FILE_NAME, share)  # TODO: error handling if providers do not accept uploads?
 
         return key
