@@ -27,9 +27,9 @@ class SecretBox:
 
     # TODO: update with other bad cases
     def verify_parameters(self, providers, key_reconstruction_threshold, file_reconstruction_threshold):
-        return key_reconstruction_threshold > 2 and \
-            file_reconstruction_threshold > 2 and \
-            len(providers) > 2 and \
+        return key_reconstruction_threshold >= 2 and \
+            file_reconstruction_threshold >= 2 and \
+            len(providers) >= 2 and \
             key_reconstruction_threshold < len(providers) and \
             file_reconstruction_threshold < len(providers)
 
