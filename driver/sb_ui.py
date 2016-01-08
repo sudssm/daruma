@@ -10,6 +10,8 @@ n is the number of local providers to make
 k_key/k_file is the number of providers that need to be up to recover key/file
 tmp_dir is a local directory that will act as the providers
 '''
+import shlex
+
 
 from driver.SecretBox import SecretBox
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
@@ -39,14 +41,14 @@ else:
 while True:
     print "\n"
     print "ls, get, put, del, exit"
-    cmd = raw_input("> ").split(" ")
+    cmd = shlex.split(raw_input("> "))
 
     if cmd[0] == "ls":
         files = SB.ls()
         if len(files) == 0:
             print "EMPTY"
         for item in files:
-            print "-",item
+            print "-", item
     if cmd[0] == "get":
         if len(cmd) < 2:
             print "Usage: get <filename>"
