@@ -1,9 +1,10 @@
 import crypto.shamir_secret_sharing
 from custom_exceptions import exceptions
-from crypto.encryption import generate_key
 import pytest
 
-secret = generate_key()
+secret = 'x\x02e\x9c\x9e\x16\xe9\xea\x15+\xbf]\xebx;o\xef\xc9X1c\xaepj\xebj\x12\xe3r\xcd\xeaM'  # An example key
+
+
 def test_min_shares():
     # First share
     shares = crypto.shamir_secret_sharing.share(secret, 2, 5)
