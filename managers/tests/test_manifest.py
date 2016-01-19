@@ -447,7 +447,7 @@ def test_standard_get_line():
         entries.append(managers.manifest.ManifestEntry(attributes=attr))
 
     manifest = managers.manifest.Manifest(lines=entries)
-    assert manifest.get_line("WONDERWOMAN.EXT") == managers.manifest.ManifestEntry(attributes={"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]})
+    assert manifest.get_line("WONDERWOMAN.EXT") == {"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]}
 
 
 def test_missing_get_line():
@@ -623,7 +623,7 @@ def test_replace_manifest_update():
     old_manifest.remove_line("SUPERMAN.PDF")
 
     assert old_code_name == codename2 and manifest == old_manifest and \
-        superman.attributes["code_name"] == codename6 and superman.attributes["size"] == 52
+        superman["code_name"] == codename6 and superman["size"] == 52
 
 
 def test_create_manifest_update():
@@ -651,4 +651,4 @@ def test_create_manifest_update():
     diana = manifest.remove_line("DIANA.PDF")
 
     assert old_code_name is None and old_manifest == manifest and \
-        diana.attributes["code_name"] == codename6 and diana.attributes["size"] == 52
+        diana["code_name"] == codename6 and diana["size"] == 52

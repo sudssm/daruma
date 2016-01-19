@@ -68,8 +68,8 @@ class FileManager:
         if entry is None:
             return None
 
-        codename = entry.attributes["code_name"]
-        key = entry.attributes["aes_key"]
+        codename = entry["code_name"]
+        key = entry["aes_key"]
 
         try:
             return self.distributor.get(codename, key)
@@ -85,4 +85,4 @@ class FileManager:
         if entry is None:
             return
         self.distribute_manifest()
-        self.distributor.delete(entry.attributes["code_name"])
+        self.distributor.delete(entry["code_name"])

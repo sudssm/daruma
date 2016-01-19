@@ -7,11 +7,13 @@ import pytest
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 master_key = generate_key()
 
+
 def test_init():
     for provider in providers:
         provider.wipe()
     FM = FileManager(providers, 3, master_key)
     assert len(FM.ls()) == 0
+
 
 def test_roundtrip():
     for provider in providers:
@@ -21,11 +23,13 @@ def test_roundtrip():
     assert FM.ls() == ["test"]
     assert FM.get("test") == "data"
 
+
 def test_get_nonexistent():
     for provider in providers:
         provider.wipe()
     FM = FileManager(providers, 3, master_key)
-    assert FM.get("blah") == None
+    assert FM.get("blah") is None
+
 
 def test_delete():
     for provider in providers:
@@ -33,7 +37,8 @@ def test_delete():
     FM = FileManager(providers, 3, master_key)
     FM.put("test", "data")
     FM.delete("test")
-    assert FM.get("test") == None
+    assert FM.get("test") is None
+
 
 def test_update():
     for provider in providers:
@@ -43,13 +48,15 @@ def test_update():
     FM.put("test", "newdata")
     assert FM.get("test") == "newdata"
 
+
 def test_wrong_master_key():
     for provider in providers:
         provider.wipe()
     FM = FileManager(providers, 3, master_key)
     with pytest.raises(exceptions.DecryptError):
         FM = FileManager(providers, 3, generate_key())
-    
+
+
 def test_multiple_sessions():
     for provider in providers:
         provider.wipe()
@@ -63,6 +70,7 @@ def test_multiple_sessions():
     assert FM.get("test") == "data"
     assert FM.get("test2") == "moredata"
 
+
 def test_corrupt_recover():
     for provider in providers:
         provider.wipe()
@@ -70,9 +78,10 @@ def test_corrupt_recover():
     FM.put("test", "data")
     providers[0].wipe()
     providers[2].wipe()
-    
+
     FM = FileManager(providers, 3, master_key)
     assert FM.get("test") == "data"
+
 
 def test_corrupt_fail():
     for provider in providers:
@@ -82,6 +91,6 @@ def test_corrupt_fail():
     providers[0].wipe()
     providers[1].wipe()
     providers[2].wipe()
-    
+
     with pytest.raises(exceptions.DecodeError):
         FM = FileManager(providers, 3, master_key)

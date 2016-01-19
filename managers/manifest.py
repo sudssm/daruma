@@ -77,6 +77,7 @@ class ManifestEntry:
 
 
 class Manifest:
+    # TODO: need to add a first line for k
     NEWLINE = "\n"
     STRREGEX = "(" + ManifestEntry.TRUENAME.pattern + ManifestEntry.DELIM + ManifestEntry.CODENAME.pattern + \
         ManifestEntry.DELIM + ManifestEntry.SIZE.pattern + ManifestEntry.DELIM + ManifestEntry.KEY.pattern + \
@@ -125,14 +126,15 @@ class Manifest:
     def get_line(self, true_name):
         for line in self.lines:
             if line.attributes["true_name"] == true_name:
-                return line
+                return line.attributes
         return None
 
     def remove_line(self, true_name):
-        line = self.get_line(true_name)
-        if line is not None:
-            self.lines.remove(line)
-            return line
+        for line in self.lines:
+            if line.attributes["true_name"] == true_name:
+                attributes = line.attributes
+                self.lines.remove(line)
+                return attributes
         return None
 
     # Updates the manifest in place
@@ -150,7 +152,7 @@ class Manifest:
         attributes = {"true_name": true_name, "code_name": new_code_name,
                       "size": size, "aes_key": aes_key}
         if line:
-            old_code_name = line.attributes["code_name"]
+            old_code_name = line["code_name"]
         else:
             old_code_name = None
         self.lines.append(ManifestEntry(attributes))
