@@ -4,6 +4,7 @@ from pyeclib.ec_iface import ECInvalidFragmentMetadata
 from pyeclib.ec_iface import ECDriverError
 from custom_exceptions.exceptions import DecodeError
 
+
 def __get_ecdriver(threshold, total_shares):
     return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
 
