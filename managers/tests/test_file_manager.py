@@ -54,9 +54,9 @@ def test_update():
 def test_wrong_master_key():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FileManager(providers, 3, master_key)
     with pytest.raises(exceptions.DecryptError):
-        FM = FileManager(providers, 3, generate_key())
+        FileManager(providers, 3, generate_key())
 
 
 def test_multiple_sessions():
