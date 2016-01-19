@@ -62,15 +62,15 @@ class ManifestEntry:
         if (self.verify_attributes(attributes)):
             return attributes
         else:
-            raise exceptions.IllegalArgumentException
+            raise exceptions.ParseException
 
     def parse(self, str_line):
         res = self.REGEX.match(str_line)
         if res is None or res.group(0) != str_line:
-            raise exceptions.IllegalArgumentException
+            raise exceptions.ParseException
         attrs = res.groups()
         if (len(attrs) != 4):
-            raise exceptions.IllegalArgumentException
+            raise exceptions.ParseException
         else:
             return {"true_name": attrs[0], "code_name": attrs[1],
                     "size": int(attrs[2]), "aes_key": attrs[3]}
@@ -112,7 +112,7 @@ class Manifest:
         tup_lines = self.REGEX.findall(content)
         reconstruction = [tup_line[0] + tup_line[1] for tup_line in tup_lines]
         if "".join(reconstruction) != content:
-            raise exceptions.IllegalArgumentException  # any invalid text will result in failure
+            raise exceptions.ParseException  # any invalid text will result in failure
         for tup_line in tup_lines:
             lines.append(ManifestEntry(str_line=tup_line[0]))  # remove terminating newline
         return lines
