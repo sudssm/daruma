@@ -23,7 +23,8 @@ def test_roundtrip():
 def test_get_nonexistent():
     SB = SecretBox(providers, 3, 3)
     SB.provision()
-    assert SB.get("blah") is None
+    with pytest.raises(exceptions.FileNotFound):
+        SB.get("blah")
 
 
 def test_delete():
@@ -31,7 +32,8 @@ def test_delete():
     SB.provision()
     SB.put("test", "data")
     SB.delete("test")
-    assert SB.get("test") is None
+    with pytest.raises(exceptions.FileNotFound):
+        SB.get("test")
 
 
 def test_update():

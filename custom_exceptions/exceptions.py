@@ -34,16 +34,16 @@ class ProvidersUnconfigured(Exception):
     pass
 
 
-class FileNotFound(Exception):
-    pass
-
-
 # manifest exceptions
-class InvalidFormatException(Exception):
+class IllegalArgumentException(Exception):
     pass
 
 
-class IllegalArgumentException(Exception):
+class ParseException(Exception):
+    pass
+
+
+class FileNotFound(Exception):
     pass
 
 

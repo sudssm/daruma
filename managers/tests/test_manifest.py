@@ -468,7 +468,8 @@ def test_missing_get_line():
         entries.append(managers.manifest.ManifestEntry(attributes=attr))
 
     manifest = managers.manifest.Manifest(lines=entries)
-    assert manifest.get_line("DIANA.EXT") is None
+    with pytest.raises(exceptions.FileNotFound):
+        manifest.get_line("DIANA.EXT")
 
 
 # ManifestEntry tests

@@ -127,7 +127,7 @@ class Manifest:
         for line in self.lines:
             if line.attributes["true_name"] == true_name:
                 return line.attributes
-        return None
+        raise exceptions.FileNotFound
 
     def remove_line(self, true_name):
         for line in self.lines:
@@ -135,7 +135,7 @@ class Manifest:
                 attributes = line.attributes
                 self.lines.remove(line)
                 return attributes
-        return None
+        raise exceptions.FileNotFound
 
     # Updates the manifest in place
     # @param: string representing the true filename
@@ -147,14 +147,15 @@ class Manifest:
         # TODO: are we rotating AES keys when we update an old file?
 
         # search the manifest with the provided true_name
-        line = self.remove_line(true_name)
+        try:
+            line = self.remove_line(true_name)
+            old_code_name = line["code_name"]
+        except exceptions.FileNotFound:
+            old_code_name = None
 
         attributes = {"true_name": true_name, "code_name": new_code_name,
                       "size": size, "aes_key": aes_key}
-        if line:
-            old_code_name = line["code_name"]
-        else:
-            old_code_name = None
+
         self.lines.append(ManifestEntry(attributes))
 
         # return old code_name

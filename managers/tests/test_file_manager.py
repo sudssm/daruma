@@ -28,7 +28,8 @@ def test_get_nonexistent():
     for provider in providers:
         provider.wipe()
     FM = FileManager(providers, 3, master_key)
-    assert FM.get("blah") is None
+    with pytest.raises(exceptions.FileNotFound):
+        FM.get("blah")
 
 
 def test_delete():
@@ -37,7 +38,8 @@ def test_delete():
     FM = FileManager(providers, 3, master_key)
     FM.put("test", "data")
     FM.delete("test")
-    assert FM.get("test") is None
+    with pytest.raises(exceptions.FileNotFound):
+        FM.get("test")
 
 
 def test_update():
