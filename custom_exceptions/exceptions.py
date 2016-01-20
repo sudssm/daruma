@@ -34,6 +34,17 @@ class ProvidersUnconfigured(Exception):
     pass
 
 
+class ConnectionFailure(Exception):
+    pass
+
+
+class AuthFailure(Exception):
+    pass
+
+
+class RejectedOperationFailure(Exception):
+    pass
+
 # manifest exceptions
 class IllegalArgumentException(Exception):
     pass

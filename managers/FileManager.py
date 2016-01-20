@@ -51,7 +51,7 @@ class FileManager:
 
     def put(self, name, data):
         codename = str(uuid4()).replace('-', '').upper()
-        key = self.distributor.put(codename, data)
+        (key, reached_threshold, failed_providers_map) = self.distributor.put(codename, data)
         # TODO len(data) probably isn't good enough for file size
         # should maybe make a class for a file
         old_codename = self.manifest.update_manifest(name, codename, len(data), key)

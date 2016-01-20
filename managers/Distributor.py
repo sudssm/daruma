@@ -11,10 +11,20 @@ class FileDistributor:
         self.num_providers = len(providers)
         self.file_reconstruction_threshold = file_reconstruction_threshold
 
-    # returns the key that this file was shared with
-    # key is an optional key to use to encrypt
-    # in practice, key should only be defined for the manifest, since we must use the master key
     def put(self, filename, data, key=None):
+        '''
+        Args:
+            filename: string
+            data: bytestring
+        Returns:
+            tuple: (key, reached_threshold, failed_providers_map)
+            key: bytestring of the key used for encryption
+            reached_threshold = boolean
+            failed_providers_map = failed provider mapped to its error code
+                TODO: define provider error codes
+        Raises:
+            UnknownError, IllegalArugmentError from erasure_encoding.share
+        '''
         # encrypt
         if key is None:
             key = encryption.generate_key()
@@ -23,18 +33,24 @@ class FileDistributor:
         # compute RS
         shares = erasure_encoding.share(ciphertext, self.file_reconstruction_threshold, self.num_providers)
 
-        # TODO, parallel?
-        # callback function?
-        # consider early return when k are done, and finish in background?
         # upload to each provider
+        failed_providers_map = {}
         for provider, share in zip(self.providers, shares):
-            provider.put(filename, share)
+            try:
+                provider.put(filename, share)
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.RejectedOperationFailure) as e:
+                failed_providers_map[provider] = str(e)
 
-        # TODO: error handling if some providers indicate upload failure
+        reached_threshold = (len(self.providers) - len(failed_providers_map)) <= self.file_reconstruction_threshold
 
-        return key
+        return (key, reached_threshold, failed_providers_map)
 
     def get(self, filename, key):
+        '''
+        Args:
+        Returns:
+        Raises:
+        '''
         def get_share(provider):
             try:
                 return provider.get(filename)
