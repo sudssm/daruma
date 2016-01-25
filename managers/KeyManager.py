@@ -20,7 +20,7 @@ class KeyManager:
         def get_share(provider):
             try:
                 return provider.get(self.KEY_FILE_NAME)
-            except exceptions.ProviderFileNotFound:
+            except (exceptions.OperationFailure, exceptions.AuthFailure, exceptions.ConnectionFailure):
                 return None  # TODO: we should throw an exception here? (see get in FM)
         # get all shares from providers in parallel
         shares_map = {}

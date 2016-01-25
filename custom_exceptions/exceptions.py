@@ -1,3 +1,10 @@
+# general exceptions
+class IllegalStateException(Exception):
+    '''
+    Indicates that a piece of logic should never have been reached
+    '''
+
+
 # crypto exceptions
 class DecryptError(Exception):
     """
@@ -25,43 +32,44 @@ class InvalidParametersException(Exception):
     '''
 
 
-# distributor exceptions
-class ProvidersDown(Exception):
-    pass
-
-
-class ProvidersUnconfigured(Exception):
-    pass
-
-
-class ConnectionFailure(Exception):
-    pass
-
-
-class AuthFailure(Exception):
-    pass
-
-
-class RejectedOperationFailure(Exception):
-    pass
-
 # manifest exceptions
 class IllegalArgumentException(Exception):
-    pass
+    '''
+    Passed too many or too few arguments to a constructor
+    '''
 
 
 class ParseException(Exception):
+    '''
+    Argument provided could not be parsed by the relevant regex
+    '''
     pass
 
 
 class FileNotFound(Exception):
+    '''
+    User requests a file by name that cannot be located in the manifest
+    '''
     pass
 
 
 # provider exceptions
-class ProviderFileNotFound(EnvironmentError):
+class ConnectionFailure(Exception):
+    '''
+    Provider is considered off-line
+    '''
     pass
 
 
-class ProviderConnectionError(EnvironmentError):
+class AuthFailure(Exception):
+    '''
+    Failed to authenticate the API token with the provider
+    '''
+    pass
+
+
+class OperationFailure(Exception):
+    '''
+    The provider rejected the desired operation (reason unknown)
+    '''
     pass

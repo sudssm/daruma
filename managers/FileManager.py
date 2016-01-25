@@ -29,9 +29,10 @@ class FileManager:
         #   self.refresh()
 
         try:
-            manifest_str = self.distributor.get(self.MANIFEST_NAME, self.master_key)
+            (manifest_str, failed_providers_map) = self.distributor.get(self.MANIFEST_NAME, self.master_key)
+            # TODO: deal with failed_providers_map
             self.manifest = Manifest(content=manifest_str)  # TODO: handle possible IllegalArgument
-        except exceptions.FileNotFound:
+        except exceptions.FileNotFound:  # TODO: this is no longer FileNotFound
             # make a new manifest and distribute it
             self.manifest = Manifest()
             self.distribute_manifest()
@@ -72,7 +73,9 @@ class FileManager:
         key = entry["aes_key"]
 
         try:
-            return self.distributor.get(codename, key)
+            (result, failed_providers_map) = self.distributor.get(codename, key)
+            # TODO: used failed_providers_map
+            return result
         except exceptions.FileNotFound:
             # TODO: throw an exception when this occurs because
             # this situation implies that we expected to see

@@ -40,7 +40,7 @@ class LocalFilesystemProvider(BaseProvider):
                 return target_file.read()
         except IOError as error:
             if error.errno is errno.ENOENT:
-                raise exceptions.ProviderFileNotFound
+                raise exceptions.OperationFailure
             else:
                 raise
 
@@ -55,7 +55,7 @@ class LocalFilesystemProvider(BaseProvider):
             os.remove(translated_filepath)
         except OSError as error:
             if error.errno is errno.ENOENT:
-                raise exceptions.ProviderFileNotFound
+                raise exceptions.OperationFailure
             else:
                 raise
 

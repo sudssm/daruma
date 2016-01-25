@@ -19,8 +19,8 @@ class FileDistributor:
         Returns:
             tuple: (key, reached_threshold, failed_providers_map)
             key: bytestring of the key used for encryption
-            reached_threshold = boolean
-            failed_providers_map = failed provider mapped to its error code
+            reached_threshold: boolean
+            failed_providers_map: failed provider mapped to its error code
                 TODO: define provider error codes
         Raises:
             UnknownError, IllegalArugmentError from erasure_encoding.share
@@ -38,7 +38,7 @@ class FileDistributor:
         for provider, share in zip(self.providers, shares):
             try:
                 provider.put(filename, share)
-            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.RejectedOperationFailure) as e:
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
                 failed_providers_map[provider] = str(e)
 
         reached_threshold = (len(self.providers) - len(failed_providers_map)) <= self.file_reconstruction_threshold
@@ -48,35 +48,51 @@ class FileDistributor:
     def get(self, filename, key):
         '''
         Args:
+            filename: string
+            key: bytestring
         Returns:
+            result: bytestring or None (None = too many failed)
+            failed_providers_map: failed provider mapped to its error code
+                TODO: define provider error codes
         Raises:
+             DecodeError, DecryptError from erasure_encoding.reconstruct, encryption.decrypt
         '''
         def get_share(provider):
+            '''
+            Args:
+            Returns:
+                tuple (result, provider, status)
+                result: content of the file share or None if no share is returned
+                provider: the provider used in a given call
+                status: the error code returned by the provider call or None on success
+            '''
             try:
-                return provider.get(filename)
-            except exceptions.ProviderFileNotFound:
-                return None
-            # TODO except other things?
+                return (provider.get(filename), provider, None)
+                # TODO: do we want something other than None for success?
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
+                return (None, provider, str(e))
 
         # download shares
-        shares = [get_share(provider) for provider in self.providers]
-        shares = [share for share in shares if share is not None]
-        if len(shares) == 0:
-            # no shares found - assume file doesn't exist
-            raise exceptions.FileNotFound
+        tuples = [get_share(provider) for provider in self.providers]
+        shares_map = {tup[1]: tup[0] for tup in tuples if tup[0] is not None and tup[2] is None}
+        failures_map = {tup[1]: tup[2] for tup in tuples if tup[0] is None and tup[2] is not None}
 
-        # TODO: address the case where some providers don't return shares?
+        if (len(failures_map) + len(shares_map) != len(self.providers)):
+            raise exceptions.IllegalStateException
 
-        # un RS
-        ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
+        if (len(shares_map) < self.file_reconstruction_threshold):
+            return (None, failures_map)
+
+        # decode Reed Solomon
+        ciphertext = erasure_encoding.reconstruct(shares_map.values(), self.file_reconstruction_threshold, self.num_providers)
         # decrypt
-        data = encryption.decrypt(ciphertext, key)  # TODO: deal with failed auth
+        data = encryption.decrypt(ciphertext, key)
 
-        return data
+        return (data, failures_map)
 
     def delete(self, filename):
         for provider in self.providers:
             try:
                 provider.delete(filename)
-            except exceptions.ProviderFileNotFound:
-                pass
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure):
+                pass  # TODO: what do we want to do here?
