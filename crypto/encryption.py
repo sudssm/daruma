@@ -1,7 +1,7 @@
 import nacl.secret
 import nacl.utils
 import nacl.exceptions
-from custom_exceptions.exceptions import DecryptError
+from custom_exceptions import exceptions
 
 
 def generate_key():
@@ -18,7 +18,12 @@ def encrypt(plaintext, key):
     Returns:
         The ciphertext, suitable to be passed to the decrypt function.
     """
-    box = nacl.secret.SecretBox(key)
+    try:
+        box = nacl.secret.SecretBox(key)
+
+    # TODO except the right thing here
+    except Exception:
+        raise exceptions.IllegalArgumentException
 
     # A new random nonce is selected for each encryption - this may not be
     # necessary, since we also generate new random keys for each encryption.
@@ -43,12 +48,13 @@ def decrypt(ciphertext, key):
     Raises:
         DecryptError: Decryption or authentication was unsuccessful.
     """
-    box = nacl.secret.SecretBox(key)
-
-    # Note that the nonce is automatically bundled with the ciphertext
     try:
+        box = nacl.secret.SecretBox(key)
+
+        # Note that the nonce is automatically bundled with the ciphertext
         plaintext = box.decrypt(ciphertext)
+
     except nacl.exceptions.CryptoError:
-        raise DecryptError
+        raise exceptions.DecryptError
 
     return plaintext

@@ -78,8 +78,7 @@ def test_corrupt_fail():
     providers[1].wipe()
     providers[2].wipe()
 
-    # need better exception
-    with pytest.raises(Exception):
+    with pytest.raises(exceptions.KeyReconstructionError):
         SB = SecretBox(providers, 3, 3)
         SB.start()
 
@@ -93,9 +92,10 @@ def test_different_ks():
     providers[2].wipe()
 
     # should be able to recover the key, but not files
-    with pytest.raises(exceptions.DecodeError):
+    with pytest.raises(exceptions.ManifestGetError):
         SB = SecretBox(providers, 2, 3)
         SB.start()
+        SB.ls()
 
 
 def test_different_ks_2():

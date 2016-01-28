@@ -31,7 +31,7 @@ def test_invalid_share_formatting():
     new_shares = [shares[0], "woohoo!"]
 
     # Then attempt to recover
-    with pytest.raises(exceptions.SecretReconstructionError):
+    with pytest.raises(exceptions.DecodeError):
         crypto.shamir_secret_sharing.reconstruct(new_shares)
 
 

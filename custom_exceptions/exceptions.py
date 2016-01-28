@@ -1,8 +1,42 @@
+# Exceptions used in SecretBox
+
+
 # general exceptions
-class IllegalStateException(Exception):
-    '''
-    Indicates that a piece of logic should never have been reached
-    '''
+class UnknownError(Exception):
+    """
+    Indicates some unkbown error
+    """
+
+
+class IllegalArgumentException(Exception):
+    """
+    Passed invalid arguments to a constructor or method
+    """
+
+
+class NetworkException(Exception):
+    """
+    Not connected to the internet
+    """
+
+
+# provider exceptions
+class ConnectionFailure(Exception):
+    """
+    Provider is considered off-line
+    """
+
+
+class AuthFailure(Exception):
+    """
+    Failed to authenticate the API token with the provider
+    """
+
+
+class OperationFailure(Exception):
+    """
+    The provider rejected the desired operation (reason unknown)
+    """
 
 
 # crypto exceptions
@@ -18,58 +52,27 @@ class DecodeError(Exception):
     """
 
 
-class SecretReconstructionError(Exception):
-    """
-    Exception for errors in decoding a secret
-    """
-
-
-# secretbox exceptions
-class InvalidParametersException(Exception):
-    '''
-    Exception indicating that provided parameters will case
-    secret sharing or erasure encoding to fail or be meaningless
-    '''
-
-
 # manifest exceptions
-class IllegalArgumentException(Exception):
-    '''
-    Passed too many or too few arguments to a constructor
-    '''
-
-
 class ParseException(Exception):
-    '''
+    """
     Argument provided could not be parsed by the relevant regex
-    '''
-    pass
+    """
 
 
 class FileNotFound(Exception):
-    '''
+    """
     User requests a file by name that cannot be located in the manifest
-    '''
-    pass
+    """
 
 
-# provider exceptions
-class ConnectionFailure(Exception):
-    '''
-    Provider is considered off-line
-    '''
-    pass
+# manager exceptions
+class ManifestGetError(Exception):
+    """
+    Thrown when there was an error recovering the manifest
+    """
 
 
-class AuthFailure(Exception):
-    '''
-    Failed to authenticate the API token with the provider
-    '''
-    pass
-
-
-class OperationFailure(Exception):
-    '''
-    The provider rejected the desired operation (reason unknown)
-    '''
-    pass
+class KeyReconstructionError(Exception):
+    """
+    Exception for errors in decoding a secret
+    """

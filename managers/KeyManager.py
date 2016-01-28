@@ -18,29 +18,25 @@ class KeyManager:
     # probably should throw some sort of connection exception too
     def recover_key(self):
         def get_share(provider):
-            try:
-                return provider.get(self.KEY_FILE_NAME)
-            except (exceptions.OperationFailure, exceptions.AuthFailure, exceptions.ConnectionFailure):
-                return None  # TODO: we should throw an exception here? (see get in FM)
-        # get all shares from providers in parallel
+            return provider.get(self.KEY_FILE_NAME)
+
         shares_map = {}
+        failures_map = {}
         for provider in self.providers:
-            shares_map[provider] = get_share(provider)
-        shares = [value for value in shares_map.values() if value is not None]
+            try:
+                shares_map[provider] = get_share(provider)
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
+                failures_map[provider] = e
+
+        shares = shares_map.values()
         if len(shares) < self.key_reconstruction_threshold:
-            raise Exception
-            #return None  # TODO: return error condition to indicate that there are too few shares to reconstruct key
+            raise exceptions.KeyReconstructionError
 
         # attempt to recover key
-        secret_key = crypto.shamir_secret_sharing.reconstruct(shares)
-
-        # TODO: determine what behavior we want here
-        # probably do it with exceptions rather than success value? which currently does nothing
-        success = True
-        # if there were providers that had invalid or missing shares
-        if len(shares) < len(self.providers):
-            success = False
-            # TODO do some fixing stuff here? someone got corrupted
+        try:
+            secret_key = crypto.shamir_secret_sharing.reconstruct(shares)
+        except exceptions.DecodeError:
+            raise exceptions.KeyReconstructionError
 
         return secret_key
 
@@ -53,7 +49,13 @@ class KeyManager:
         shares = crypto.shamir_secret_sharing.share(key, self.key_reconstruction_threshold, len(self.providers))
 
         # write shares to providers
+        failed_providers_map = {}
         for provider, share in zip(self.providers, shares):
-            provider.put(self.KEY_FILE_NAME, share)  # TODO: error handling if providers do not accept uploads?
+            try:
+                provider.put(self.KEY_FILE_NAME, share)
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
+                failed_providers_map[provider] = e
+
+        # TODO handle failed providers map
 
         return key

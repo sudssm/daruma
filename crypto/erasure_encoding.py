@@ -2,7 +2,7 @@ from pyeclib.ec_iface import ECDriver
 from pyeclib.ec_iface import ECInsufficientFragments
 from pyeclib.ec_iface import ECInvalidFragmentMetadata
 from pyeclib.ec_iface import ECDriverError
-from custom_exceptions.exceptions import DecodeError
+from custom_exceptions import exceptions
 
 
 def __get_ecdriver(threshold, total_shares):
@@ -21,13 +21,17 @@ def share(message, threshold, total_shares):
     Returns:
         A list of values suitable to be passed to the reconstruct function.
     """
+    if threshold > total_shares:
+        raise exceptions.IllegalArgumentException
+
     ec_driver = __get_ecdriver(threshold, total_shares)
     return ec_driver.encode(message)
 
 
 def reconstruct(shares, threshold, total_shares):
     """
-    Reconstruct a message if possible from the given shares.  If the shares are corrupt, an invalid message will be returned.
+    Reconstruct a message if possible from the given shares.
+    If the shares are corrupt, an invalid message will be returned.
 
     Args:
         shares: a list of equally sized binary strings.
@@ -42,4 +46,4 @@ def reconstruct(shares, threshold, total_shares):
     try:
         return ec_driver.decode(shares)
     except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
-        raise DecodeError
+        raise exceptions.DecodeError
