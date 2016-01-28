@@ -52,7 +52,7 @@ class FileDistributor:
             result: bytestring or None if error
             failed_providers_map: map of provider to error
         Raises:
-             DecodeError, DecryptError from erasure_encoding.reconstruct, encryption.decrypt
+             FileReconstructionError
         """
         def get_share(provider):
             return provider.get(filename)
@@ -73,9 +73,12 @@ class FileDistributor:
         # If we can recover but have some cheating shares, we treat them as failures
         # If we can't recover at all, this should throw an exception
         # decode Reed Solomon
-        ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
-        # decrypt
-        data = encryption.decrypt(ciphertext, key)
+        try:
+            ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
+            # decrypt
+            data = encryption.decrypt(ciphertext, key)
+        except (exceptions.DecodeError, exceptions.DecryptError):
+            raise exceptions.FileReconstructionError
 
         return (data, failures_map)
 

@@ -14,6 +14,7 @@ import shlex
 
 
 from driver.SecretBox import SecretBox
+from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 import sys
 
@@ -54,7 +55,10 @@ while True:
             print "Usage: get <filename>"
             continue
         name = cmd[1]
-        print SB.get(name)
+        try:
+            print SB.get(name)
+        except exceptions.FileNotFound:
+            print "File does not exist!"
     if cmd[0] == "put":
         if len(cmd) < 3:
             print "Usage: put <filename> <contents>"
@@ -67,6 +71,9 @@ while True:
             print "Usage: del <filename>"
             continue
         name = cmd[1]
-        SB.delete(name)
+        try:
+            SB.delete(name)
+        except exceptions.FileNotFound:
+            print "File does not exist!"
     if cmd[0] == "exit":
         break

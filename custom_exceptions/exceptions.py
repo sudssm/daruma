@@ -4,7 +4,7 @@
 # general exceptions
 class UnknownError(Exception):
     """
-    Indicates some unkbown error
+    Indicates some unknown error
     """
 
 
@@ -75,4 +75,10 @@ class ManifestGetError(Exception):
 class KeyReconstructionError(Exception):
     """
     Exception for errors in decoding a secret
+    """
+
+
+class FileReconstructionError(Exception):
+    """
+    Exception for errors in decoding a file
     """

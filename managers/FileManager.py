@@ -27,7 +27,7 @@ class FileManager:
     def get_manifest(self):
         try:
             manifest_str, failed_providers_map = self.distributor.get(self.MANIFEST_NAME, self.master_key)
-        except (exceptions.DecodeError, exceptions.DecryptError):
+        except exceptions.FileReconstructionError:
             raise exceptions.ManifestGetError
 
         # TODO: deal with failed_providers_map

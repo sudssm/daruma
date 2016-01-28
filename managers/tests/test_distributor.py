@@ -66,7 +66,7 @@ def test_wrong_key():
     FD = FileDistributor(providers, 3)
     data, _ = FD.put("test", "data")
     # TODO something different should happen here eventually
-    with pytest.raises(exceptions.DecryptError):
+    with pytest.raises(exceptions.FileReconstructionError):
         FD.get("test", wrong_key)
 
 
