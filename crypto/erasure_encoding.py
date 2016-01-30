@@ -1,3 +1,4 @@
+import logging
 from pyeclib.ec_iface import ECDriver
 from pyeclib.ec_iface import ECInsufficientFragments
 from pyeclib.ec_iface import ECInvalidFragmentMetadata
@@ -20,12 +21,15 @@ def share(message, threshold, total_shares):
 
     Returns:
         A list of values suitable to be passed to the reconstruct function.
+    Raises:
+        LibraryException: An exception occurred in the backing erasure encoding library.
     """
-    if threshold > total_shares:
-        raise exceptions.IllegalArgumentException
-
-    ec_driver = __get_ecdriver(threshold, total_shares)
-    return ec_driver.encode(message)
+    try:
+        ec_driver = __get_ecdriver(threshold, total_shares)
+        return ec_driver.encode(message)
+    except Exception:
+        logging.exception("Exception encountered during share creation")
+        raise exceptions.LibraryException
 
 
 def reconstruct(shares, threshold, total_shares):
@@ -41,9 +45,13 @@ def reconstruct(shares, threshold, total_shares):
 
     Raises:
         DecodeError: Decoding the erasure code was unsuccessful (e.g. the shares were of different lengths).
+        LibraryException: An exception occurred in the backing erasure encoding library.
     """
-    ec_driver = __get_ecdriver(threshold, total_shares)
     try:
+        ec_driver = __get_ecdriver(threshold, total_shares)
         return ec_driver.decode(shares)
     except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
         raise exceptions.DecodeError
+    except Exception:
+        logging.exception("Exception encountered during share reconstruction")
+        raise exceptions.LibraryException

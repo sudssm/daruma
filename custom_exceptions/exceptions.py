@@ -2,12 +2,13 @@
 
 
 # general exceptions
-class UnknownError(Exception):
+class LibraryException(Exception):
     """
-    Indicates some unknown error
+    Indicates a non-recoverable error generated in a call to an external library
     """
 
 
+# Should we get rid of this?
 class IllegalArgumentException(Exception):
     """
     Passed invalid arguments to a constructor or method
