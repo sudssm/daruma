@@ -4,56 +4,62 @@ from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
 from uuid import uuid4
+# TODO cache the manifest intelligently
 
 
 class FileManager:
     # the name of the manifest file
     MANIFEST_NAME = "manifest"
 
-    def __init__(self, providers, file_reconstruction_threshold, master_key):
+    # set setup to True in order to create a new system
+    def __init__(self, providers, file_reconstruction_threshold, master_key, setup=False):
         self.providers = providers
         self.file_reconstruction_threshold = file_reconstruction_threshold
         self.master_key = master_key
         self.distributor = FileDistributor(providers, file_reconstruction_threshold)
 
-        self.get_manifest()
-
-    def get_manifest(self):
-        # get shares from providers in parallel
-        # once we have k shares, un-RS the manifest
-        # decrypt the manifest
-        # parse the manifest
-
-        # if there were providers that didn't have shares of the manifest
-        # (or had invalid shares of the manifest):
-        #   self.refresh()
-
-        try:
-            manifest_str = self.distributor.get(self.MANIFEST_NAME, self.master_key)
-            self.manifest = Manifest(content=manifest_str)  # TODO: handle possible IllegalArgument
-        except exceptions.FileNotFound:
-            # make a new manifest and distribute it
+        if setup:
             self.manifest = Manifest()
             self.distribute_manifest()
+        # else:
+        # self.get_manifest()
+
+    def get_manifest(self):
+        try:
+            manifest_str, failed_providers_map = self.distributor.get(self.MANIFEST_NAME, self.master_key)
+        except exceptions.FileReconstructionError:
+            raise exceptions.ManifestGetError
+
+        # TODO: deal with failed_providers_map
+        # if len(failed_providers_map) == len(providers) and all(failed_providers_map.values() are ConnectionError)
+        # raise NetworkError
+
+        if manifest_str is None:
+            raise exceptions.ManifestGetError
+
+        self.manifest = Manifest(content=manifest_str)
 
     def distribute_manifest(self):
         content = str(self.manifest)
-        self.distributor.put(self.MANIFEST_NAME, content, self.master_key)
+        _, failed_providers_map = self.distributor.put(self.MANIFEST_NAME, content, self.master_key)
+        # TODO handle failed_providers_map
 
     def refresh(self):
         pass
         # for every file, perform a self.get() and self.put()
         # to fetch it, re-encode it with the new list of providers, and put it
-        # used most often for reprovisioning new or broken provider
+        # used most often for reprovisioning new or broken provider
 
     def ls(self):
+        self.get_manifest()
         return self.manifest.ls()
 
     def put(self, name, data):
+        self.get_manifest()
         codename = str(uuid4()).replace('-', '').upper()
-        (key, reached_threshold, failed_providers_map) = self.distributor.put(codename, data)
-        # TODO len(data) probably isn't good enough for file size
-        # should maybe make a class for a file
+        key, failed_providers_map = self.distributor.put(codename, data)
+        # TODO handle failed_providers
+
         old_codename = self.manifest.update_manifest(name, codename, len(data), key)
 
         # update the manifest
@@ -63,26 +69,19 @@ class FileManager:
             self.distributor.delete(old_codename)
 
     def get(self, name):
+        self.get_manifest()
         entry = self.manifest.get_line(name)
-
-        if entry is None:
-            return None
 
         codename = entry["code_name"]
         key = entry["aes_key"]
 
-        try:
-            return self.distributor.get(codename, key)
-        except exceptions.FileNotFound:
-            # TODO: throw an exception when this occurs because
-            # this situation implies that we expected to see
-            # a file with the given codename and but cannot retrieve shares
-            # which is "bad news bears" indeed
-            return None
+        result, failed_providers_map = self.distributor.get(codename, key)
+        # TODO: used failed_providers_map
+        return result
 
     def delete(self, name):
+        self.get_manifest()
         entry = self.manifest.remove_line(name)
-        if entry is None:
-            return
+
         self.distribute_manifest()
         self.distributor.delete(entry["code_name"])

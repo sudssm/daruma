@@ -1,11 +1,23 @@
+import logging
 import nacl.secret
 import nacl.utils
 import nacl.exceptions
-from custom_exceptions.exceptions import DecryptError
+from custom_exceptions import exceptions
 
 
 def generate_key():
-    return nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+    """
+    Returns:
+        A secret key suitable to be passed to the encrypt function.
+    Raises:
+        LibraryException: An exception occurred in the backing cryptographic library.
+    """
+    try:
+        return nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+
+    except Exception:
+        logging.exception("Exception encountered during key generation")
+        raise exceptions.LibraryException
 
 
 def encrypt(plaintext, key):
@@ -17,16 +29,23 @@ def encrypt(plaintext, key):
         key: a key returned by the generate_key function
     Returns:
         The ciphertext, suitable to be passed to the decrypt function.
+    Raises:
+        LibraryException: An exception occurred in the backing cryptographic library.
     """
-    box = nacl.secret.SecretBox(key)
+    try:
+        box = nacl.secret.SecretBox(key)
 
-    # A new random nonce is selected for each encryption - this may not be
-    # necessary, since we also generate new random keys for each encryption.
-    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+        # A new random nonce is selected for each encryption - this may not be
+        # necessary, since we also generate new random keys for each encryption.
+        nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
 
-    ciphertext = box.encrypt(plaintext, nonce)
+        ciphertext = box.encrypt(plaintext, nonce)
 
-    return ciphertext
+        return ciphertext
+
+    except Exception:
+        logging.exception("Exception encountered during encryption")
+        raise exceptions.LibraryException
 
 
 def decrypt(ciphertext, key):
@@ -42,13 +61,19 @@ def decrypt(ciphertext, key):
 
     Raises:
         DecryptError: Decryption or authentication was unsuccessful.
+    Raises:
+        LibraryException: An exception occurred in the backing cryptographic library.
     """
-    box = nacl.secret.SecretBox(key)
-
-    # Note that the nonce is automatically bundled with the ciphertext
     try:
-        plaintext = box.decrypt(ciphertext)
-    except nacl.exceptions.CryptoError:
-        raise DecryptError
+        box = nacl.secret.SecretBox(key)
 
-    return plaintext
+        # Note that the nonce is automatically bundled with the ciphertext
+        plaintext = box.decrypt(ciphertext)
+
+        return plaintext
+
+    except nacl.exceptions.CryptoError:
+        raise exceptions.DecryptError
+    except Exception:
+        logging.exception("Exception encountered during decryption")
+        raise exceptions.LibraryException
