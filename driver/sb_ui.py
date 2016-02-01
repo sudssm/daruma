@@ -1,4 +1,4 @@
-'''
+"""
 super ugly hacked together thing to play with secretbox
 usage:
     python sb_ui.py (init | start | help) n k_key k_file tmp_dir
@@ -9,11 +9,12 @@ arg 1 is init if you want to start a new secretbox from scratch
 n is the number of local providers to make
 k_key/k_file is the number of providers that need to be up to recover key/file
 tmp_dir is a local directory that will act as the providers
-'''
+"""
 import shlex
 
 
 from driver.SecretBox import SecretBox
+from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 import sys
 
@@ -54,7 +55,10 @@ while True:
             print "Usage: get <filename>"
             continue
         name = cmd[1]
-        print SB.get(name)
+        try:
+            print SB.get(name)
+        except exceptions.FileNotFound:
+            print "File does not exist!"
     if cmd[0] == "put":
         if len(cmd) < 3:
             print "Usage: put <filename> <contents>"
@@ -67,6 +71,9 @@ while True:
             print "Usage: del <filename>"
             continue
         name = cmd[1]
-        SB.delete(name)
+        try:
+            SB.delete(name)
+        except exceptions.FileNotFound:
+            print "File does not exist!"
     if cmd[0] == "exit":
         break

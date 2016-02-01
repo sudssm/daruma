@@ -1,6 +1,6 @@
 # This is the main project
 
-#TODO note to self: think about caching
+# TODO note to self: think about caching
 
 from managers.KeyManager import KeyManager
 from managers.FileManager import FileManager
@@ -14,8 +14,8 @@ class SecretBox:
         # file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
         # providers: a list of providers
 
-        if (not self.verify_parameters(providers, key_reconstruction_threshold, file_reconstruction_threshold)):
-            raise exceptions.InvalidParametersException
+        if not self.verify_parameters(providers, key_reconstruction_threshold, file_reconstruction_threshold):
+            raise exceptions.IllegalArgumentException
 
         self.providers = providers
         self.key_reconstruction_threshold = key_reconstruction_threshold
@@ -40,9 +40,9 @@ class SecretBox:
 
         self.master_key = self.key_manager.distribute_new_key()
         # TODO: error handling if we can't upload key shares
-        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
+        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key, setup=True)
 
-        '''
+        """
         except ProvidersUnconfigured:
             # case where no provider has a keyshare
             self.master_key = self.key_manager.create_master_key()
@@ -52,7 +52,7 @@ class SecretBox:
             # case where some providers have keyshares, and others don't
             # and we have don't have enough shares to recover the key
             print "sorry, you're screwed (or maybe no internet connection?)"
-        '''
+        """
 
     # alternative to provision, when we are resuming a previous session
     def start(self):
@@ -60,20 +60,20 @@ class SecretBox:
         # TODO: error handling if we can't recover the key
         self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
 
-  # public methods
+    # public methods
 
-  # add a new provider
-  # TODO we get annoying edge cases if the user adds a provider, and then tries to add another before we update providers to reflect the first add
+    # add a new provider
+    # TODO we get annoying edge cases if the user adds a provider, and then tries to add another before we update providers to reflect the first add
     def add_provider(self, provider):
         # TODO: use Doron's storage equation to determine if adding a new provider is worthwhile
             # will need to make calls to know the capacity of each provider
-        '''
+        """
         self.providers.append(provider)
         self.key_manager.distribute_new_key(self.master_key)
         # TODO: also need to update the file manager with the new master key
         # or make a new file manager
         self.file_manager.refresh()
-        '''
+        """
 
     def ls(self):
         return self.file_manager.ls()

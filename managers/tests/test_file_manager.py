@@ -11,14 +11,14 @@ master_key = generate_key()
 def test_init():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     assert len(FM.ls()) == 0
 
 
 def test_roundtrip():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     FM.put("test", "data")
     assert FM.ls() == ["test"]
     assert FM.get("test") == "data"
@@ -27,23 +27,25 @@ def test_roundtrip():
 def test_get_nonexistent():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
-    assert FM.get("blah") is None
+    FM = FileManager(providers, 3, master_key, setup=True)
+    with pytest.raises(exceptions.FileNotFound):
+        FM.get("blah")
 
 
 def test_delete():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     FM.put("test", "data")
     FM.delete("test")
-    assert FM.get("test") is None
+    with pytest.raises(exceptions.FileNotFound):
+        FM.get("test")
 
 
 def test_update():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     FM.put("test", "data")
     FM.put("test", "newdata")
     assert FM.get("test") == "newdata"
@@ -52,15 +54,16 @@ def test_update():
 def test_wrong_master_key():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
-    with pytest.raises(exceptions.DecryptError):
+    FileManager(providers, 3, master_key, setup=True)
+    with pytest.raises(exceptions.ManifestGetError):
         FM = FileManager(providers, 3, generate_key())
+        FM.ls()
 
 
 def test_multiple_sessions():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     FM.put("test", "data")
     FM.put("test2", "moredata")
     assert sorted(FM.ls()) == ["test", "test2"]
@@ -74,7 +77,7 @@ def test_multiple_sessions():
 def test_corrupt_recover():
     for provider in providers:
         provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     FM.put("test", "data")
     providers[0].wipe()
     providers[2].wipe()
@@ -86,11 +89,12 @@ def test_corrupt_recover():
 def test_corrupt_fail():
     for provider in providers:
             provider.wipe()
-    FM = FileManager(providers, 3, master_key)
+    FM = FileManager(providers, 3, master_key, setup=True)
     FM.put("test", "data")
     providers[0].wipe()
     providers[1].wipe()
     providers[2].wipe()
 
-    with pytest.raises(exceptions.DecodeError):
+    with pytest.raises(exceptions.ManifestGetError):
         FM = FileManager(providers, 3, master_key)
+        FM.ls()

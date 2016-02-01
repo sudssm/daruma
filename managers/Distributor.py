@@ -11,10 +11,17 @@ class FileDistributor:
         self.num_providers = len(providers)
         self.file_reconstruction_threshold = file_reconstruction_threshold
 
-    # returns the key that this file was shared with
-    # key is an optional key to use to encrypt
-    # in practice, key should only be defined for the manifest, since we must use the master key
     def put(self, filename, data, key=None):
+        """
+        Args:
+            filename: string
+            data: bytestring
+            key: an optional key used to encrypt
+        Returns:
+            tuple: (key, failed_providers_map)
+            key: bytestring of the key used for encryption
+            failed_providers_map: failed provider mapped to exception
+        """
         # encrypt
         if key is None:
             key = encryption.generate_key()
@@ -23,44 +30,58 @@ class FileDistributor:
         # compute RS
         shares = erasure_encoding.share(ciphertext, self.file_reconstruction_threshold, self.num_providers)
 
-        # TODO, parallel?
-        # callback function?
-        # consider early return when k are done, and finish in background?
         # upload to each provider
+        failed_providers_map = {}
         for provider, share in zip(self.providers, shares):
-            provider.put(filename, share)
+            try:
+                provider.put(filename, share)
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
+                failed_providers_map[provider] = e
 
-        # TODO: error handling if some providers indicate upload failure
-
-        return key
+        return (key, failed_providers_map)
 
     def get(self, filename, key):
+        """
+        Args:
+            filename: string
+            key: bytestring
+        Returns:
+            result: bytestring or None if error
+            failed_providers_map: map of provider to error
+        Raises:
+             FileReconstructionError
+        """
         def get_share(provider):
+            return provider.get(filename)
+
+        shares_map = {}
+        failures_map = {}
+        for provider in self.providers:
             try:
-                return provider.get(filename)
-            except exceptions.ProviderFileNotFound:
-                return None
-            # TODO except other things?
+                shares_map[provider] = get_share(provider)
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
+                failures_map[provider] = e
 
-        # download shares
-        shares = [get_share(provider) for provider in self.providers]
-        shares = [share for share in shares if share is not None]
-        if len(shares) == 0:
-            # no shares found - assume file doesn't exist
-            raise exceptions.FileNotFound
+        shares = shares_map.values()
+        if len(shares) < self.file_reconstruction_threshold:
+            return (None, failures_map)
 
-        # TODO: address the case where some providers don't return shares?
+        # TODO handle RS differently
+        # If we can recover but have some cheating shares, we treat them as failures
+        # If we can't recover at all, this should throw an exception
+        # decode Reed Solomon
+        try:
+            ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
+            # decrypt
+            data = encryption.decrypt(ciphertext, key)
+        except (exceptions.DecodeError, exceptions.DecryptError):
+            raise exceptions.FileReconstructionError
 
-        # un RS
-        ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
-        # decrypt
-        data = encryption.decrypt(ciphertext, key)  # TODO: deal with failed auth
-
-        return data
+        return (data, failures_map)
 
     def delete(self, filename):
         for provider in self.providers:
             try:
                 provider.delete(filename)
-            except exceptions.ProviderFileNotFound:
+            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure):
                 pass
