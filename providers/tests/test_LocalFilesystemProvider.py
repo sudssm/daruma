@@ -20,6 +20,16 @@ def test_roundtrip():
     assert FS.get("file1") == "abc"
 
 
+def test_exception_has_provider():
+    try:
+        FS = LocalFilesystemProvider("tmp")
+        FS.wipe()
+        FS.get("file1")
+        assert False
+    except exceptions.OperationFailure as e:
+        assert e.provider == FS
+
+
 def test_get_nonexisting():
     FS = LocalFilesystemProvider("tmp")
     FS.wipe()

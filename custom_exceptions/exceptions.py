@@ -25,18 +25,24 @@ class ConnectionFailure(Exception):
     """
     Provider is considered off-line
     """
+    def __init__(self, provider):
+        self.provider = provider
 
 
 class AuthFailure(Exception):
     """
     Failed to authenticate the API token with the provider
     """
+    def __init__(self, provider):
+        self.provider = provider
 
 
 class OperationFailure(Exception):
     """
     The provider rejected the desired operation (reason unknown)
     """
+    def __init__(self, provider):
+        self.provider = provider
 
 
 # crypto exceptions

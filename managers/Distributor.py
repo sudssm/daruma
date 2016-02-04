@@ -21,9 +21,9 @@ class FileDistributor:
             data: bytestring
             key: an optional key used to encrypt
         Returns:
-            tuple: (key, failed_providers_map)
+            tuple: (key, failures)
             key: bytestring of the key used for encryption
-            failed_providers_map: failed provider mapped to exception
+            failures: list of failures
         """
         # encrypt
         if key is None:
@@ -34,14 +34,16 @@ class FileDistributor:
         shares = erasure_encoding.share(ciphertext, self.file_reconstruction_threshold, self.num_providers)
 
         # upload to each provider
-        failed_providers_map = {}
+        failures = []
         for provider, share in zip(self.providers, shares):
             try:
                 provider.put(filename, share)
-            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
-                failed_providers_map[provider] = e
 
-        return (key, failed_providers_map)
+            # pass up AuthFailure, get user to relogin.
+            except (exceptions.ConnectionFailure, exceptions.OperationFailure) as e:
+                failures.append(e)
+
+        return (key, failures)
 
     def get(self, filename, key):
         """
@@ -50,7 +52,7 @@ class FileDistributor:
             key: bytestring
         Returns:
             result: bytestring or None if error
-            failed_providers_map: map of provider to error
+            failures: map of provider to error
         Raises:
              FileReconstructionError
         """
@@ -58,16 +60,16 @@ class FileDistributor:
             return provider.get(filename)
 
         shares_map = {}
-        failures_map = {}
+        failures = []
         for provider in self.providers:
             try:
                 shares_map[provider] = get_share(provider)
-            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
-                failures_map[provider] = e
+            except (exceptions.ConnectionFailure, exceptions.OperationFailure) as e:
+                failures.append(e)
 
         shares = shares_map.values()
         if len(shares) < self.file_reconstruction_threshold:
-            return (None, failures_map)
+            return (None, failures)
 
         # TODO handle RS differently
         # If we can recover but have some cheating shares, we treat them as failures
@@ -80,11 +82,11 @@ class FileDistributor:
         except (exceptions.DecodeError, exceptions.DecryptError):
             raise exceptions.FileReconstructionError
 
-        return (data, failures_map)
+        return (data, failures)
 
     def delete(self, filename):
         for provider in self.providers:
             try:
                 provider.delete(filename)
-            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure):
+            except (exceptions.ConnectionFailure, exceptions.OperationFailure):
                 pass

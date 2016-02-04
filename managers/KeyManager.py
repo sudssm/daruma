@@ -21,12 +21,14 @@ class KeyManager:
             return provider.get(self.KEY_FILE_NAME)
 
         shares_map = {}
-        failures_map = {}
+        failures = []
         for provider in self.providers:
             try:
                 shares_map[provider] = get_share(provider)
-            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
-                failures_map[provider] = e
+            except (exceptions.ConnectionFailure, exceptions.OperationFailure) as e:
+                failures.append(e)
+
+        # TODO handle failures
 
         shares = shares_map.values()
         if len(shares) < self.key_reconstruction_threshold:
@@ -49,13 +51,13 @@ class KeyManager:
         shares = crypto.shamir_secret_sharing.share(key, self.key_reconstruction_threshold, len(self.providers))
 
         # write shares to providers
-        failed_providers_map = {}
+        failures = []
         for provider, share in zip(self.providers, shares):
             try:
                 provider.put(self.KEY_FILE_NAME, share)
-            except (exceptions.ConnectionFailure, exceptions.AuthFailure, exceptions.OperationFailure) as e:
-                failed_providers_map[provider] = e
+            except (exceptions.ConnectionFailure, exceptions.OperationFailure) as e:
+                failures.append(e)
 
-        # TODO handle failed providers map
-
+        # TODO handle failures
+        # TODO re-handle manifest
         return key

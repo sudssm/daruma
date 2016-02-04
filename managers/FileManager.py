@@ -26,12 +26,12 @@ class FileManager:
 
     def get_manifest(self):
         try:
-            manifest_str, failed_providers_map = self.distributor.get(self.MANIFEST_NAME, self.master_key)
+            manifest_str, failures = self.distributor.get(self.MANIFEST_NAME, self.master_key)
         except exceptions.FileReconstructionError:
             raise exceptions.ManifestGetError
 
-        # TODO: deal with failed_providers_map
-        # if len(failed_providers_map) == len(providers) and all(failed_providers_map.values() are ConnectionError)
+        # TODO: deal with failures
+        # if len(failures) == len(providers) and all(failures.values() are ConnectionError)
         # raise NetworkError
 
         if manifest_str is None:
@@ -41,8 +41,8 @@ class FileManager:
 
     def distribute_manifest(self):
         content = str(self.manifest)
-        _, failed_providers_map = self.distributor.put(self.MANIFEST_NAME, content, self.master_key)
-        # TODO handle failed_providers_map
+        _, failures = self.distributor.put(self.MANIFEST_NAME, content, self.master_key)
+        # TODO handle failures
 
     def refresh(self):
         pass
@@ -57,7 +57,7 @@ class FileManager:
     def put(self, name, data):
         self.get_manifest()
         codename = str(uuid4()).replace('-', '').upper()
-        key, failed_providers_map = self.distributor.put(codename, data)
+        key, failures = self.distributor.put(codename, data)
         # TODO handle failed_providers
 
         old_codename = self.manifest.update_manifest(name, codename, len(data), key)
@@ -75,8 +75,8 @@ class FileManager:
         codename = entry["code_name"]
         key = entry["aes_key"]
 
-        result, failed_providers_map = self.distributor.get(codename, key)
-        # TODO: used failed_providers_map
+        result, failures = self.distributor.get(codename, key)
+        # TODO: used failures
         return result
 
     def delete(self, name):
