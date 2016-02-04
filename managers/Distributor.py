@@ -1,5 +1,5 @@
 from custom_exceptions import exceptions
-from tools import encryption, erasure_encoding
+from tools import encryption, erasure_encoding, gen
 
 # For RS distributing files
 # TODO make resistant to provider going down and other error cases
@@ -24,7 +24,7 @@ class FileDistributor:
         """
         # encrypt
         if key is None:
-            key = encryption.generate_key()
+            key = gen.generate_key()
         ciphertext = encryption.encrypt(data, key)
 
         # compute RS

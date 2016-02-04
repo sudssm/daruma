@@ -1,6 +1,6 @@
 # This file handles keys using SSSS
 import tools.shamir_secret_sharing
-from tools.encryption import generate_key
+from tools.gen import generate_key
 from custom_exceptions import exceptions
 
 

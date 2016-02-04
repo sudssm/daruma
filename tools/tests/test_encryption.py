@@ -6,7 +6,7 @@ import pytest
 def test_standard_usage():
     # First encrypt
     plaintext = "FOO BAR WOOHOO!"
-    key = tools.encryption.generate_key()
+    key = tools.gen.generate_key()
     ciphertext = tools.encryption.encrypt(plaintext, key)
 
     # Then attempt to decrypt
@@ -17,7 +17,7 @@ def test_standard_usage():
 def test_empty_plaintext():
     # First encrypt
     plaintext = ""
-    key = tools.encryption.generate_key()
+    key = tools.gen.generate_key()
     ciphertext = tools.encryption.encrypt(plaintext, key)
 
     # Then attempt to decrypt
@@ -28,7 +28,7 @@ def test_empty_plaintext():
 def test_malicious_ciphertext():
     # First encrypt
     plaintext = "FOO BAR woohoo!"
-    key = tools.encryption.generate_key()
+    key = tools.gen.generate_key()
     ciphertext = tools.encryption.encrypt(plaintext, key)
 
     # Then corrupt ciphertext
@@ -42,7 +42,7 @@ def test_malicious_ciphertext():
 def test_short_encryption_key():
     # Set up a normal encryption
     plaintext = "FOO BAR woohoo!"
-    key = tools.encryption.generate_key()
+    key = tools.gen.generate_key()
 
     # Drop a few bytes from the key
     short_key = key[:-3]
