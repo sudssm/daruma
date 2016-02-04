@@ -1,6 +1,6 @@
 # This file handles keys using SSSS
-import crypto.shamir_secret_sharing
-from crypto.encryption import generate_key
+import tools.shamir_secret_sharing
+from tools.encryption import generate_key
 from custom_exceptions import exceptions
 
 
@@ -36,7 +36,7 @@ class KeyManager:
 
         # attempt to recover key
         try:
-            secret_key = crypto.shamir_secret_sharing.reconstruct(shares)
+            secret_key = tools.shamir_secret_sharing.reconstruct(shares)
         except exceptions.DecodeError:
             raise exceptions.KeyReconstructionError
 
@@ -48,7 +48,7 @@ class KeyManager:
         key = generate_key()
 
         # compute new shares using len(providers) and key_reconstruction_threshold
-        shares = crypto.shamir_secret_sharing.share(key, self.key_reconstruction_threshold, len(self.providers))
+        shares = tools.shamir_secret_sharing.share(key, self.key_reconstruction_threshold, len(self.providers))
 
         # write shares to providers
         failures = []
