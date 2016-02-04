@@ -37,3 +37,15 @@ def test_malicious_ciphertext():
     # Then attempt to decrypt
     with pytest.raises(exceptions.DecryptError):
         crypto.encryption.decrypt(malicious_ciphertext, key)
+
+
+def test_short_encryption_key():
+    # Set up a normal encryption
+    plaintext = "FOO BAR woohoo!"
+    key = crypto.encryption.generate_key()
+
+    # Drop a few bytes from the key
+    short_key = key[:-3]
+
+    with pytest.raises(exceptions.LibraryException):
+        crypto.encryption.encrypt(plaintext, short_key)

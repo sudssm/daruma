@@ -7,9 +7,6 @@ from crypto import encryption, erasure_encoding
 
 class FileDistributor:
     def __init__(self, providers, file_reconstruction_threshold):
-        if file_reconstruction_threshold > providers:
-            raise exceptions.IllegalArgumentError
-
         self.providers = providers
         self.num_providers = len(providers)
         self.file_reconstruction_threshold = file_reconstruction_threshold

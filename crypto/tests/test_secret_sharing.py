@@ -45,3 +45,8 @@ def test_secret_with_leading_zeroes():
     # Then attempt to recover
     recovered_secret = crypto.shamir_secret_sharing.reconstruct(shares[0:2])
     assert recovered_secret == my_secret
+
+
+def test_bad_configuration():
+    with pytest.raises(exceptions.LibraryException):
+        crypto.shamir_secret_sharing.share(secret, 5, 2)

@@ -1,4 +1,5 @@
 import binascii
+import logging
 from secretsharing import SecretSharer
 from custom_exceptions import exceptions
 import nacl.secret
@@ -16,11 +17,15 @@ def share(secret, threshold, total_shares):
 
     Returns:
         A list of values suitable to be passed to the reconstruct function.
-    """
-    if threshold > total_shares:
-        raise exceptions.IllegalArgumentException
 
-    return SecretSharer.split_secret(binascii.hexlify(secret), threshold, total_shares)
+    Raises:
+        LibraryException: An exception occurred in the backing secret sharing library.
+    """
+    try:
+        return SecretSharer.split_secret(binascii.hexlify(secret), threshold, total_shares)
+    except Exception:
+        logging.exception("Exception encountered during secret share creation")
+        raise exceptions.LibraryException
 
 
 def reconstruct(shares):
@@ -37,11 +42,17 @@ def reconstruct(shares):
 
     Raises:
         DecodeError: Decoding the secret was unsuccessful (e.g. the shares were improperly formatted).
+
+    Raises:
+        LibraryException: An exception occurred in the backing secret sharing library.
     """
     try:
         secret = SecretSharer.recover_secret(shares)
     except ValueError:
         raise exceptions.DecodeError
+    except Exception:
+        logging.exception("Exception encountered during secret share reconstruction")
+        raise exceptions.LibraryException
 
     # TODO BAD! this is going to go away
     # once michelle finishes her crypto stuff

@@ -47,3 +47,9 @@ def test_corrupt_shares_wrong_sizes():
     # Then attempt to decode
     with pytest.raises(exceptions.DecodeError):
         crypto.erasure_encoding.reconstruct(new_shares, 2, 5)
+
+
+def test_bad_configuration():
+    message1 = "FOO BAR woohoo!"
+    with pytest.raises(exceptions.LibraryException):
+        crypto.erasure_encoding.share(message1, 5, 3)
