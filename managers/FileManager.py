@@ -8,14 +8,13 @@ from tools.gen import generate_name
 
 
 class FileManager:
-    # the name of the manifest file
-    MANIFEST_NAME = "manifest"
-
     # set setup to True in order to create a new system
-    def __init__(self, providers, file_reconstruction_threshold, master_key, setup=False):
+    def __init__(self, secret_box, providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
+        self.secret_box = secret_box
         self.providers = providers
         self.file_reconstruction_threshold = file_reconstruction_threshold
         self.master_key = master_key
+        self.manifest_name = manifest_name
         self.distributor = FileDistributor(providers, file_reconstruction_threshold)
 
         if setup:
@@ -26,7 +25,7 @@ class FileManager:
 
     def get_manifest(self):
         try:
-            manifest_str, failures = self.distributor.get(self.MANIFEST_NAME, self.master_key)
+            manifest_str, failures = self.distributor.get(self.manifest_name, self.master_key)
         except exceptions.FileReconstructionError:
             raise exceptions.ManifestGetError
 
@@ -41,8 +40,16 @@ class FileManager:
 
     def distribute_manifest(self):
         content = str(self.manifest)
-        _, failures = self.distributor.put(self.MANIFEST_NAME, content, self.master_key)
+        _, failures = self.distributor.put(self.manifest_name, content, self.master_key)
         # TODO handle failures
+        # after handling, will have to create new key and reshare with
+        # self.secret_box.update_master_key
+
+    def update_key_and_name(self, master_key, manifest_name):
+        self.master_key = master_key
+        self.manifest_name = manifest_name
+        self.distribute_manifest()
+        # TODO make sure this doesnt go to infinite loop on repeated distributes
 
     def refresh(self):
         pass

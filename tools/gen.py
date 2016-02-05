@@ -4,6 +4,9 @@ import logging
 from uuid import uuid4
 from custom_exceptions import exceptions
 
+KEY_SIZE = nacl.secret.SecretBox.KEY_SIZE
+NAME_SIZE = 32
+
 
 def generate_key():
     """
@@ -13,7 +16,7 @@ def generate_key():
         LibraryException: An exception occurred in the backing cryptographic library.
     """
     try:
-        return nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+        return nacl.utils.random(KEY_SIZE)
 
     except Exception:
         logging.exception("Exception encountered during key generation")

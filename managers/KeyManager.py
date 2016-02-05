@@ -1,6 +1,6 @@
 # This file handles keys using SSSS
 import tools.shamir_secret_sharing
-from tools.gen import generate_key
+import tools.gen
 from custom_exceptions import exceptions
 
 
@@ -16,7 +16,7 @@ class KeyManager:
     # throws ProvidersUnconfigured if no provider has a keyshare
     # throws ProvidersDown if not enough providers have keyshares
     # probably should throw some sort of connection exception too
-    def recover_key(self):
+    def recover_key_and_name(self):
         def get_share(provider):
             return provider.get(self.KEY_FILE_NAME)
 
@@ -36,19 +36,23 @@ class KeyManager:
 
         # attempt to recover key
         try:
-            secret_key = tools.shamir_secret_sharing.reconstruct(shares)
+            plaintext = tools.shamir_secret_sharing.reconstruct(shares)
+            name = plaintext[0:tools.gen.NAME_SIZE]
+            key = plaintext[-tools.gen.KEY_SIZE:]
+            
         except exceptions.DecodeError:
             raise exceptions.KeyReconstructionError
 
-        return secret_key
+        return key, name
 
-    # distributes a new key to all providers
+    # distributes a new key and name to all providers
     # probably throws exception if the provider's put method fails
-    def distribute_new_key(self):
-        key = generate_key()
+    def distribute_key_and_name(self, key, name):
+        # concatenate them together; both lengths are fixed
+        plaintext = name + key
 
         # compute new shares using len(providers) and key_reconstruction_threshold
-        shares = tools.shamir_secret_sharing.share(key, self.key_reconstruction_threshold, len(self.providers))
+        shares = tools.shamir_secret_sharing.share(plaintext, self.key_reconstruction_threshold, len(self.providers))
 
         # write shares to providers
         failures = []
@@ -60,4 +64,3 @@ class KeyManager:
 
         # TODO handle failures
         # TODO re-handle manifest
-        return key

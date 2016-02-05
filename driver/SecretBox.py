@@ -5,6 +5,7 @@
 from managers.KeyManager import KeyManager
 from managers.FileManager import FileManager
 from custom_exceptions import exceptions
+from tools import gen
 
 
 class SecretBox:
@@ -38,15 +39,18 @@ class SecretBox:
         for provider in self.providers:
             provider.wipe()
 
-        self.master_key = self.key_manager.distribute_new_key()
+        master_key = gen.generate_key()
+        manifest_name = gen.generate_name()
+
+        self.key_manager.distribute_key_and_name(master_key, manifest_name)
         # TODO: error handling if we can't upload key shares
-        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key, setup=True)
+        self.file_manager = FileManager(self, self.providers, self.file_reconstruction_threshold, master_key, manifest_name, setup=True)
 
         """
         except ProvidersUnconfigured:
             # case where no provider has a keyshare
-            self.master_key = self.key_manager.create_master_key()
-            self.key_manager.distribute_new_key(self.master_key)
+            master_key = self.key_manager.create_master_key()
+            self.key_manager.distribute_new_key(master_key)
             # TODO probably should catch connection errors
         except ProvidersDown:
             # case where some providers have keyshares, and others don't
@@ -56,9 +60,19 @@ class SecretBox:
 
     # alternative to provision, when we are resuming a previous session
     def start(self):
-        self.master_key = self.key_manager.recover_key()
+        master_key, manifest_name = self.key_manager.recover_key_and_name()
         # TODO: error handling if we can't recover the key
-        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, self.master_key)
+        self.file_manager = FileManager(self, self.providers, self.file_reconstruction_threshold, master_key, manifest_name)
+
+    # change the master key
+    def update_master_key(self):
+        master_key = gen.generate_key()
+        manifest_name = gen.generate_name()
+
+        # upload new manifest first, then distribute new key to be atomic
+        self.file_manager.update_key_and_name(master_key, manifest_name)
+        self.key_manager.distribute_key_and_name(master_key, manifest_name)
+        # TODO: error handling if we can't upload key shares
 
     # public methods
 
@@ -69,7 +83,7 @@ class SecretBox:
             # will need to make calls to know the capacity of each provider
         """
         self.providers.append(provider)
-        self.key_manager.distribute_new_key(self.master_key)
+        self.key_manager.distribute_new_key(master_key)
         # TODO: also need to update the file manager with the new master key
         # or make a new file manager
         self.file_manager.refresh()
