@@ -80,7 +80,7 @@ class OperationFailure(Exception):
     Raised only by read operations - any failure in a write operation will be fatal
     result should only be None if the original operation wasn't supposed to return anything
     (this only happens when the operation updates a cache)
-    failures - a list of Exceptions, thrown by some provider
+    failures - a list of Exceptions; one of [AuthFailure, ProviderOperationFailure, ConnectionFailure]
     """
     def __init__(self, failures, result):
         self.failures = failures
@@ -90,7 +90,7 @@ class OperationFailure(Exception):
 class FatalOperationFailure(Exception):
     """
     A multi-provider operation had some failure that was fatal
-    failures - a list of Exceptions, thrown by some provider
+    failures - a list of Exceptions; one of [AuthFailure, ProviderOperationFailure, ConnectionFailure]
     """
     def __init__(self, failures):
         self.failures = failures
