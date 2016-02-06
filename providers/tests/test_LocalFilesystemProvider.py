@@ -26,14 +26,14 @@ def test_exception_has_provider():
         FS.wipe()
         FS.get("file1")
         assert False
-    except exceptions.OperationFailure as e:
+    except exceptions.ProviderOperationFailure as e:
         assert e.provider == FS
 
 
 def test_get_nonexisting():
     FS = LocalFilesystemProvider("tmp")
     FS.wipe()
-    with pytest.raises(exceptions.OperationFailure):
+    with pytest.raises(exceptions.ProviderOperationFailure):
         FS.get("file1")
 
 
@@ -41,7 +41,7 @@ def test_delete():
     FS = LocalFilesystemProvider("tmp")
     FS.put("file1", "abc")
     FS.delete("file1")
-    with pytest.raises(exceptions.OperationFailure):
+    with pytest.raises(exceptions.ProviderOperationFailure):
         FS.get("file1")
 
 

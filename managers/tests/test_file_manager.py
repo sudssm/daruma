@@ -57,7 +57,7 @@ def test_wrong_master_key():
     for provider in providers:
         provider.wipe()
     FileManager(providers, 3, master_key, manifest_name, setup=True)
-    with pytest.raises(exceptions.ManifestGetError):
+    with pytest.raises(exceptions.FatalOperationFailure):
         FM = FileManager(providers, 3, generate_key(), manifest_name)
         FM.ls()
 
@@ -66,7 +66,7 @@ def test_wrong_manifest_name():
     for provider in providers:
         provider.wipe()
     FileManager(providers, 3, master_key, manifest_name, setup=True)
-    with pytest.raises(exceptions.ManifestGetError):
+    with pytest.raises(exceptions.FatalOperationFailure):
         FM = FileManager(providers, 3, master_key, generate_filename())
         FM.ls()
 
@@ -93,8 +93,13 @@ def test_corrupt_recover():
     providers[0].wipe()
     providers[2].wipe()
 
-    FM = FileManager(providers, 3, master_key, manifest_name)
-    assert FM.get("test") == "data"
+    try:
+        FM = FileManager(providers, 3, master_key, manifest_name)
+        FM.get("test")
+        assert False
+    except exceptions.OperationFailure as e:
+        assert e.result == "data"
+        assert len(e.failures) == 4
 
 
 def test_corrupt_fail():
@@ -106,6 +111,9 @@ def test_corrupt_fail():
     providers[1].wipe()
     providers[2].wipe()
 
-    with pytest.raises(exceptions.ManifestGetError):
+    try:
         FM = FileManager(providers, 3, master_key, manifest_name)
         FM.ls()
+        assert False
+    except exceptions.FatalOperationFailure as e:
+        assert len(e.failures) == 3

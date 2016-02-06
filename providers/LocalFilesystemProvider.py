@@ -37,7 +37,7 @@ class LocalFilesystemProvider(BaseProvider):
             with open(translated_filepath, mode="rb") as target_file:
                 return target_file.read()
         except (IOError, OSError):
-            raise exceptions.OperationFailure(self)
+            raise exceptions.ProviderOperationFailure(self)
 
     def put(self, filename, data):
         translated_filepath = self.__get_translated_filepath(filename)
@@ -45,14 +45,14 @@ class LocalFilesystemProvider(BaseProvider):
             with open(translated_filepath, mode="wb") as target_file:
                 target_file.write(data)
         except (IOError, OSError):
-            raise exceptions.OperationFailure(self)
+            raise exceptions.ProviderOperationFailure(self)
 
     def delete(self, filename):
         translated_filepath = self.__get_translated_filepath(filename)
         try:
             os.remove(translated_filepath)
         except (IOError, OSError):
-            raise exceptions.OperationFailure(self)
+            raise exceptions.ProviderOperationFailure(self)
 
     def wipe(self):
         translated_root_dir = self.__get_translated_filepath("")
@@ -60,4 +60,4 @@ class LocalFilesystemProvider(BaseProvider):
             shutil.rmtree(translated_root_dir)
             os.makedirs(translated_root_dir, DIRECTORY_MODE)
         except (IOError, OSError):
-            raise exceptions.OperationFailure(self)
+            raise exceptions.ProviderOperationFailure(self)

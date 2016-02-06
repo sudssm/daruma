@@ -18,9 +18,9 @@ class FileDistributor:
             data: bytestring
             key: an optional key used to encrypt
         Returns:
-            tuple: (key, failures)
             key: bytestring of the key used for encryption
-            failures: list of failures
+        Raises:
+            FatalOperationFailure if any provider failed
         """
         # encrypt
         if key is None:
@@ -37,10 +37,13 @@ class FileDistributor:
                 provider.put(filename, share)
 
             # pass up AuthFailure, get user to relogin.
-            except (exceptions.ConnectionFailure, exceptions.OperationFailure) as e:
+            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
                 failures.append(e)
 
-        return (key, failures)
+        if len(failures) > 0:
+            raise exceptions.FatalOperationFailure(failures)
+
+        return key
 
     def get(self, filename, key):
         """
@@ -48,10 +51,10 @@ class FileDistributor:
             filename: string
             key: bytestring
         Returns:
-            result: bytestring or None if error
-            failures: map of provider to error
+            result: bytestring
         Raises:
              FileReconstructionError
+             OperationFailure if any provider failed
         """
         def get_share(provider):
             return provider.get(filename)
@@ -61,29 +64,35 @@ class FileDistributor:
         for provider in self.providers:
             try:
                 shares_map[provider] = get_share(provider)
-            except (exceptions.ConnectionFailure, exceptions.OperationFailure) as e:
+            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
                 failures.append(e)
 
         shares = shares_map.values()
-        if len(shares) < self.file_reconstruction_threshold:
-            return (None, failures)
 
-        # TODO handle RS differently
-        # If we can recover but have some cheating shares, we treat them as failures
-        # If we can't recover at all, this should throw an exception
-        # decode Reed Solomon
+        # TODO move this into RS lib
+        if len(shares) < self.file_reconstruction_threshold:
+            raise exceptions.FatalOperationFailure(failures)
+
+        # TODO RS should identify broken shares
         try:
             ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
             # decrypt
             data = encryption.decrypt(ciphertext, key)
         except (exceptions.DecodeError, exceptions.DecryptError):
-            raise exceptions.FileReconstructionError
+            # we could not recover the file
+            raise exceptions.FatalOperationFailure(failures)
 
-        return (data, failures)
+        if len(failures) > 0:
+            raise exceptions.OperationFailure(failures, data)
+
+        return data
 
     def delete(self, filename):
+        failures = []
         for provider in self.providers:
             try:
                 provider.delete(filename)
-            except (exceptions.ConnectionFailure, exceptions.OperationFailure):
-                pass
+            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
+                failures.append(e)
+        if len(failures) > 0:
+            raise exceptions.FatalOperationFailure(failures)

@@ -18,7 +18,7 @@ class BaseProvider(object):
         # throw an exception if it isn't
         pass
 
-    # the rest of these should only throw OperationFailure
+    # the rest of these should only throw ProviderOperationFailure
     def get(self, filename):
         pass
 

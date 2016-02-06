@@ -38,31 +38,33 @@ class SecretBox:
     # start from scratch and create a new key
     def provision(self):
         for provider in self.providers:
-            provider.wipe()
+            try:
+                provider.wipe()
+            except exceptions.ProviderOperationFailure:
+                # TODO maybe diagnose here?
+                pass
 
         master_key = generate_key()
         manifest_name = generate_filename()
 
-        self.key_manager.distribute_key_and_name(master_key, manifest_name)
-        # TODO: error handling if we can't upload key shares
+        try:
+            self.key_manager.distribute_key_and_name(master_key, manifest_name)
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
         self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name, setup=True)
-
-        """
-        except ProvidersUnconfigured:
-            # case where no provider has a keyshare
-            master_key = self.key_manager.create_master_key()
-            self.key_manager.distribute_new_key(master_key)
-            # TODO probably should catch connection errors
-        except ProvidersDown:
-            # case where some providers have keyshares, and others don't
-            # and we have don't have enough shares to recover the key
-            print "sorry, you're screwed (or maybe no internet connection?)"
-        """
 
     # alternative to provision, when we are resuming a previous session
     def start(self):
-        master_key, manifest_name = self.key_manager.recover_key_and_name()
-        # TODO: error handling if we can't recover the key
+        try:
+            master_key, manifest_name = self.key_manager.recover_key_and_name()
+        except exceptions.OperationFailure as e:
+            master_key, manifest_name = e.result
+            # TODO diagnose and repair
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
+
         self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name)
 
     # change the master key
@@ -71,9 +73,12 @@ class SecretBox:
         manifest_name = generate_filename()
 
         # upload new manifest first, then distribute new key to be atomic
-        self.file_manager.update_key_and_name(master_key, manifest_name)
-        self.key_manager.distribute_key_and_name(master_key, manifest_name)
-        # TODO: error handling if we can't upload key shares
+        try:
+            self.file_manager.update_key_and_name(master_key, manifest_name)
+            self.key_manager.distribute_key_and_name(master_key, manifest_name)
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
 
     # public methods
 
@@ -91,13 +96,42 @@ class SecretBox:
         """
 
     def ls(self):
-        return self.file_manager.ls()
+        # TODO maybe change this when we handle manifest caching?
+        try:
+            return self.file_manager.ls()
+        except exceptions.OperationFailure as e:
+            # TODO diagnose and repair
+            return e.result
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
 
     def get(self, path):
-        return self.file_manager.get(path)
+        try:
+            return self.file_manager.get(path)
+        except exceptions.OperationFailure as e:
+            # TODO diagnose and repair
+            return e.result
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
 
     def put(self, path, data):
-        return self.file_manager.put(path, data)
+        try:
+            return self.file_manager.put(path, data)
+        except exceptions.OperationFailure as e:
+            # TODO diagnose and repair
+            return e.result
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
 
     def delete(self, path):
-        return self.file_manager.delete(path)
+        try:
+            return self.file_manager.delete(path)
+        except exceptions.OperationFailure as e:
+            # TODO diagnose and repair
+            return e.result
+        except exceptions.FatalOperationFailure:
+            # TODO diagnose
+            raise
