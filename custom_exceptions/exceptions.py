@@ -38,7 +38,7 @@ class AuthFailure(Exception):
         self.provider = provider
 
 
-class OperationFailure(Exception):
+class ProviderOperationFailure(Exception):
     """
     The provider rejected the desired operation (reason unknown)
     """
@@ -73,19 +73,22 @@ class FileNotFound(Exception):
 
 
 # manager exceptions
-class ManifestGetError(Exception):
+class OperationFailure(Exception):
     """
-    Thrown when there was an error recovering the manifest
+    A multi-provider operation had some failure, but was not fatal
+    Must contain the result of the operation, and the list of failures
+    Raised only by read operations - any failure in a write operation will be fatal
+    result should only be None if the original operation wasn't supposed to return anything
     """
+    def __init__(self, failures, result):
+        self.failures = failures
+        self.result = result
 
 
-class KeyReconstructionError(Exception):
+class FatalOperationFailure(Exception):
     """
-    Exception for errors in decoding a secret
+    A multi-provider operation had some failure that was fatal
+    Contains a list of failures
     """
-
-
-class FileReconstructionError(Exception):
-    """
-    Exception for errors in decoding a file
-    """
+    def __init__(self, failures):
+        self.failures = failures

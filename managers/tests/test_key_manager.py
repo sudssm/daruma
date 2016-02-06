@@ -3,7 +3,6 @@ from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
 from tools.utils import generate_filename
-import pytest
 
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 
@@ -21,9 +20,11 @@ def test_recover_nonexistent():
     for provider in providers:
         provider.wipe()
     KM = KeyManager(providers, 3)
-    # TODO should be a better error
-    with pytest.raises(Exception):
+    try:
         KM.recover_key_and_name()
+        assert False
+    except exceptions.FatalOperationFailure as e:
+        assert len(e.failures) == 5
 
 
 def test_multiple_sessions():
@@ -39,7 +40,12 @@ def test_corrupt_recover():
     KM.distribute_key_and_name(key, name)
     providers[0].wipe()
     providers[2].wipe()
-    assert KM.recover_key_and_name() == (key, name)
+    try:
+        KM.recover_key_and_name()
+        assert False
+    except exceptions.OperationFailure as e:
+        assert e.result == (key, name)
+        assert len(e.failures) == 2
 
 
 def test_corrupt_fail():
@@ -48,5 +54,8 @@ def test_corrupt_fail():
     providers[0].wipe()
     providers[1].wipe()
     providers[2].wipe()
-    with pytest.raises(exceptions.KeyReconstructionError):
+    try:
         KM.recover_key_and_name()
+        assert False
+    except exceptions.FatalOperationFailure as e:
+        assert len(e.failures) == 3
