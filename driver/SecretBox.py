@@ -44,7 +44,7 @@ class SecretBox:
 
         self.key_manager.distribute_key_and_name(master_key, manifest_name)
         # TODO: error handling if we can't upload key shares
-        self.file_manager = FileManager(self, self.providers, self.file_reconstruction_threshold, master_key, manifest_name, setup=True)
+        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name, setup=True)
 
         """
         except ProvidersUnconfigured:
@@ -62,7 +62,7 @@ class SecretBox:
     def start(self):
         master_key, manifest_name = self.key_manager.recover_key_and_name()
         # TODO: error handling if we can't recover the key
-        self.file_manager = FileManager(self, self.providers, self.file_reconstruction_threshold, master_key, manifest_name)
+        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name)
 
     # change the master key
     def update_master_key(self):

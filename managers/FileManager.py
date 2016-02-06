@@ -9,8 +9,7 @@ from tools.gen import generate_name
 
 class FileManager:
     # set setup to True in order to create a new system
-    def __init__(self, secret_box, providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
-        self.secret_box = secret_box
+    def __init__(self, providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
         self.providers = providers
         self.file_reconstruction_threshold = file_reconstruction_threshold
         self.master_key = master_key
@@ -41,9 +40,7 @@ class FileManager:
     def distribute_manifest(self):
         content = str(self.manifest)
         _, failures = self.distributor.put(self.manifest_name, content, self.master_key)
-        # TODO handle failures
-        # after handling, will have to create new key and reshare with
-        # self.secret_box.update_master_key
+        # TODO handle failures - will be passed up
 
     def update_key_and_name(self, master_key, manifest_name):
         self.master_key = master_key
@@ -66,6 +63,7 @@ class FileManager:
         codename = generate_name()
         key, failures = self.distributor.put(codename, data)
         # TODO handle failed_providers
+        # early return if this fails
 
         old_codename = self.manifest.update_manifest(name, codename, len(data), key)
 
