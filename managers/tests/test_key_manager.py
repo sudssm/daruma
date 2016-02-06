@@ -2,13 +2,13 @@ from managers.KeyManager import KeyManager
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
-from tools.utils import generate_name
+from tools.utils import generate_filename
 import pytest
 
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 
 key = generate_key()
-name = generate_name()
+name = generate_filename()
 
 
 def test_roundtrip():

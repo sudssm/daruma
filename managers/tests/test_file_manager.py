@@ -2,12 +2,12 @@ from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
-from tools.utils import generate_name
+from tools.utils import generate_filename
 import pytest
 
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 master_key = generate_key()
-manifest_name = generate_name()
+manifest_name = generate_filename()
 
 
 def test_init():
@@ -67,7 +67,7 @@ def test_wrong_manifest_name():
         provider.wipe()
     FileManager(providers, 3, master_key, manifest_name, setup=True)
     with pytest.raises(exceptions.ManifestGetError):
-        FM = FileManager(providers, 3, master_key, generate_name())
+        FM = FileManager(providers, 3, master_key, generate_filename())
         FM.ls()
 
 

@@ -3,7 +3,7 @@
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
-from tools.utils import generate_name
+from tools.utils import generate_filename
 # TODO cache the manifest intelligently
 
 
@@ -60,7 +60,7 @@ class FileManager:
 
     def put(self, name, data):
         self.get_manifest()
-        codename = generate_name()
+        codename = generate_filename()
         key, failures = self.distributor.put(codename, data)
         # TODO handle failed_providers
         # early return if this fails

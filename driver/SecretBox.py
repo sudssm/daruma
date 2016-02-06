@@ -6,7 +6,7 @@ from managers.KeyManager import KeyManager
 from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
-from tools.utils import generate_name
+from tools.utils import generate_filename
 
 
 class SecretBox:
@@ -41,7 +41,7 @@ class SecretBox:
             provider.wipe()
 
         master_key = generate_key()
-        manifest_name = generate_name()
+        manifest_name = generate_filename()
 
         self.key_manager.distribute_key_and_name(master_key, manifest_name)
         # TODO: error handling if we can't upload key shares
@@ -68,7 +68,7 @@ class SecretBox:
     # change the master key
     def update_master_key(self):
         master_key = generate_key()
-        manifest_name = generate_name()
+        manifest_name = generate_filename()
 
         # upload new manifest first, then distribute new key to be atomic
         self.file_manager.update_key_and_name(master_key, manifest_name)

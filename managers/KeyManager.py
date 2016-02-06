@@ -38,7 +38,7 @@ class KeyManager:
         # attempt to recover key
         try:
             plaintext = tools.shamir_secret_sharing.reconstruct(shares)
-            name = plaintext[0:tools.utils.NAME_SIZE]
+            name = plaintext[0:tools.utils.FILENAME_SIZE]
             key = plaintext[-tools.encryption.KEY_SIZE:]
 
         except exceptions.DecodeError:
