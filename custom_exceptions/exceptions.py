@@ -79,6 +79,7 @@ class OperationFailure(Exception):
     Must contain the result of the operation, and the list of failures
     Raised only by read operations - any failure in a write operation will be fatal
     result should only be None if the original operation wasn't supposed to return anything
+    failures - a list of Exceptions, thrown by some provider
     """
     def __init__(self, failures, result):
         self.failures = failures
@@ -88,7 +89,7 @@ class OperationFailure(Exception):
 class FatalOperationFailure(Exception):
     """
     A multi-provider operation had some failure that was fatal
-    Contains a list of failures
+    failures - a list of Exceptions, thrown by some provider
     """
     def __init__(self, failures):
         self.failures = failures
