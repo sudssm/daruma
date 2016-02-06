@@ -1,6 +1,6 @@
 import managers.manifest
 from custom_exceptions import exceptions
-from crypto.encryption import generate_key
+from tools.encryption import generate_key
 import copy
 import pytest
 

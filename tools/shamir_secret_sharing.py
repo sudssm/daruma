@@ -2,7 +2,6 @@ import binascii
 import logging
 from secretsharing import SecretSharer
 from custom_exceptions import exceptions
-import nacl.secret
 
 
 def share(secret, threshold, total_shares):
@@ -21,6 +20,8 @@ def share(secret, threshold, total_shares):
     Raises:
         LibraryException: An exception occurred in the backing secret sharing library.
     """
+    # TODO remove this after RSS is implemented
+    secret = "*" + secret
     try:
         return SecretSharer.split_secret(binascii.hexlify(secret), threshold, total_shares)
     except Exception:
@@ -54,8 +55,7 @@ def reconstruct(shares):
         logging.exception("Exception encountered during secret share reconstruction")
         raise exceptions.LibraryException
 
-    # TODO BAD! this is going to go away
-    # once michelle finishes her crypto stuff
-    while len(secret) < nacl.secret.SecretBox.KEY_SIZE * 2:
-        secret = "0" + secret
-    return binascii.unhexlify(secret)
+    result = binascii.unhexlify(secret)
+
+    # TODO remove this after RSS implemented
+    return result[1:]
