@@ -1,6 +1,7 @@
 # This file handles keys using SSSS
 import tools.shamir_secret_sharing
-import tools.gen
+import tools.encryption
+import tools.utils
 from custom_exceptions import exceptions
 
 
@@ -37,9 +38,9 @@ class KeyManager:
         # attempt to recover key
         try:
             plaintext = tools.shamir_secret_sharing.reconstruct(shares)
-            name = plaintext[0:tools.gen.NAME_SIZE]
-            key = plaintext[-tools.gen.KEY_SIZE:]
-            
+            name = plaintext[0:tools.utils.NAME_SIZE]
+            key = plaintext[-tools.encryption.KEY_SIZE:]
+
         except exceptions.DecodeError:
             raise exceptions.KeyReconstructionError
 

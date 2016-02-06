@@ -3,7 +3,7 @@
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
-from tools.gen import generate_name
+from tools.utils import generate_name
 # TODO cache the manifest intelligently
 
 
