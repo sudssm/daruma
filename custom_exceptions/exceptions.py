@@ -79,6 +79,7 @@ class OperationFailure(Exception):
     Must contain the result of the operation, and the list of failures
     Raised only by read operations - any failure in a write operation will be fatal
     result should only be None if the original operation wasn't supposed to return anything
+    (this only happens when the operation updates a cache)
     failures - a list of Exceptions, thrown by some provider
     """
     def __init__(self, failures, result):
