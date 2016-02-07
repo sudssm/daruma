@@ -1,4 +1,4 @@
-# trust-no-one
+# trust-no-one [![Build Status](https://travis-ci.com/sudssm/trust-no-one.svg?token=9r7x75stRuvJScvvvedh&branch=master)](https://travis-ci.com/sudssm/trust-no-one)
 
 ## Installation
 
