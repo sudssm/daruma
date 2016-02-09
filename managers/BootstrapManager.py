@@ -14,7 +14,8 @@ class Bootstrap:
     """
 
     # network-endian, string, string, int
-    FORMAT = "!" + str(KEY_SIZE) + "s" + str(FILENAME_SIZE) + "si"
+    STRUCT_FORMAT = "!" + str(KEY_SIZE) + "s" + str(FILENAME_SIZE) + "si"
+    SIZE = struct.calcsize(STRUCT_FORMAT)
 
     def __init__(self, key, manifest_name, file_reconstruction_threshold):
         self.key = str(key)
@@ -22,7 +23,7 @@ class Bootstrap:
         self.file_reconstruction_threshold = file_reconstruction_threshold
 
     def __str__(self):
-        return struct.pack(self.FORMAT, self.key, self.manifest_name, self.file_reconstruction_threshold)
+        return struct.pack(self.STRUCT_FORMAT, self.key, self.manifest_name, self.file_reconstruction_threshold)
 
     def __eq__(self, other):
         return other is not None and \
@@ -31,7 +32,7 @@ class Bootstrap:
 
     @staticmethod
     def parse(string):
-        key, manifest_name, file_reconstruction_threshold = struct.unpack(Bootstrap.FORMAT, string)
+        key, manifest_name, file_reconstruction_threshold = struct.unpack(Bootstrap.STRUCT_FORMAT, string)
         return Bootstrap(key, manifest_name, file_reconstruction_threshold)
 
 
@@ -48,13 +49,15 @@ class BootstrapManager:
         Returns a Bootstrap object, collected from self.Providers
         Raises FatalOperationFailure or OperationFailure
         """
+        # maps provider to bootstrap share
         shares_map = {}
-        # threshold vote to provider
+        # maps threshold vote to providers that voted
         thresholds_map = defaultdict(list)
         failures = []
         for provider in self.providers:
             try:
                 shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
+                # track provider votes for bootstrap threshold values
                 thresholds_map[int(provider.get(self.BOOTSTRAP_THRESHOLD_FILE_NAME))].append(provider)
             except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
                 failures.append(e)

@@ -12,6 +12,9 @@ file_reconstruction_threshold = 2
 bootstrap = Bootstrap(key, name, file_reconstruction_threshold)
 
 
+def test_size():
+    assert Bootstrap.SIZE == len(str(bootstrap))
+
 def test_roundtrip():
     BM = BootstrapManager(providers, 2)
     BM.distribute_bootstrap(bootstrap)
