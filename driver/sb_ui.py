@@ -33,11 +33,10 @@ except:
 
 
 providers = [LocalFilesystemProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
-SB = SecretBox(providers, k_key, k_file)
 if cmd == "init":
-    SB.provision()
+    SB = SecretBox.provision(providers, k_key, k_file)
 else:
-    SB.start()
+    SB = SecretBox.load(providers)
 
 while True:
     print "\n"
