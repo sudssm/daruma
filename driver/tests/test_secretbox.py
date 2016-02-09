@@ -7,29 +7,25 @@ providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 
 
 def test_init():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     assert len(SB.ls()) == 0
 
 
 def test_roundtrip():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     assert SB.ls() == ["test"]
     assert SB.get("test") == "data"
 
 
 def test_get_nonexistent():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     with pytest.raises(exceptions.FileNotFound):
         SB.get("blah")
 
 
 def test_delete():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     SB.delete("test")
     with pytest.raises(exceptions.FileNotFound):
@@ -37,63 +33,54 @@ def test_delete():
 
 
 def test_update():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     SB.put("test", "newdata")
     assert SB.get("test") == "newdata"
 
 
 def test_multiple_sessions():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     SB.put("test2", "moredata")
     assert sorted(SB.ls()) == ["test", "test2"]
 
-    SB = SecretBox(providers, 3, 3)
-    SB.start()
+    SecretBox.load(providers)
     assert sorted(SB.ls()) == ["test", "test2"]
     assert SB.get("test") == "data"
     assert SB.get("test2") == "moredata"
 
 
 def test_corrupt_recover():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     providers[0].wipe()
     providers[2].wipe()
 
-    SB = SecretBox(providers, 3, 3)
-    SB.start()
+    SecretBox.load(providers)
     assert SB.get("test") == "data"
 
 
 def test_corrupt_fail():
-    SB = SecretBox(providers, 3, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     providers[0].wipe()
     providers[1].wipe()
     providers[2].wipe()
 
     with pytest.raises(exceptions.FatalOperationFailure):
-        SB = SecretBox(providers, 3, 3)
-        SB.start()
+        SecretBox.load(providers)
 
 
 def test_different_ks():
-    SB = SecretBox(providers, 2, 3)
-    SB.provision()
+    SB = SecretBox.provision(providers, 2, 3)
     SB.put("test", "data")
     providers[0].wipe()
     providers[1].wipe()
     providers[2].wipe()
 
     # should be able to recover the key, but not files
-    SB = SecretBox(providers, 2, 3)
-    SB.start()
+    SB = SecretBox.load(providers)
     try:
         SB.ls()
         assert False
@@ -102,15 +89,13 @@ def test_different_ks():
 
 
 def test_different_ks_2():
-    SB = SecretBox(providers, 3, 2)
-    SB.provision()
+    SB = SecretBox.provision(providers, 3, 2)
     SB.put("test", "data")
     providers[0].wipe()
     providers[1].wipe()
 
     # should be able to recover the key
-    SB = SecretBox(providers, 3, 2)
-    SB.start()
+    SB = SecretBox.load(providers)
 
     providers[0].wipe()
     providers[1].wipe()
@@ -118,8 +103,7 @@ def test_different_ks_2():
 
     # but now can't recover the key
     with pytest.raises(Exception):
-        SB2 = SecretBox(providers, 3, 2)
-        SB2.start()
+        SecretBox.load(providers, 3, 2)
 
     # should still be able to recover the files
     # even though 3rd provider went down after initializing

@@ -2,7 +2,7 @@
 
 # TODO note to self: think about caching
 
-from managers.KeyManager import KeyManager
+from managers.BootstrapManager import BootstrapManager, Bootstrap
 from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
@@ -11,62 +11,78 @@ from tools.utils import generate_filename
 
 class SecretBox:
 
-    def __init__(self, providers, key_reconstruction_threshold, file_reconstruction_threshold):
-        # key_reconstruction_threshold: the number of providers that need to be up to recover the key
-        # file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
-        # providers: a list of providers
+    def __init__(self, bootstrap_manager, file_manager):
+        """
+        Construct a new SecretBox object
+        NB: In normal usage, one should use the static load or provision methods
+        """
+        self.bootstrap_manager = bootstrap_manager
+        self.file_manager = file_manager
 
-        if not self.verify_parameters(providers, key_reconstruction_threshold, file_reconstruction_threshold):
-            raise exceptions.IllegalArgumentException
+    @staticmethod
+    def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
+        """
+        Create a new SecretBox
+        Providers: a list of providers
+        bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key
+        file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
+        Returns a constructed SecretBox object
+        Raises FatalOperationFailure or OperationFailure
+        """
 
-        self.providers = providers
-        self.key_reconstruction_threshold = key_reconstruction_threshold
-        self.file_reconstruction_threshold = file_reconstruction_threshold
-
-        # the key manager uses SSSS
-        self.key_manager = KeyManager(self.providers, self.key_reconstruction_threshold)
-        self.file_manager = None
-
-    # TODO: update with other bad cases
-    def verify_parameters(self, providers, key_reconstruction_threshold, file_reconstruction_threshold):
-        return key_reconstruction_threshold >= 2 and \
-            file_reconstruction_threshold >= 2 and \
-            len(providers) >= 2 and \
-            key_reconstruction_threshold < len(providers) and \
-            file_reconstruction_threshold < len(providers)
-
-    # start from scratch and create a new key
-    def provision(self):
-        for provider in self.providers:
+        for provider in providers:
             try:
                 provider.wipe()
             except exceptions.ProviderOperationFailure:
                 # TODO maybe diagnose here?
+                # or maybe crash -- can't provision if one provider is down already
                 pass
 
         master_key = generate_key()
         manifest_name = generate_filename()
+        bootstrap = Bootstrap(master_key, manifest_name, file_reconstruction_threshold)
+
+        # the bootstrap manager uses SSSS
+        bootstrap_manager = BootstrapManager(providers, bootstrap_reconstruction_threshold)
 
         try:
-            self.key_manager.distribute_key_and_name(master_key, manifest_name)
+            bootstrap_manager.distribute_bootstrap(bootstrap)
         except exceptions.FatalOperationFailure:
             # TODO diagnose
             # TODO if all are offline, raise network error?
             raise
-        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name, setup=True)
 
-    # alternative to provision, when we are resuming a previous session
-    def start(self):
+        file_manager = FileManager(providers, file_reconstruction_threshold, master_key, manifest_name, setup=True)
+        return SecretBox(bootstrap_manager, file_manager)
+
+    @staticmethod
+    def load(providers):
+        """
+        Load an existing SecretBox
+        Providers: a list of providers
+        Returns a constructed SecretBox object
+        Raises FatalOperationFailure or OperationFailure
+        """
+        bootstrap_manager = BootstrapManager(providers)
         try:
-            master_key, manifest_name = self.key_manager.recover_key_and_name()
+            bootstrap = bootstrap_manager.recover_bootstrap()
         except exceptions.OperationFailure as e:
-            master_key, manifest_name = e.result
+            bootstrap = e.result
             # TODO diagnose and repair
         except exceptions.FatalOperationFailure:
             # TODO diagnose
             raise
 
-        self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name)
+        file_manager = FileManager(providers, bootstrap.file_reconstruction_threshold, bootstrap.key, bootstrap.manifest_name)
+        return SecretBox(bootstrap_manager, file_manager)
+
+    # TODO: update with other bad cases
+    def _verify_parameters(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
+        return bootstrap_reconstruction_threshold >= 2 and \
+            file_reconstruction_threshold >= 2 and \
+            len(providers) >= 2 and \
+            bootstrap_reconstruction_threshold < len(providers) and \
+            file_reconstruction_threshold < len(providers)
 
     # change the master key
     def update_master_key(self):
@@ -76,7 +92,7 @@ class SecretBox:
         # upload new manifest first, then distribute new key to be atomic
         try:
             self.file_manager.update_key_and_name(master_key, manifest_name)
-            self.key_manager.distribute_key_and_name(master_key, manifest_name)
+            self.bootstrap_manager.distribute_bootstrap(master_key, manifest_name)
         except exceptions.FatalOperationFailure:
             # TODO diagnose
             raise
@@ -90,7 +106,7 @@ class SecretBox:
             # will need to make calls to know the capacity of each provider
         """
         self.providers.append(provider)
-        self.key_manager.distribute_new_key(master_key)
+        self.bootstrap_manager.distribute_new_key(master_key)
         # TODO: also need to update the file manager with the new master key
         # or make a new file manager
         self.file_manager.refresh()

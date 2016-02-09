@@ -1,7 +1,8 @@
 """
 super ugly hacked together thing to play with secretbox
 usage:
-    python sb_ui.py (init | start | help) n k_key k_file tmp_dir
+    python sb_ui.py init n k_key k_file tmp_dir
+    python sb_ui.py start n tmp_dir
 
 arg 1 is init if you want to start a new secretbox from scratch
          start if you want to resume an existing secretbox
@@ -21,11 +22,14 @@ import sys
 try:
     cmd = sys.argv[1]
     n = int(sys.argv[2])
-    k_key = int(sys.argv[3])
-    k_file = int(sys.argv[4])
-    tmp_dir = sys.argv[5]
 
-    if cmd not in ["init", "start"]:
+    if cmd == "init":
+        k_key = int(sys.argv[3])
+        k_file = int(sys.argv[4])
+        tmp_dir = sys.argv[5]
+    elif cmd == "start":
+        tmp_dir = sys.argv[3]
+    else:
         raise Exception
 except:
     print __doc__
@@ -33,11 +37,10 @@ except:
 
 
 providers = [LocalFilesystemProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
-SB = SecretBox(providers, k_key, k_file)
 if cmd == "init":
-    SB.provision()
+    SB = SecretBox.provision(providers, k_key, k_file)
 else:
-    SB.start()
+    SB = SecretBox.load(providers)
 
 while True:
     print "\n"
