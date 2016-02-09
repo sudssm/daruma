@@ -11,18 +11,24 @@ from tools.utils import generate_filename
 
 class SecretBox:
 
-    # construct a new secretbox
-    # in normal usage, one should use the static load or provision methods
     def __init__(self, bootstrap_manager, file_manager):
+        """
+        Construct a new SecretBox object
+        NB: In normal usage, one should use the static load or provision methods
+        """
         self.bootstrap_manager = bootstrap_manager
         self.file_manager = file_manager
 
-    # start from scratch
     @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
-        # providers: a list of providers
-        # bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key
-        # file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
+        """
+        Create a new SecretBox
+        Providers: a list of providers
+        bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key
+        file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
+        Returns a constructed SecretBox object
+        Raises FatalOperationFailure or OperationFailure
+        """
 
         for provider in providers:
             try:
@@ -48,9 +54,14 @@ class SecretBox:
         file_manager = FileManager(providers, file_reconstruction_threshold, master_key, manifest_name, setup=True)
         return SecretBox(bootstrap_manager, file_manager)
 
-    # alternative to provision, when we are resuming a previous session
     @staticmethod
     def load(providers):
+        """
+        Load an existing SecretBox
+        Providers: a list of providers
+        Returns a constructed SecretBox object
+        Raises FatalOperationFailure or OperationFailure
+        """
         bootstrap_manager = BootstrapManager(providers)
         try:
             bootstrap = bootstrap_manager.recover_bootstrap()

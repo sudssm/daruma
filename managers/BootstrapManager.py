@@ -7,10 +7,14 @@ import struct
 from custom_exceptions import exceptions
 
 
-# Definition for a bootstrap to be shared
 class Bootstrap:
-    # big-endian, string, string, int
-    FORMAT = ">" + str(KEY_SIZE) + "s" + str(FILENAME_SIZE) + "si"
+    """
+    A class to contain the Shamir-Shared data
+    Contains the master key, manifest name, and file reconstruction threshold
+    """
+
+    # network-endian, string, string, int
+    FORMAT = "!" + str(KEY_SIZE) + "s" + str(FILENAME_SIZE) + "si"
 
     def __init__(self, key, manifest_name, file_reconstruction_threshold):
         self.key = str(key)
@@ -39,9 +43,11 @@ class BootstrapManager:
         self.providers = providers
         self.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
 
-    # un SSSS the bootstrap from the providers
-    # returns the recovered bootstrap from all the shares
     def recover_bootstrap(self):
+        """
+        Returns a Bootstrap object, collected from self.Providers
+        Raises FatalOperationFailure or OperationFailure
+        """
         shares_map = {}
         # threshold vote to provider
         thresholds_map = defaultdict(list)
@@ -84,8 +90,10 @@ class BootstrapManager:
 
         return bootstrap
 
-    # distributes a new bootstrap to all providers
     def distribute_bootstrap(self, bootstrap):
+        """
+        Secret-Share distribute a Bootstrap object to all providers
+        """
         string = str(bootstrap)
 
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
