@@ -37,10 +37,6 @@ class FileManager:
             self.manifest = Manifest(content=e.result)
             raise exceptions.OperationFailure(e.failures, None)
 
-        # TODO: deal with failures
-        # if len(failures) == len(providers) and all(failures.values() are ConnectionError)
-        # raise NetworkError - handle one level up?
-
     def distribute_manifest(self):
         """
         Raises FatalOperationFailure if any provider fails

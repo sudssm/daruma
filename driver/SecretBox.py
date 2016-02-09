@@ -51,6 +51,7 @@ class SecretBox:
             self.key_manager.distribute_key_and_name(master_key, manifest_name)
         except exceptions.FatalOperationFailure:
             # TODO diagnose
+            # TODO if all are offline, raise network error?
             raise
         self.file_manager = FileManager(self.providers, self.file_reconstruction_threshold, master_key, manifest_name, setup=True)
 

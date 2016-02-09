@@ -142,7 +142,6 @@ class ManifestEntry:
 
 
 class Manifest:
-    # TODO: need to add a first line for k
     NEWLINE = "\n"
     STRREGEX = "(" + ManifestEntry.TRUENAME.pattern + ManifestEntry.DELIM + ManifestEntry.CODENAME.pattern + \
         ManifestEntry.DELIM + ManifestEntry.SIZE.pattern + ManifestEntry.DELIM + ManifestEntry.KEY.pattern + \
@@ -185,7 +184,6 @@ class Manifest:
             return ""
         str_lines = [str(line) for line in self.lines]
 
-        # TODO: should we randomize line order with each call?
         str_manifest = self.NEWLINE.join(str_lines) + self.NEWLINE
         return str_manifest
 
@@ -262,7 +260,6 @@ class Manifest:
             old code file name (None if creating a new line)
         """
 
-        # TODO: are we rotating AES keys when we update an old file?
         try:
             line = self.remove_line(true_name)
             old_code_name = line["code_name"]

@@ -451,7 +451,6 @@ def test_standard_get_line():
 
 
 def test_missing_get_line():
-    # TODO
     keys = []
     for i in range(5):
         keys.append(generate_key())
@@ -646,7 +645,6 @@ def test_create_manifest_update():
     manifest = managers.manifest.Manifest(lines=entries)
     old_manifest = copy.deepcopy(manifest)
 
-    # TODO: assumes we do not rotate keys
     new_key = generate_key()
     old_code_name = manifest.update_manifest("DIANA.PDF", codename6, 52, new_key)
     diana = manifest.remove_line("DIANA.PDF")

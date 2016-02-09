@@ -2,7 +2,6 @@ from custom_exceptions import exceptions
 from tools import encryption, erasure_encoding
 
 # For RS distributing files
-# TODO make resistant to provider going down and other error cases
 
 
 class FileDistributor:
