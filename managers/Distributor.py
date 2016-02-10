@@ -95,7 +95,7 @@ class FileDistributor:
         # substitute in other shares to find problematic ones
         for share in shares:
             if share in minimal_working_set:
-                pass
+                continue
             test_set = minimal_working_set[:-1] + [share]
             if attempt_recovery(test_set) != data:
                 bad_shares.append(share)
