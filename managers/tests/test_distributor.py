@@ -77,6 +77,24 @@ def test_corrupt_fail():
     except exceptions.FatalOperationFailure as e:
         assert len(e.failures) == 3
 
+"""
+def test_mutate_recover():
+    FD = FileDistributor(providers, 3)
+    key = FD.put("test", "data")
+
+    share = list(providers[0].get("test"))
+    share[-1] = "\x08"
+    share = "".join(share)
+    providers[0].put("test", share)
+
+    try:
+        FD.get("test", key)
+        assert False
+    except exceptions.OperationFailure as e:
+        assert e.result == "data"
+        assert len(e.failures) == 1
+        assert e.failures[0].provider == providers[0]
+""" 
 
 def test_wrong_key():
     wrong_key = generate_key()

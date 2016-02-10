@@ -46,6 +46,14 @@ class ProviderOperationFailure(Exception):
         self.provider = provider
 
 
+class InvalidShareFailure(Exception):
+    """
+    The provider returned an invalid share
+    """
+    def __init__(self, provider):
+        self.provider = provider
+
+
 # crypto exceptions
 class DecryptError(Exception):
     """

@@ -47,6 +47,9 @@ def reconstruct(shares, threshold, total_shares):
         DecodeError: Decoding the erasure code was unsuccessful (e.g. the shares were of different lengths).
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
+    if len(shares) < threshold:
+        raise exceptions.DecodeError()
+
     try:
         ec_driver = __get_ecdriver(threshold, total_shares)
         return ec_driver.decode(shares)
