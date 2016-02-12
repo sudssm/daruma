@@ -96,13 +96,14 @@ def mutate(provider, filename, mutations):
 
 
 def test_small_mutate_recover():
+    # TODO This sometimes passes, depending on where the corruption occurs
     FD = FileDistributor(providers, 3)
     key = FD.put("test", "data")
 
     mutate(providers[0], "test", 1)
 
     try:
-        print FD.get("test", key)
+        FD.get("test", key)
         assert False
     except exceptions.OperationFailure as e:
         assert e.result == "data"
@@ -117,7 +118,7 @@ def test_medium_mutate_recover():
     mutate(providers[0], "test", 10)
 
     try:
-        print FD.get("test", key)
+        FD.get("test", key)
         assert False
     except exceptions.OperationFailure as e:
         assert e.result == "data"
@@ -131,10 +132,8 @@ def test_big_mutate_recover():
 
     mutate(providers[0], "test", 20)
 
-    print [provider.get("test") for provider in providers]
-
     try:
-        print FD.get("test", key)
+        FD.get("test", key)
         assert False
     except exceptions.OperationFailure as e:
         assert e.result == "data"

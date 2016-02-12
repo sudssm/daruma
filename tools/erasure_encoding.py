@@ -6,8 +6,8 @@ from pyeclib.ec_iface import ECDriverError
 from custom_exceptions import exceptions
 
 
-def __get_ecdriver(threshold, total_shares):
-    return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
+def _get_ecdriver(threshold, total_shares):
+    return ECDriver(k=threshold, m=total_shares - threshold, ec_type='isa_l_rs_vand')
 
 
 def share(message, threshold, total_shares):
@@ -25,7 +25,7 @@ def share(message, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
+        ec_driver = _get_ecdriver(threshold, total_shares)
         return ec_driver.encode(message)
     except Exception:
         logging.exception("Exception encountered during share creation")
@@ -51,7 +51,7 @@ def reconstruct(shares, threshold, total_shares):
         raise exceptions.DecodeError()
 
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
+        ec_driver = _get_ecdriver(threshold, total_shares)
         return ec_driver.decode(shares)
     except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
         raise exceptions.DecodeError

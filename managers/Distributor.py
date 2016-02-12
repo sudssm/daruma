@@ -78,16 +78,18 @@ class FileDistributor:
             return None, None
 
         bad_shares = []
-        # get data with all shares
-        data = attempt_recovery(shares)
+
         # check 2 subgroups; threshold > n/2
+        data = attempt_recovery(shares[:self.file_reconstruction_threshold])
         if data is not None and \
-           data == attempt_recovery(shares[:self.file_reconstruction_threshold]) and \
            data == attempt_recovery(shares[-self.file_reconstruction_threshold:]):
             return data, bad_shares
 
         # there was definitely some error; find a minimal working set
-        data, minimal_working_set = find_minimal_working_set()
+        if data is not None:
+            minimal_working_set = shares[:self.file_reconstruction_threshold]
+        else:
+            data, minimal_working_set = find_minimal_working_set()
         if minimal_working_set is None:
             # cannot recover
             return None, bad_shares
