@@ -1,8 +1,12 @@
 import dropbox
+from cStringIO import StringIO
+# from custom_exceptions import exceptions
+from BaseProvider import BaseProvider
 
+ACCESS_TOKEN = "oosk9iu5HYAAAAAAAAAADgeXRX5LJWEXV6_6GlUp6L3CWM2PgkpY2nHu99TvZDM2"
 
 class DropboxProvider(BaseProvider):
-    def __init__(self, access_token=""):
+    def __init__(self, access_token=ACCESS_TOKEN):
         """
         Initialize a dropbox provider.
 
@@ -14,20 +18,46 @@ class DropboxProvider(BaseProvider):
         self.client = dropbox.client.DropboxClient(self.access_token)
 
     def connect(self):
-        # might consider run get access token here. Only initialize provider with app information.
-        pass
-        
+        # use account info to check connection 
+        try:
+            account_info = self.client.account_info()
+        except Exception as E:
+            # Error handling
+            raise Exception(E.error_msg)
+
     def get(self, filename):
-        f, metadata = client.get_file_and_metadata(filename)
-        out = open(filename, 'wb')
-        out.write(f.read())
-        out.close()
+        try:
+            f, metadata = client.get_file_and_metadata(filename)
+            return f.read()
+        except Exception as E:
+            # Error handling
+            raise Exception(E.error_msg)
 
     def put(self, filename, data):
-        response = self.client.put_file(filename, data, overwrite=True)
+        try:
+            f = StringIO(data)
+            response = self.client.put_file(filename, f, overwrite=True)
+            print "uploaded:", response
+        except Exception as E:
+            # Error handling
+            raise Exception(E.error_msg)
 
     def delete(self, filename):
-        self.client.file_delete(filename)
+        try:
+            self.client.file_delete(filename)
+        except Exception as E:
+            # Error handling
+            raise Exception(E.error_msg)
 
     def wipe (self):
-        pass
+        try:
+            entries = self.client.delta()['entries']
+            for e in entries:
+                self.client.file_delete(e[0])
+        except Exception as E:
+            # Error handling
+            raise Exception(E.error_msg)
+
+
+
+
