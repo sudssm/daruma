@@ -3,6 +3,9 @@ from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
 from tools.utils import generate_filename
+from struct import pack
+from random import randint
+import pytest
 
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 
@@ -67,9 +70,20 @@ def test_erase_fail():
         assert len(e.failures) == 3
 
 
+def mutate(provider, filename, mutations):
+    share = list(provider.get(filename))
+    for i in xrange(mutations):
+        corrupt = pack("h", randint(0, 255))
+        location = randint(0, (len(share)-2) / 2) * 2
+        share[location] = corrupt[0]
+        share[location + 1] = corrupt[1]
+    provider.put(filename, "".join(share))
+
+
+# TODO - once RSS is in, change this
 def test_corrupt_share():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
-    # TODO: corrupt one of the LocalFileSystemProvider shares
-    #   the goal of this test is to trigger the FatalOperationFailure
-    #   on line 89 of BootstrapManager (i.e., consumed DecodeError)
+    mutate(providers[0], "mellon", 10)
+    with pytest.raises(exceptions.FatalOperationFailure):
+        BM.recover_bootstrap()
