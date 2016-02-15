@@ -9,5 +9,10 @@ setup(
         "secretsharing==0.2.6",
         "PyECLib==1.1.1",
         "uuid==1.30"
-    ]
+    ],
+    extras_require={
+        ':sys_platform == "darwin"': [
+            'rumps==0.2.1'
+        ]
+    }
 )
