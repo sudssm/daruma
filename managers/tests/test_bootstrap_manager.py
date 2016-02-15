@@ -15,13 +15,14 @@ bootstrap = Bootstrap(key, name, file_reconstruction_threshold)
 def test_size():
     assert Bootstrap.SIZE == len(str(bootstrap))
 
+
 def test_roundtrip():
     BM = BootstrapManager(providers, 2)
     BM.distribute_bootstrap(bootstrap)
     assert BM.recover_bootstrap() == bootstrap
 
 
-def test_recover_nonexistent():
+def test_recover_fresh_providers():
     for provider in providers:
         provider.wipe()
     BM = BootstrapManager(providers, 3)
@@ -40,7 +41,7 @@ def test_multiple_sessions():
     assert BM.recover_bootstrap() == bootstrap
 
 
-def test_corrupt_recover():
+def test_erase_recover():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
     providers[0].wipe()
@@ -53,7 +54,7 @@ def test_corrupt_recover():
         assert len(e.failures) == 2
 
 
-def test_corrupt_fail():
+def test_erase_fail():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
     providers[0].wipe()
@@ -64,3 +65,11 @@ def test_corrupt_fail():
         assert False
     except exceptions.FatalOperationFailure as e:
         assert len(e.failures) == 3
+
+
+def test_corrupt_share():
+    BM = BootstrapManager(providers, 3)
+    BM.distribute_bootstrap(bootstrap)
+    # TODO: corrupt one of the LocalFileSystemProvider shares
+    #   the goal of this test is to trigger the FatalOperationFailure
+    #   on line 89 of BootstrapManager (i.e., consumed DecodeError)
