@@ -12,7 +12,7 @@ setup(
         "robustsecretsharing==0.1"
     ],
     dependency_links=[
-        "git+ssh://git@github.com/michsoch/robust-secret-sharing.git#egg=robustsecretsharing-0.1"
+        "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@sss#egg=robustsecretsharing-0.1"
     ]
 
 )
