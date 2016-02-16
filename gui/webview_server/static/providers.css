@@ -1,0 +1,76 @@
+html, body {
+	height: 100%;
+}
+
+body {
+	display: flex;
+    flex-direction: column;
+}
+
+.status-green {
+	color: green;
+}
+
+.status-orange {
+	color: goldenrod;
+}
+
+.status-red {
+	color: red;
+}
+
+.status-list {
+	list-style-type: none;
+	line-height: 150%;
+}
+
+#provider-section {
+	flex: 1;
+	overflow: scroll;
+	padding-bottom: 10px;
+	padding-top: 12px;
+	border-style: solid;
+	border-bottom-style: none;
+	border-width: 1px;
+	border-color: lightgray;
+}
+
+#add-provider-button {
+	margin-left: auto;
+	font-size: 12pt;
+}
+
+#provider-list {
+	list-style-type: none;
+	padding: 0;
+	width: 95%;
+	margin: auto;
+}
+
+#provider-list > li {
+	margin-top: 10px;
+}
+
+.provider-icon {
+	height: 70px;
+}
+
+.provider-name {
+	font-size: 18pt;
+	font-weight: bold;
+}
+
+.provider-controls {
+	margin-left: auto;
+	display: inline;
+	border: none;
+	padding: 0;
+}
+
+.provider-controls > button {
+	width: 100%;
+	display: block;
+	font-size: 12pt;
+	margin-top: 15%;
+	margin-bottom: 15%;
+}
