@@ -19,7 +19,7 @@ def share(secret, threshold, total_shares):
     """
     try:
         return sss.share_secret(total_shares, threshold, len(secret), secret)
-    except Exception:
+    except ValueError:
         logging.exception("Exception encountered during secret share creation")
         raise exceptions.LibraryException
 
@@ -32,7 +32,7 @@ def reconstruct(shares, secret_length, total_shares):
 
     Args:
         shares: a list of properly formatted binary strings.
-        total_shares: the maximum number of shares, so total_shares >= len(shares)
+        total_shares: the original number of shares created, total_shares >= len(shares)
         secret_length: the value that would be returned by len(secret)
     Returns:
         A byte representation of the reconstructed secret.
@@ -41,6 +41,6 @@ def reconstruct(shares, secret_length, total_shares):
     """
     try:
         return sss.reconstruct_secret(total_shares, secret_length, shares)
-    except Exception:
+    except ValueError:
         logging.exception("Exception encountered during secret share reconstruction")
         raise exceptions.LibraryException
