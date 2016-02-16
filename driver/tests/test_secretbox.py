@@ -73,22 +73,6 @@ def test_corrupt_fail():
 
 
 def test_different_ks():
-    SB = SecretBox.provision(providers, 2, 3)
-    SB.put("test", "data")
-    providers[0].wipe()
-    providers[1].wipe()
-    providers[2].wipe()
-
-    # should be able to recover the key, but not files
-    SB = SecretBox.load(providers)
-    try:
-        SB.ls()
-        assert False
-    except exceptions.FatalOperationFailure as e:
-        assert len(e.failures) == 3
-
-
-def test_different_ks_2():
     SB = SecretBox.provision(providers, 3, 2)
     SB.put("test", "data")
     providers[0].wipe()

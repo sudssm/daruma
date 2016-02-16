@@ -22,12 +22,16 @@ class NetworkException(Exception):
 
 
 # provider exceptions
+# TODO make a superclass called ProviderFailure
 class ConnectionFailure(Exception):
     """
     Provider is considered off-line
     """
     def __init__(self, provider):
         self.provider = provider
+
+    def __str__(self):
+        return self.__class__.__name__ + " in " + str(self.provider)
 
 
 class AuthFailure(Exception):
@@ -37,6 +41,9 @@ class AuthFailure(Exception):
     def __init__(self, provider):
         self.provider = provider
 
+    def __str__(self):
+        return self.__class__.__name__ + " in " + str(self.provider)
+
 
 class ProviderOperationFailure(Exception):
     """
@@ -44,6 +51,9 @@ class ProviderOperationFailure(Exception):
     """
     def __init__(self, provider):
         self.provider = provider
+
+    def __str__(self):
+        return self.__class__.__name__ + " in " + str(self.provider)
 
 
 # crypto exceptions

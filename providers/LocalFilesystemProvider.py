@@ -61,3 +61,6 @@ class LocalFilesystemProvider(BaseProvider):
             os.makedirs(translated_root_dir, DIRECTORY_MODE)
         except (IOError, OSError):
             raise exceptions.ProviderOperationFailure(self)
+
+    def __str__(self):
+        return "<LocalFilesystemProvider@" + self.provider_path + ">"

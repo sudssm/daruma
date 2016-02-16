@@ -47,6 +47,9 @@ while True:
     print "ls, get, put, del, exit"
     cmd = shlex.split(raw_input("> "))
 
+    if len(cmd) == 0:
+        continue
+
     if cmd[0] == "ls":
         files = SB.ls()
         if len(files) == 0:
