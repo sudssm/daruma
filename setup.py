@@ -9,6 +9,7 @@ setup(
         "secretsharing==0.2.6",
         "PyECLib==1.1.1",
         "uuid==1.30",
+        "pywebview==1.0",
         "flask>=0.10.1"
     ],
     extras_require={
