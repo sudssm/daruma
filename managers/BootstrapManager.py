@@ -62,15 +62,17 @@ class BootstrapManager:
             except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
                 failures.append(e)
             except ValueError:
-                failures.append(exceptions.ProviderOperationFailure(provider))
+                # if the cast to int failed
+                failures.append(exceptions.IncorrectFileFailure(provider))
 
         # vote on threshold
-        if len(thresholds_map) == 1:
-            self.bootstrap_reconstruction_threshold = thresholds_map.keys()[0]
-        else:
-            for threshold, sources in thresholds_map.items():
-                if len(sources) > len(self.providers) / 2:
-                    self.bootstrap_reconstruction_threshold = threshold
+        for threshold, sources in thresholds_map.items():
+            if len(sources) > len(self.providers) / 2:
+                self.bootstrap_reconstruction_threshold = threshold
+            else:
+                # add providers to failures
+                for provider in sources:
+                    failures.append(exceptions.IncorrectFileFailure(provider))
 
         # if still not set, we have a problem
         if self.bootstrap_reconstruction_threshold is None:

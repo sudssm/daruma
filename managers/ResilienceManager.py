@@ -51,7 +51,6 @@ class ResilienceManager:
 
         self.diagnose(failures)
 
-        # TODO maybe refactor this?
         master_key = generate_key()
         manifest_name = generate_filename()
         bootstrap = Bootstrap(master_key, manifest_name, self.file_manager.file_reconstruction_threshold)

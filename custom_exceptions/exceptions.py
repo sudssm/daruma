@@ -23,6 +23,7 @@ class NetworkException(Exception):
 
 # provider exceptions
 # TODO make a superclass called ProviderFailure
+# but maybe auth shouldn't be a subclass of this?
 class ConnectionFailure(Exception):
     """
     Provider is considered off-line
@@ -48,6 +49,17 @@ class AuthFailure(Exception):
 class ProviderOperationFailure(Exception):
     """
     The provider rejected the desired operation (reason unknown)
+    """
+    def __init__(self, provider):
+        self.provider = provider
+
+    def __str__(self):
+        return self.__class__.__name__ + " in " + str(self.provider)
+
+
+class IncorrectFileFailure(Exception):
+    """
+    The provider returned the wrong value for a file
     """
     def __init__(self, provider):
         self.provider = provider
