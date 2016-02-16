@@ -12,6 +12,7 @@ def start_gui_across_platforms():
         raise UnsupportedPlatformException("No support for " + sys.platform)
 
 if __name__ == "__main__":
-    ui_server_thread = t = threading.Thread(target=start_ui_server, name="ui_server_thread")
+    ui_server_thread = threading.Thread(target=start_ui_server, name="ui_server_thread")
+    ui_server_thread.daemon = True
     ui_server_thread.start()
     start_gui_across_platforms()
