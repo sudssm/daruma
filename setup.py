@@ -5,8 +5,8 @@ setup(
     version="0.1",
     packages=find_packages(),
     install_requires=[
-        "PyNaCl==0.3.0",
-        "PyECLib==1.1.1",
+        "PyNaCl==1.0.1",
+        "PyECLib==1.2.0",
         "uuid==1.30",
         "robustsecretsharing==0.1"
     ],
