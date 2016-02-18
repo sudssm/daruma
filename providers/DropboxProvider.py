@@ -3,7 +3,27 @@ from cStringIO import StringIO
 # from custom_exceptions import exceptions
 from BaseProvider import BaseProvider
 
+# From Dropbox developer site. 
+DBOX_APP_KEY = "btmom5enals52c3"
+DBOX_APP_SECRET = "dl9yxq1331z9z81"
 ACCESS_TOKEN = "oosk9iu5HYAAAAAAAAAADgeXRX5LJWEXV6_6GlUp6L3CWM2PgkpY2nHu99TvZDM2"
+
+def get_access_token():
+    """
+    Get user access token using APP_KEY and APP_SECRET
+    """
+
+    flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY,DBOX_APP_SECRET)
+    authorize_url = flow.start()
+
+    # go to this link to enable app
+    print "Go to this link : %s" % authorize_url
+
+    code = raw_input("Enter the authorization code here: ").strip()
+    access_token, user_id = flow.finish(code)
+
+    return access_token
+
 
 class DropboxProvider(BaseProvider):
     def __init__(self, access_token=ACCESS_TOKEN):
