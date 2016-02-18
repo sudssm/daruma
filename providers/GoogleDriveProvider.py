@@ -44,30 +44,45 @@ class GoogleDriveProvider(BaseProvider):
 		http = credentials.authorize(httplib2.Http())
 		self.service = discovery.build('drive', 'v3', http=http)
 		self.folder_ID = folder_ID
-		self.file_IDs = []
+		# key: filename, value: file ID
+		self.file_index = {}
 
 	def connect(self):
 		# check folder validity
-		if self.folder_ID:
-			response = self.service.files().list(q="name='%s'"%APPLICATION_NAME).execute()
-			for f in response.get('files',[]):
-				if f['id'] == self.folder_ID:
-					# find a matching folder
-					return
-		
-		# Create new folder: folder does not exist or no folder ID
-		file_metadata = {
-			'name' : APPLICATION_NAME,
-			'mimeType' : 'application/vnd.google-apps.folder'
-		}
-		f = self.service.files().create(body=file_metadata,
-											fields='id').execute()
-		self.folder_ID = f.get('id')
-		print 'Folder ID: %s' % f.get('id')
+		try:
+			if self.folder_ID:
+				response = self.service.files().list(q="name='%s'"%APPLICATION_NAME).execute()
+				for f in response.get('files',[]):
+					if f['id'] == self.folder_ID:
+						# find a matching folder. create file index
+						response = self.service.files().list(q="'%s' in parents"%self.folder_ID).execute()
+						for f in response.get('files',[]):
+							self.file_index[f['title']] = f['id']
+						return
+			
+			# Create new folder: folder does not exist or no folder ID
+			file_metadata = {
+				'name' : APPLICATION_NAME,
+				'mimeType' : 'application/vnd.google-apps.folder'
+			}
+			f = self.service.files().create(body=file_metadata,
+												fields='id').execute()
+			self.folder_ID = f.get('id')
+			print 'Folder ID: %s' % f.get('id')
+		except Exception as e:
+			pass
 
 
 	def get(self, filename):
-		pass
+		try:
+			if filename not in gd.file_index:
+				print "file not exist"
+			else:
+				file_id = gd.file_index[filename]
+			print gd.service.files().get_media(fileId=file_id).execute()
+		except Exception as e:
+			print e.content
+
 
 	def put(self, filename, data):
 		try:
@@ -90,7 +105,7 @@ class GoogleDriveProvider(BaseProvider):
 											media_body=media,
 											fields='id').execute()
 
-			self.file_IDs.append(f.get('id'))
+			self.file_index[filename] = f.get('id')
 			print 'File ID: ' + f.get('id')
 		except Exception as e:
 			pass
