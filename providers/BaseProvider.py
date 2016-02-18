@@ -10,6 +10,9 @@ class BaseProvider(object):
         # this function will not be overridden
         # but rather called by other constructors that take parameters
 
+        # TODO change this when diagnose becomes more sophisticated
+        self.errors = 0
+
         self.connect()
 
     # can throw ConnectionFailure, AuthFailure
