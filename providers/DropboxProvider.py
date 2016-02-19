@@ -1,5 +1,6 @@
 import dropbox
 import urllib3
+from contextlib import contextmanager
 from custom_exceptions import exceptions
 from BaseProvider import BaseProvider
 
@@ -14,7 +15,7 @@ class DropboxProvider(BaseProvider):
         Initialize a dropbox provider.
 
         Args:
-            access_token: the access_token for the user. See more in GetAccessToken.py. 
+            access_token: the access_token for the user. 
         """
         
         self.access_token = access_token
@@ -42,9 +43,11 @@ class DropboxProvider(BaseProvider):
         except Exception:
             raise exceptions.LibraryException
 
-    def connect(self):
+
+    @contextmanager
+    def exception_handler(self):
         try:
-            account_info = self.client.account_info()
+            yield
         except urllib3.exceptions.MaxRetryError:
             raise exceptions.ConnectionFailure(self)
         except dropbox.rest.ErrorResponse as e:
@@ -54,58 +57,34 @@ class DropboxProvider(BaseProvider):
         except Exception:
             raise exceptions.LibraryException
 
+
+    def connect(self):
+        with self.exception_handler():
+            account_info = self.client.account_info()
+        
 
     def get(self, filename):
-        try:
+        with self.exception_handler():
             f, metadata = self.client.get_file_and_metadata(filename)
             return f.read()
-        except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(self)
-        except dropbox.rest.ErrorResponse as e:
-            if e.status == 401:
-                raise exceptions.AuthFailure(self)
-            raise exceptions.ProviderOperationFailure(self)
-        except Exception:
-            raise exceptions.LibraryException
+        
 
     def put(self, filename, data):
-        try:
+        with self.exception_handler():
             response = self.client.put_file(filename, data, overwrite=True)
-            print "uploaded:", response
-        except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(self)
-        except dropbox.rest.ErrorResponse as e:
-            if e.status == 401:
-                raise exceptions.AuthFailure(self)
-            raise exceptions.ProviderOperationFailure(self)
-        except Exception:
-            raise exceptions.LibraryException
+        
 
     def delete(self, filename):
-        try:
+        with self.exception_handler():
             self.client.file_delete(filename)
-        except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(self)
-        except dropbox.rest.ErrorResponse as e:
-            if e.status == 401:
-                raise exceptions.AuthFailure(self)
-            raise exceptions.ProviderOperationFailure(self)
-        except Exception:
-            raise exceptions.LibraryException
+        
 
     def wipe (self):
-        try:
+        with self.exception_handler():
             entries = self.client.delta()['entries']
             for e in entries:
                 self.client.file_delete(e[0])
-        except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(self)
-        except dropbox.rest.ErrorResponse as e:
-            if e.status == 401:
-                raise exceptions.AuthFailure(self)
-            raise exceptions.ProviderOperationFailure(self)
-        except Exception:
-            raise exceptions.LibraryException
+        
 
 
 
