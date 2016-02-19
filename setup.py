@@ -8,6 +8,7 @@ setup(
         "PyNaCl==0.3.0",
         "secretsharing==0.2.6",
         "PyECLib==1.1.1",
-        "uuid==1.30"
+        "uuid==1.30",
+        "dropbox==4.0"
     ]
 )
