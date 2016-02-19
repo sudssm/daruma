@@ -1,13 +1,32 @@
 import logging
+import sys
 from pyeclib.ec_iface import ECDriver
 from pyeclib.ec_iface import ECInsufficientFragments
 from pyeclib.ec_iface import ECInvalidFragmentMetadata
 from pyeclib.ec_iface import ECDriverError
 from custom_exceptions import exceptions
+from tools.utils import sandbox_function
+
+EXIT_CODE_DECODE_ERROR = 2
 
 
 def __get_ecdriver(threshold, total_shares):
     return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
+
+
+def __share_implementation(message, threshold, total_shares):
+    ec_driver = __get_ecdriver(threshold, total_shares)
+    shares = ec_driver.encode(message)
+    return shares
+
+
+def __reconstruct_implementation(shares, threshold, total_shares):
+    try:
+        ec_driver = __get_ecdriver(threshold, total_shares)
+        message = ec_driver.decode(shares)
+        return [message]
+    except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
+        sys.exit(EXIT_CODE_DECODE_ERROR)
 
 
 def share(message, threshold, total_shares):
@@ -25,9 +44,9 @@ def share(message, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
-        return ec_driver.encode(message)
-    except Exception:
+        shares = sandbox_function(__share_implementation, message, threshold, total_shares)
+        return shares
+    except exceptions.SandboxProcessFailure:
         logging.exception("Exception encountered during share creation")
         raise exceptions.LibraryException
 
@@ -48,10 +67,11 @@ def reconstruct(shares, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
-        return ec_driver.decode(shares)
-    except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
-        raise exceptions.DecodeError
-    except Exception:
-        logging.exception("Exception encountered during share reconstruction")
-        raise exceptions.LibraryException
+        message = sandbox_function(__reconstruct_implementation, shares, threshold, total_shares)
+        return message[0]
+    except exceptions.SandboxProcessFailure as e:
+        if e.exitcode is EXIT_CODE_DECODE_ERROR:
+            raise exceptions.DecodeError
+        else:
+            logging.exception("Exception encountered during share reconstruction")
+            raise exceptions.LibraryException
