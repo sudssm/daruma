@@ -10,19 +10,19 @@ from tools.utils import sandbox_function
 EXIT_CODE_DECODE_ERROR = 2
 
 
-def __get_ecdriver(threshold, total_shares):
+def _get_ecdriver(threshold, total_shares):
     return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
 
 
-def __share_implementation(message, threshold, total_shares):
-    ec_driver = __get_ecdriver(threshold, total_shares)
+def _share_implementation(message, threshold, total_shares):
+    ec_driver = _get_ecdriver(threshold, total_shares)
     shares = ec_driver.encode(message)
     return shares
 
 
-def __reconstruct_implementation(shares, threshold, total_shares):
+def _reconstruct_implementation(shares, threshold, total_shares):
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
+        ec_driver = _get_ecdriver(threshold, total_shares)
         message = ec_driver.decode(shares)
         return [message]
     except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
@@ -44,7 +44,7 @@ def share(message, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        shares = sandbox_function(__share_implementation, message, threshold, total_shares)
+        shares = sandbox_function(_share_implementation, message, threshold, total_shares)
         return shares
     except exceptions.SandboxProcessFailure:
         logging.exception("Exception encountered during share creation")
@@ -67,7 +67,7 @@ def reconstruct(shares, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        message = sandbox_function(__reconstruct_implementation, shares, threshold, total_shares)
+        message = sandbox_function(_reconstruct_implementation, shares, threshold, total_shares)
         return message[0]
     except exceptions.SandboxProcessFailure as e:
         if e.exitcode is EXIT_CODE_DECODE_ERROR:
