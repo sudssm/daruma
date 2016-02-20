@@ -30,3 +30,23 @@ def test_sandbox_with_exit_code():
     with pytest.raises(exceptions.SandboxProcessFailure) as excinfo:
         tools.utils.sandbox_function(exit_with_code, test_name)
     assert excinfo.value.exitcode == EXIT_CODE
+
+
+def test_sandbox_with_segfault():
+    SEGFAULT_CODE = -11
+
+    def cause_segfault():
+        """
+        Crashes Python using an example from https://wiki.python.org/moin/CrashingPython
+        """
+        import ctypes
+        i = ctypes.c_char('a')
+        j = ctypes.pointer(i)
+        c = 0
+        while True:
+                j[c] = 'a'
+                c += 1
+        j
+    with pytest.raises(exceptions.SandboxProcessFailure) as excinfo:
+        tools.utils.sandbox_function(cause_segfault)
+    assert excinfo.value.exitcode == SEGFAULT_CODE
