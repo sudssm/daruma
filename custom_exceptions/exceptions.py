@@ -102,3 +102,12 @@ class FatalOperationFailure(Exception):
     """
     def __init__(self, failures):
         self.failures = failures
+
+
+class SandboxProcessFailure(Exception):
+    """
+    A function run in the process sandbox exited with an unsuccessful exit code.
+    The exit code is stored in the exitcode field.
+    """
+    def __init__(self, exitcode):
+        self.exitcode = exitcode

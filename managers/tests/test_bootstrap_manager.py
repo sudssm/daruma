@@ -25,6 +25,13 @@ def test_roundtrip():
     assert BM.recover_bootstrap() == bootstrap
 
 
+def test_bad_configuration():
+    BM = BootstrapManager(providers, 300)
+
+    with pytest.raises(exceptions.LibraryException):
+        BM.distribute_bootstrap(bootstrap)
+
+
 def test_recover_fresh_providers():
     for provider in providers:
         provider.wipe()
