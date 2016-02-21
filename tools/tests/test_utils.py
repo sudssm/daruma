@@ -47,4 +47,4 @@ def test_sandbox_with_segfault():
         j
     with pytest.raises(exceptions.SandboxProcessFailure) as excinfo:
         tools.utils.sandbox_function(cause_segfault)
-    assert excinfo.value.exitcode == tools.utils.EXIT_CODE_SEGFAULT
+    assert excinfo.value.exitcode < 0

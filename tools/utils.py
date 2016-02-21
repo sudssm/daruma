@@ -3,7 +3,6 @@ from uuid import uuid4
 from custom_exceptions.exceptions import SandboxProcessFailure
 
 FILENAME_SIZE = 32
-EXIT_CODE_SEGFAULT = -11
 
 
 # create a length-32 string of random uppercase letters and numbers
