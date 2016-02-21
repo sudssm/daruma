@@ -33,8 +33,6 @@ def test_sandbox_with_exit_code():
 
 
 def test_sandbox_with_segfault():
-    SEGFAULT_CODE = -11
-
     def cause_segfault():
         """
         Crashes Python using an example from https://wiki.python.org/moin/CrashingPython
@@ -49,4 +47,4 @@ def test_sandbox_with_segfault():
         j
     with pytest.raises(exceptions.SandboxProcessFailure) as excinfo:
         tools.utils.sandbox_function(cause_segfault)
-    assert excinfo.value.exitcode == SEGFAULT_CODE
+    assert excinfo.value.exitcode == tools.utils.EXIT_CODE_SEGFAULT
