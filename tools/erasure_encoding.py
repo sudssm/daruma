@@ -77,9 +77,6 @@ def reconstruct(shares, threshold, total_shares):
             different lengths, or the shares were excessively corrupted).
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
-    if len(shares) < threshold:
-        raise exceptions.DecodeError()
-
     try:
         message = sandbox_function(_do_reconstruction, shares, threshold, total_shares)
         return message[0]
