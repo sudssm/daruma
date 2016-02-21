@@ -49,16 +49,13 @@ class FileDistributor:
         """
         Returns:
             (result, bad_shares)
-            result: A byte representation of the reconstructed message if the reconstruction was successful.
+            result: A byte representation of the reconstructed message if the reconstruction was successful, or None otherwise
             bad_shares: the shares that were deemed cheaters
         """
         def attempt_recovery(shares):
-            try:
-                ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
-                data = encryption.decrypt(ciphertext, key)
-                return data
-            except (exceptions.DecodeError, exceptions.DecryptError):
-                return None
+            ciphertext = erasure_encoding.reconstruct(shares, self.file_reconstruction_threshold, self.num_providers)
+            data = encryption.decrypt(ciphertext, key)
+            return data
 
         def find_minimal_working_set():
             """
@@ -72,18 +69,24 @@ class FileDistributor:
             minimal_sets = itertools.combinations(shares, self.file_reconstruction_threshold)
             for test_set in minimal_sets:
                 test_set = list(test_set)
-                data = attempt_recovery(test_set)
-                if data:
+                try:
+                    data = attempt_recovery(test_set)
                     return data, test_set
+                except (exceptions.DecodeError, exceptions.DecryptError):
+                    # continue searching
+                    pass
             return None, None
 
         bad_shares = []
 
         # check 2 subgroups; threshold > n/2
-        data = attempt_recovery(shares[:self.file_reconstruction_threshold])
-        if data is not None and \
-           data == attempt_recovery(shares[-self.file_reconstruction_threshold:]):
-            return data, bad_shares
+        data = None
+        try:
+            data = attempt_recovery(shares[:self.file_reconstruction_threshold])
+            if data == attempt_recovery(shares[-self.file_reconstruction_threshold:]):
+                return data, bad_shares
+        except (exceptions.DecodeError, exceptions.DecryptError):
+            pass
 
         # there was definitely some error; find a minimal working set
         if data is not None:
@@ -99,7 +102,10 @@ class FileDistributor:
             if share in minimal_working_set:
                 continue
             test_set = minimal_working_set[:-1] + [share]
-            if attempt_recovery(test_set) != data:
+            try:
+                if attempt_recovery(test_set) != data:
+                    bad_shares.append(share)
+            except (exceptions.DecodeError, exceptions.DecryptError):
                 bad_shares.append(share)
 
         return data, bad_shares

@@ -95,50 +95,27 @@ def mutate(provider, filename, mutations):
     provider.put(filename, "".join(share))
 
 
-def test_small_mutate_recover():
-    # TODO This sometimes passes, depending on where the corruption occurs
+def test_mutate_recover():
+    # the first share is bad!
+    shares = ['\x04\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\r\x02\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x05(\xd8\xea\x9bo\xed\xc5\x13\xab\xa4\xc8\xebO\x8b', '\x01\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\r\x02\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00}\xcb\x9e\xb2*\xb4\xea?1\xa3)H[?\xb9', '\xd0\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\xc8\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x14\x00\x00\x00\x00\x00}\x00;\x00\x00\x00\x00\x00\x00\x00\xe6\x00\xb8\x00\x90\x00\r\x02\x00\xcc^\x0c\x0b\x02\xe4\x00\x00\x00U\x00\x1c\x00\xb6\x00\x93\x00\x00\x00\x00\x00\x89\xbf\xc6D\xfe\xc5\x0fh^\xc5\x1d\x00\xef\x00\xe4', '\x03\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\r\x02\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00gs\x9e\n\x9f\x8f&\xaa\xad,\xc5G\x9a=]', '\x02\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\r\x02\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x93\x07\xc6\xfcK\xfe\xc3\xfd\xc2J\xa0B,\x0f\x00']
+    tmp = shares[2]
+    shares[2] = shares[0]
+    shares[0] = tmp
+    key = "%\xae\xbc\x15\t)\xb7\x19\x89\xe4^\xdd\xda>[J\xb1\xaag\x8f\x94\x9b\xe3\xad\xd8*{D\xf8.\xb4\xdf"
+    for share, provider in zip(shares, providers):
+        provider.put("test", share)
+
     FD = FileDistributor(providers, 3)
-    key = FD.put("test", "data")
-
-    mutate(providers[0], "test", 1)
-
-    try:
+    #FD.put("test", "data", key)
+    #mutate(providers[0], "test", 20)
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
         FD.get("test", key)
-        assert False
-    except exceptions.OperationFailure as e:
-        assert e.result == "data"
-        assert len(e.failures) == 1
-        assert e.failures[0].provider == providers[0]
-
-
-def test_medium_mutate_recover():
-    FD = FileDistributor(providers, 3)
-    key = FD.put("test", "data")
-
-    mutate(providers[0], "test", 10)
-
-    try:
-        FD.get("test", key)
-        assert False
-    except exceptions.OperationFailure as e:
-        assert e.result == "data"
-        assert len(e.failures) == 1
-        assert e.failures[0].provider == providers[0]
-
-
-def test_big_mutate_recover():
-    FD = FileDistributor(providers, 3)
-    key = FD.put("test", "data")
-
-    mutate(providers[0], "test", 20)
-
-    try:
-        FD.get("test", key)
-        assert False
-    except exceptions.OperationFailure as e:
-        assert e.result == "data"
-        assert len(e.failures) == 1
-        assert e.failures[0].provider == providers[0]
+    assert excinfo.value.result == "data"
+    assert len(excinfo.value.failures) == 1
+    print excinfo.value.failures[0].provider.provider_path
+    print providers[0].provider_path
+    assert excinfo.value.failures[0].provider == providers[0]
+    assert False
 
 
 def test_mutate_two_recover():
@@ -148,12 +125,10 @@ def test_mutate_two_recover():
     mutate(providers[2], "test", 20)
     mutate(providers[3], "test", 20)
 
-    try:
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
         FD.get("test", key)
-        assert False
-    except exceptions.OperationFailure as e:
-        assert e.result == "data"
-        assert sorted([f.provider for f in e.failures]) == sorted([providers[2], providers[3]])
+    assert excinfo.value.result == "data"
+    assert sorted([f.provider for f in excinfo.value.failures]) == sorted([providers[2], providers[3]])
 
 
 def test_mutate_fail():
