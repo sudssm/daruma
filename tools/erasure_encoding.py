@@ -7,7 +7,7 @@ from custom_exceptions import exceptions
 
 
 def _get_ecdriver(threshold, total_shares):
-    return ECDriver(k=threshold, m=total_shares - threshold, ec_type='isa_l_rs_vand')
+    return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
 
 
 def share(message, threshold, total_shares):
