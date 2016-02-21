@@ -29,13 +29,14 @@ def sandbox_function(function, *args):
     """
     EXIT_SUCCESS = 0
 
-    def function_wrapper(function, pipe, args):
+    def function_wrapper(function, pipe_receiver, pipe_sender, args):
+        pipe_receiver.close()
         results = function(*args)
         for result in results:
-            pipe.send_bytes(result)
-        pipe.close()
+            pipe_sender.send_bytes(result)
+        pipe_sender.close()
     pipe_receiver, pipe_sender = Pipe(duplex=False)
-    process = Process(target=function_wrapper, args=(function, pipe_sender, args))
+    process = Process(target=function_wrapper, args=(function, pipe_receiver, pipe_sender, args))
     process.start()
     pipe_sender.close()
     process.join()
