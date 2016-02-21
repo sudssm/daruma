@@ -5,7 +5,7 @@ from pyeclib.ec_iface import ECInsufficientFragments
 from pyeclib.ec_iface import ECInvalidFragmentMetadata
 from pyeclib.ec_iface import ECDriverError
 from custom_exceptions import exceptions
-from tools.utils import sandbox_function
+from tools.utils import sandbox_function, EXIT_CODE_SEGFAULT
 
 EXIT_CODE_DECODE_ERROR = 2
 
@@ -70,7 +70,7 @@ def reconstruct(shares, threshold, total_shares):
         message = sandbox_function(_reconstruct_implementation, shares, threshold, total_shares)
         return message[0]
     except exceptions.SandboxProcessFailure as e:
-        if e.exitcode is EXIT_CODE_DECODE_ERROR:
+        if e.exitcode is EXIT_CODE_DECODE_ERROR or e.exitcode is EXIT_CODE_SEGFAULT:
             raise exceptions.DecodeError
         else:
             logging.exception("Exception encountered during share reconstruction")
