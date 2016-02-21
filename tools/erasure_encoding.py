@@ -72,7 +72,9 @@ def reconstruct(shares, threshold, total_shares):
         A byte representation of the reconstructed message if the reconstruction was successful.
 
     Raises:
-        DecodeError: Decoding the erasure code was unsuccessful (e.g. the shares were of different lengths).
+        DecodeError: Decoding the erasure code was unsuccessful (e.g. there
+            were insufficient shares for reconstruction, the shares were of
+            different lengths, or the shares were excessively corrupted).
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
