@@ -14,13 +14,22 @@ def _get_ecdriver(threshold, total_shares):
     return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
 
 
-def _share_implementation(message, threshold, total_shares):
+def _do_sharing(message, threshold, total_shares):
+    """
+    This function calls into the RS C library and has a propensity to segfault.
+    Do NOT call it outside of the sandbox_function.
+    """
     ec_driver = _get_ecdriver(threshold, total_shares)
     shares = ec_driver.encode(message)
     return shares
 
 
-def _reconstruct_implementation(shares, threshold, total_shares):
+def _do_reconstruction(shares, threshold, total_shares):
+    """
+    This function calls into the RS C library and has a propensity to segfault.
+    Do NOT call it outside of the sandbox_function.  Its peculiar return type
+    and exit behavior are specific to the sandbox implementation.
+    """
     try:
         ec_driver = _get_ecdriver(threshold, total_shares)
         message = ec_driver.decode(shares)
@@ -44,10 +53,10 @@ def share(message, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        shares = sandbox_function(_share_implementation, message, threshold, total_shares)
+        shares = sandbox_function(_do_sharing, message, threshold, total_shares)
         return shares
     except exceptions.SandboxProcessFailure:
-        logging.exception("Exception encountered during share creation")
+        logging.exception("Exception encountered during Reed-Solomon share creation")
         raise exceptions.LibraryException
 
 
@@ -67,11 +76,11 @@ def reconstruct(shares, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        message = sandbox_function(_reconstruct_implementation, shares, threshold, total_shares)
+        message = sandbox_function(_do_reconstruction, shares, threshold, total_shares)
         return message[0]
     except exceptions.SandboxProcessFailure as e:
         if e.exitcode is EXIT_CODE_DECODE_ERROR or e.exitcode is EXIT_CODE_SEGFAULT:
             raise exceptions.DecodeError
         else:
-            logging.exception("Exception encountered during share reconstruction")
+            logging.exception("Exception encountered during Reed-Solomon share reconstruction")
             raise exceptions.LibraryException
