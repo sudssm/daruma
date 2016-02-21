@@ -30,20 +30,34 @@ def sandbox_function(function, *args):
     EXIT_SUCCESS = 0
 
     def function_wrapper(function, pipe_receiver, pipe_sender, args):
+        """
+        This function calls the user's function and then sends the returned
+        data back on the provided pipe.
+        """
         pipe_receiver.close()
         results = function(*args)
         for result in results:
             pipe_sender.send_bytes(result)
         pipe_sender.close()
+    # Create a pipe to send data returned from the function.  This custom
+    # serialization scheme is used because at least one application of the
+    # sandbox uses untrusted data unsuitable for pickling.  If more diverse
+    # applications crop up, using JSON for serialization may make sense.
     pipe_receiver, pipe_sender = Pipe(duplex=False)
+
+    # Call the function wrapper in a new process
     process = Process(target=function_wrapper, args=(function, pipe_receiver, pipe_sender, args))
     process.start()
     pipe_sender.close()
+
+    # Wait for the new process to exit
     process.join()
 
+    # The status code will be non-zero on a crash or exception
     if process.exitcode is not EXIT_SUCCESS:
         raise SandboxProcessFailure(process.exitcode)
 
+    # Reconstruct the returned data
     results = []
     while True:
         try:
