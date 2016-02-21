@@ -148,7 +148,6 @@ class SecretBox:
             self.resilience_manager.log_success()
             return result
         except exceptions.OperationFailure as e:
-            print "failed!"
             self.resilience_manager.diagnose_and_repair_file(e.failures, path, e.result)
             return e.result
         except exceptions.FatalOperationFailure as e:

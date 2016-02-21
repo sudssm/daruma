@@ -37,7 +37,7 @@ class ProviderFailure(Exception):
     """
     def __init__(self, provider):
         self.provider = provider
-        provider.log_error(self)
+        # TODO? provider.log_error(self)
 
     def __str__(self):
         return "<" + self.__class__.__name__ + " in " + str(self.provider) + ">"
@@ -61,18 +61,10 @@ class ProviderOperationFailure(ProviderFailure):
     """
 
 
-class IncorrectFileFailure(ProviderFailure):
+class InvalidShareFailure(ProviderFailure):
     """
     The provider returned the wrong value for a file
     """
-
-
-class InvalidShareFailure(Exception):
-    """
-    The provider returned an invalid share
-    """
-    def __init__(self, provider):
-        self.provider = provider
 
 
 # crypto exceptions

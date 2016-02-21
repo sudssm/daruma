@@ -21,10 +21,7 @@ class ResilienceManager:
         # TODO maybe raise network failure here?
         # TODO
         for failure in failures:
-            failure.provider.errors += 1
-            # raise an error when the provider goes over the "red" threshold
-            if failure.provider.errors == 5:
-                raise exceptions.RedProviderFailure
+            failure.provider.log_error(failure)
 
     # TODO in general, in repairs, we don't have to upload new file if the error was
     # connection failure. if provider is down, we just diagnose and retry til red?

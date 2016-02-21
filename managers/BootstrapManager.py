@@ -63,7 +63,11 @@ class BootstrapManager:
                 failures.append(e)
             except ValueError:
                 # if the cast to int failed
-                failures.append(exceptions.IncorrectFileFailure(provider))
+                failures.append(exceptions.InvalidShareFailure(provider))
+
+        # if we don't have at least n/2 thresholds, we can't have a quorum
+        if len(failures) > len(self.providers)/2:
+            raise exceptions.FatalOperationFailure(failures)
 
         # vote on threshold
         for threshold, sources in thresholds_map.items():
@@ -72,7 +76,7 @@ class BootstrapManager:
             else:
                 # add providers to failures
                 for provider in sources:
-                    failures.append(exceptions.IncorrectFileFailure(provider))
+                    failures.append(exceptions.InvalidShareFailure(provider))
 
         # if still not set, we have a problem
         if self.bootstrap_reconstruction_threshold is None:
