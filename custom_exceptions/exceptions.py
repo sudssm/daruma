@@ -20,6 +20,16 @@ class NetworkException(Exception):
     """
 
 
+# tools exceptions
+class SandboxProcessFailure(Exception):
+    """
+    A function run in the process sandbox exited with an unsuccessful exit code.
+    The exit code is stored in the exitcode field.
+    """
+    def __init__(self, exitcode):
+        self.exitcode = exitcode
+
+
 # provider exceptions
 class ProviderFailure(Exception):
     """
@@ -55,6 +65,14 @@ class IncorrectFileFailure(ProviderFailure):
     """
     The provider returned the wrong value for a file
     """
+
+
+class InvalidShareFailure(Exception):
+    """
+    The provider returned an invalid share
+    """
+    def __init__(self, provider):
+        self.provider = provider
 
 
 # crypto exceptions

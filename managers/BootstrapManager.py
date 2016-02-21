@@ -85,9 +85,9 @@ class BootstrapManager:
         # attempt to recover key
         # TODO find cheaters
         try:
-            string = tools.shamir_secret_sharing.reconstruct(shares)
+            string = tools.shamir_secret_sharing.reconstruct(shares, Bootstrap.SIZE, len(self.providers))
             bootstrap = Bootstrap.parse(string)
-        except exceptions.DecodeError:
+        except exceptions.LibraryException:  # TODO: update when RSS is introduced
             raise exceptions.FatalOperationFailure(failures)
 
         if len(failures) > 0:

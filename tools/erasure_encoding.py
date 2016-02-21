@@ -1,13 +1,41 @@
 import logging
+import sys
 from pyeclib.ec_iface import ECDriver
 from pyeclib.ec_iface import ECInsufficientFragments
 from pyeclib.ec_iface import ECInvalidFragmentMetadata
 from pyeclib.ec_iface import ECDriverError
 from custom_exceptions import exceptions
+from tools.utils import sandbox_function, EXIT_CODE_SEGFAULT
+
+EXIT_CODE_DECODE_ERROR = 2
 
 
-def __get_ecdriver(threshold, total_shares):
+def _get_ecdriver(threshold, total_shares):
     return ECDriver(k=threshold, m=total_shares - threshold, ec_type='liberasurecode_rs_vand')
+
+
+def _do_sharing(message, threshold, total_shares):
+    """
+    This function calls into the RS C library and has a propensity to segfault.
+    Do NOT call it outside of the sandbox_function.
+    """
+    ec_driver = _get_ecdriver(threshold, total_shares)
+    shares = ec_driver.encode(message)
+    return shares
+
+
+def _do_reconstruction(shares, threshold, total_shares):
+    """
+    This function calls into the RS C library and has a propensity to segfault.
+    Do NOT call it outside of the sandbox_function.  Its peculiar return type
+    and exit behavior are specific to the sandbox implementation.
+    """
+    try:
+        ec_driver = _get_ecdriver(threshold, total_shares)
+        message = ec_driver.decode(shares)
+        return [message]
+    except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
+        sys.exit(EXIT_CODE_DECODE_ERROR)
 
 
 def share(message, threshold, total_shares):
@@ -25,10 +53,10 @@ def share(message, threshold, total_shares):
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
-        return ec_driver.encode(message)
-    except Exception:
-        logging.exception("Exception encountered during share creation")
+        shares = sandbox_function(_do_sharing, message, threshold, total_shares)
+        return shares
+    except exceptions.SandboxProcessFailure:
+        logging.exception("Exception encountered during Reed-Solomon share creation")
         raise exceptions.LibraryException
 
 
@@ -44,14 +72,17 @@ def reconstruct(shares, threshold, total_shares):
         A byte representation of the reconstructed message if the reconstruction was successful.
 
     Raises:
-        DecodeError: Decoding the erasure code was unsuccessful (e.g. the shares were of different lengths).
+        DecodeError: Decoding the erasure code was unsuccessful (e.g. there
+            were insufficient shares for reconstruction, the shares were of
+            different lengths, or the shares were excessively corrupted).
         LibraryException: An exception occurred in the backing erasure encoding library.
     """
     try:
-        ec_driver = __get_ecdriver(threshold, total_shares)
-        return ec_driver.decode(shares)
-    except (ECInsufficientFragments, ECInvalidFragmentMetadata, ECDriverError):
-        raise exceptions.DecodeError
-    except Exception:
-        logging.exception("Exception encountered during share reconstruction")
-        raise exceptions.LibraryException
+        message = sandbox_function(_do_reconstruction, shares, threshold, total_shares)
+        return message[0]
+    except exceptions.SandboxProcessFailure as e:
+        if e.exitcode is EXIT_CODE_DECODE_ERROR or e.exitcode is EXIT_CODE_SEGFAULT:
+            raise exceptions.DecodeError
+        else:
+            logging.exception("Exception encountered during Reed-Solomon share reconstruction")
+            raise exceptions.LibraryException
