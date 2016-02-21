@@ -82,6 +82,7 @@ class SecretBox:
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
 
         if failures is not None:
+            # TODO if a provider is permanently offline, this shouldn't crash
             resilience_manager.diagnose_and_repair_bootstrap(failures)
 
         return SecretBox(bootstrap_manager, file_manager, resilience_manager)

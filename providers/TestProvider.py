@@ -61,11 +61,5 @@ class TestProvider(LocalFilesystemProvider):
         with self.exception_handler():
             return super(TestProvider, self).wipe()
 
-    def log_error(self, exception):
-        super(TestProvider, self).log_error(exception)
-        self.errors += 1
-        if self.errors == 5:
-            raise exceptions.RedProviderFailure
-
     def __str__(self):
         return "<TestFilesystemProvider@" + self.provider_path + "-" + self.state + ">"

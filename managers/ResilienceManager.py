@@ -22,6 +22,10 @@ class ResilienceManager:
         # TODO
         for failure in failures:
             failure.provider.log_error(failure)
+            failure.provider.errors += 1
+            if failure.provider.errors > 50:
+                raise exceptions.RedProviderFailure
+
 
     # TODO in general, in repairs, we don't have to upload new file if the error was
     # connection failure. if provider is down, we just diagnose and retry til red?
@@ -65,7 +69,7 @@ class ResilienceManager:
             self.file_manager.update_key_and_name(master_key, manifest_name)
             self.bootstrap_manager.distribute_bootstrap(bootstrap)
         except exceptions.FatalOperationFailure as e:
-            self.diagnose_and_repair_bootstrap(failures)
+            self.diagnose_and_repair_bootstrap(e.failures)
 
     def diagnose_and_repair_entry(self):
         # for the bootstrap_reconstruction_threshold

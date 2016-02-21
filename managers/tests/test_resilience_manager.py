@@ -30,14 +30,14 @@ def test_permanently_offline_get():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     providers[0].set_state(TestProviderState.OFFLINE)
+    # TODO i should be able to still get this somehow?
     with pytest.raises(exceptions.RedProviderFailure):
         SB.get("test")
 
-'''
+
 def test_permanently_offline_load():
     print providers[0].state
-    SB = SecretBox.provision(providers, 3, 3)
+    SecretBox.provision(providers, 3, 3)
     providers[0].set_state(TestProviderState.OFFLINE)
     with pytest.raises(exceptions.RedProviderFailure):
         SecretBox.load(providers)
-'''
