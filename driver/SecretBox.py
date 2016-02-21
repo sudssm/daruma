@@ -29,7 +29,7 @@ class SecretBox:
         bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key
         file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
         Returns a constructed SecretBox object
-        Raises FatalOperationFailure or OperationFailure
+        Raises FatalOperationFailure or OperationFailure or ProviderFailure
         """
 
         for provider in providers:
@@ -144,28 +144,35 @@ class SecretBox:
         self._load_manifest()
 
         try:
-            return self.file_manager.get(path)
+            result = self.file_manager.get(path)
+            self.resilience_manager.log_success()
+            return result
         except exceptions.OperationFailure as e:
+            print "failed!"
             self.resilience_manager.diagnose_and_repair_file(e.failures, path, e.result)
             return e.result
-        except exceptions.FatalOperationFailure:
-            self.reslience_manager.diagnose(failures)
+        except exceptions.FatalOperationFailure as e:
+            # TODO do we want to diagnose and repair here?
+            self.resilience_manager.diagnose(e.failures)
             raise
 
     def put(self, path, data):
         self._load_manifest()
 
         try:
-            return self.file_manager.put(path, data)
-        except exceptions.FatalOperationFailure:
-            self.reslience_manager.diagnose(failures)
+            result = self.file_manager.put(path, data)
+            self.resilience_manager.log_success()
+            return result
+        except exceptions.FatalOperationFailure as e:
+            self.resilience_manager.diagnose(e.failures)
             raise
 
     def delete(self, path):
         self._load_manifest()
 
         try:
-            return self.file_manager.delete(path)
+            self.file_manager.delete(path)
+            self.resilience_manager.log_success()
         except exceptions.OperationFailure as e:
             # TODO diagnose and repair
             # repair here is just garbage collect

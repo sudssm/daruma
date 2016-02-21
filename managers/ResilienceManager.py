@@ -8,57 +8,67 @@ class ResilienceManager:
     def __init__(self, providers, file_manager, bootstrap_manager):
         self.file_manager = file_manager
         self.bootstrap_manager = bootstrap_manager
-        pass
+        self.providers = providers
 
     def log_success(self):
+        # TODO
         # to be called when all providers responded correctly
-        pass
+        for provider in self.providers:
+            pass
 
     def diagnose(self, failures):
-        print "*** diagnose"
-        # assign failing providers bad scores based on the failures
-        for failure in failures:
-            print failure
+        # TODO ignore auth failures; raise them?
+        # TODO maybe raise network failure here?
         # TODO
+        for failure in failures:
+            failure.provider.errors += 1
+            # raise an error when the provider goes over the "red" threshold
+            if failure.provider.errors == 5:
+                raise exceptions.RedProviderFailure
 
+    # TODO in general, in repairs, we don't have to upload new file if the error was
+    # connection failure. if provider is down, we just diagnose and retry til red?
     def diagnose_and_repair_file(self, failures, filename, data):
-        print "FILE failures"
         self.diagnose(failures)
 
         try:
             # attempt to repair file
             self.file_manager.put(filename, data)
         except exceptions.OperationFailure as e:
-            # necessarily going to happen because delete of the old filename will fail
-            # TODO remove all of the providers in failures from e.failures
-            # if there are any left, diagnose them
-            pass
+            # will necessarily happen if the error was due to a missing file
+            # because deleting that file will not work. So, ignore all additional
+            # from providers in failures
+            original_providers = [failure.provider for failure in failures]
+            additional_errors = [failure for failure in e.failures if failure.provider not in original_providers]
+            if len(additional_errors) > 0:
+                self.diagnose(additional_errors)
         except exceptions.FatalOperationFailure as e:
-            # unable to repair; update diagnosis and return
-            self.diagnose(e.failures)
+            # unable to repair; try again
+            self.diagnose_and_repair_file(e.failures, filename, data)
 
     def diagnose_and_repair_bootstrap(self, failures):
-        print "BOOTSTRAP failures"
+        self.diagnose(failures)
 
         # we need to get the manifest to repair the bootstrap
         try:
             self.file_manager.load_manifest()
         except exceptions.OperationFailure as e:
-            failures += e.failures
-        except exceptions.FatalOperationFailure:
-            # TODO diagnose?
-            raise
-
-        self.diagnose(failures)
+            self.diagnose(e.failures)
+        except exceptions.FatalOperationFailure as e:
+            # can't proceed if unable to load manifest; retry
+            self.diagnose_and_repair_bootstrap(e.failures)
 
         master_key = generate_key()
         manifest_name = generate_filename()
         bootstrap = Bootstrap(master_key, manifest_name, self.file_manager.file_reconstruction_threshold)
 
-        # TODO what if manifest distribute fails? need to rollback
-        # TODO try/catch
-        self.file_manager.update_key_and_name(master_key, manifest_name)
-        self.bootstrap_manager.distribute_bootstrap(bootstrap)
+        try:
+            # TODO what if part of this distribute fails? need to rollback
+            # TODO ensure that this is actually atomic
+            self.file_manager.update_key_and_name(master_key, manifest_name)
+            self.bootstrap_manager.distribute_bootstrap(bootstrap)
+        except exceptions.FatalOperationFailure as e:
+            self.diagnose_and_repair_bootstrap(failures)
 
     def diagnose_and_repair_entry(self):
         # for the bootstrap_reconstruction_threshold

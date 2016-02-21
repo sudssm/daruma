@@ -12,7 +12,7 @@ class BaseProvider(object):
 
         # TODO change this when diagnose becomes more sophisticated
         self.errors = 0
-
+        self.error_log = []
         self.connect()
 
     # can throw ConnectionFailure, AuthFailure
@@ -35,3 +35,6 @@ class BaseProvider(object):
         """
         Delete all files on the provider
         """
+
+    def log_error(self, exception):
+        self.error_log.append(exception)
