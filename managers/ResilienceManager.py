@@ -2,6 +2,7 @@ from custom_exceptions import exceptions
 from tools.encryption import generate_key
 from tools.utils import generate_filename
 from managers.BootstrapManager import Bootstrap
+from providers.BaseProvider import ProviderStatus
 
 
 class ResilienceManager:
@@ -21,11 +22,13 @@ class ResilienceManager:
         # TODO maybe raise network failure here?
         # TODO
         for failure in failures:
-            failure.provider.log_error(failure)
             failure.provider.errors += 1
-            if failure.provider.errors > 50:
-                raise exceptions.RedProviderFailure
 
+    def _has_red_provider(self, failures):
+        for failure in failures:
+            if failure.provider.status == ProviderStatus.RED:
+                return True
+        return False
 
     # TODO in general, in repairs, we don't have to upload new file if the error was
     # connection failure. if provider is down, we just diagnose and retry til red?
@@ -44,13 +47,21 @@ class ResilienceManager:
             if len(additional_errors) > 0:
                 self.diagnose(additional_errors)
         except exceptions.FatalOperationFailure as e:
-            # unable to repair; try again
-            self.diagnose_and_repair_file(e.failures, filename, data)
+            # unable to repair
+            # if a provider is now red, just diagnose and stop
+            if self._has_red_provider(e.failures):
+                self.diagnose(e.failures)
+                # TODO, raise a different error here?
+                return
+            # otherwise retry
+            else:
+                self.diagnose_and_repair_file(e.failures, filename, data)
 
     def diagnose_and_repair_bootstrap(self, failures):
         self.diagnose(failures)
 
         # we need to get the manifest to repair the bootstrap
+        # TODO maybe remove this - the manifest is cached?
         try:
             self.file_manager.load_manifest()
         except exceptions.OperationFailure as e:
@@ -69,10 +80,22 @@ class ResilienceManager:
             self.file_manager.update_key_and_name(master_key, manifest_name)
             self.bootstrap_manager.distribute_bootstrap(bootstrap)
         except exceptions.FatalOperationFailure as e:
-            self.diagnose_and_repair_bootstrap(e.failures)
+            # unable to repair
+            # if a provider is now red, just diagnose and stop
+            if self._has_red_provider(e.failures):
+                self.diagnose(e.failures)
+                # TODO, raise a different error here?
+                return
+            # otherwise retry
+            else:
+                self.diagnose_and_repair_bootstrap(e.failures)
 
     def diagnose_and_repair_entry(self):
         # for the bootstrap_reconstruction_threshold
         # TODO
         # maybe we don't need this; bootstrap manager distribute sort of takes care of it
+        pass
+
+    def garbage_collect(self):
+        # TODO
         pass

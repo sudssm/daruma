@@ -37,7 +37,7 @@ class ProviderFailure(Exception):
     """
     def __init__(self, provider):
         self.provider = provider
-        # TODO? provider.log_error(self)
+        provider.log_error(self)
 
     def __str__(self):
         return "<" + self.__class__.__name__ + " in " + str(self.provider) + ">"
@@ -115,10 +115,3 @@ class FatalOperationFailure(Exception):
     """
     def __init__(self, failures):
         self.failures = failures
-
-
-# TODO should this know about the bad provider?
-class RedProviderFailure(Exception):
-    """
-    An operation could not be completed because a provider is in the red state
-    """

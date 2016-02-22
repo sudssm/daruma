@@ -1,6 +1,7 @@
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
 from providers.TestProvider import TestProvider, TestProviderState
+from providers.BaseProvider import ProviderStatus
 import pytest
 
 
@@ -24,20 +25,29 @@ def test_failing():
     # check that everything is fixed - we should get no more errors
     assert SB.get("test") == "data"
     assert providers[0].errors == 2
+    assert providers[0].status == ProviderStatus.YELLOW
 
 
 def test_permanently_offline_get():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     providers[0].set_state(TestProviderState.OFFLINE)
-    # TODO i should be able to still get this somehow?
-    with pytest.raises(exceptions.RedProviderFailure):
-        SB.get("test")
+    assert SB.get("test") == "data"
+    assert providers[0].status == ProviderStatus.RED
 
 
 def test_permanently_offline_load():
-    print providers[0].state
-    SecretBox.provision(providers, 3, 3)
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
     providers[0].set_state(TestProviderState.OFFLINE)
-    with pytest.raises(exceptions.RedProviderFailure):
-        SecretBox.load(providers)
+    SB = SecretBox.load(providers)
+    assert providers[0].status == ProviderStatus.RED
+    assert SB.get("test") == "data"
+
+
+def test_permanently_offline_put():
+    SB = SecretBox.provision(providers, 3, 3)
+    providers[0].set_state(TestProviderState.OFFLINE)
+    with pytest.raises(exceptions.FatalOperationFailure):
+        SB.put("test", "data")
+    assert providers[0].status == ProviderStatus.RED

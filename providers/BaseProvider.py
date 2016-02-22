@@ -2,6 +2,10 @@
 # interface that allows cloud and local providers
 
 
+class ProviderStatus:
+    RED, YELLOW, GREEN = "RED", "YELLOW", "GREEN"
+
+
 class BaseProvider(object):
     # the path to our files on the cloud provider
     ROOT_DIR = "secretbox"
@@ -38,3 +42,11 @@ class BaseProvider(object):
 
     def log_error(self, exception):
         self.error_log.append(exception)
+
+    @property
+    def status(self):
+        if self.errors > 20:
+            return ProviderStatus.RED
+        if self.errors > 1:
+            return ProviderStatus.YELLOW
+        return ProviderStatus.GREEN
