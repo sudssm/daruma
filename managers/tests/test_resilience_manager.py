@@ -105,3 +105,11 @@ def test_permanently_authfail_get():
     providers[0].set_state(TestProviderState.UNAUTHENTICATED)
     assert SB.get("test") == "data"
     assert providers[0].status == ProviderStatus.AUTH_FAIL
+
+
+def test_corrupting():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+    providers[0].set_state(TestProviderState.CORRUPTING)
+    assert SB.get("test") == "data"
+    assert providers[0].status == ProviderStatus.YELLOW

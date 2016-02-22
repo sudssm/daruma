@@ -1,6 +1,8 @@
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from contextlib import contextmanager
+from struct import pack
+from random import randint, random, randrange
 
 
 class TestProviderState:
@@ -47,10 +49,14 @@ class TestProvider(LocalFilesystemProvider):
         with self.exception_handler():
             result = super(TestProvider, self).get(filename)
         if self.state == TestProviderState.CORRUPTING:
-            # TODO mutate file
-            # with probability half, change file size
-            pass
-        return result
+            if random() > 0.5:
+                size = randrange(50)*2
+            else:
+                size = len(result)/2
+            corrupt = pack("h"*size, *[randint(0, 255) for i in xrange(size)])
+            return "".join(corrupt)
+        else:
+            return result
 
     def put(self, filename, data):
         with self.exception_handler():
