@@ -1,4 +1,5 @@
 import dropbox
+
 import urllib3
 from contextlib import contextmanager
 from custom_exceptions import exceptions
@@ -21,25 +22,31 @@ class DropboxProvider(BaseProvider):
         self.access_token = access_token
         self.client = dropbox.client.DropboxClient(self.access_token)
 
+
     @staticmethod
     def new_connection():
         flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY,DBOX_APP_SECRET)
         authorize_url = flow.start()
         return authorize_url
 
+
     @staticmethod
     def finish_connection(authorization_code):
         flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY,DBOX_APP_SECRET)
         try:
             access_token,_ = flow.finish(authorization_code)
-            client = dropbox.client.DropboxClient(access_token)
+            # TODO credential management
             return DropboxProvider(access_token=access_token)
         except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(self)
+            raise exceptions.ConnectionFailure(None)
         except dropbox.oauth.NotApprovedException:
-            raise exceptions.AuthFailure(self)
+            raise exceptions.AuthFailure(None)
         except dropbox.oauth.ProviderException:
-            raise exceptions.ProviderOperationFailure(self)
+            raise exceptions.ProviderOperationFailure(None)
+        except dropbox.rest.ErrorResponse as e:
+            if e.status == 400:
+                raise exceptions.AuthFailure(None)
+            raise exceptions.ProviderOperationFailure(None)
         except Exception:
             raise exceptions.LibraryException
 
@@ -60,7 +67,7 @@ class DropboxProvider(BaseProvider):
 
     def connect(self):
         with self.exception_handler():
-            account_info = self.client.account_info()
+            self.client.account_info()
         
 
     def get(self, filename):
@@ -71,7 +78,7 @@ class DropboxProvider(BaseProvider):
 
     def put(self, filename, data):
         with self.exception_handler():
-            response = self.client.put_file(filename, data, overwrite=True)
+            self.client.put_file(filename, data, overwrite=True)
         
 
     def delete(self, filename):
