@@ -135,7 +135,8 @@ class SecretBox:
             # TODO this repeats until someone is red, which is bad for read operations
             self.resilience_manager.diagnose_and_repair_bootstrap(e.failures)
         except exceptions.FatalOperationFailure as e:
-            # TODO diagnose
+            if self.resilience_manager.diagnose(e.failures):
+                return self._load_manifest()
             raise
 
     def ls(self):
@@ -154,7 +155,8 @@ class SecretBox:
             self.resilience_manager.diagnose_and_repair_file(e.failures, path, e.result)
             return e.result
         except exceptions.FatalOperationFailure as e:
-            self.resilience_manager.diagnose(e.failures)
+            if self.resilience_manager.diagnose(e.failures):
+                return self.get(path)
             raise
 
     def put(self, path, data):
@@ -165,7 +167,8 @@ class SecretBox:
             self.resilience_manager.log_success()
             return result
         except exceptions.FatalOperationFailure as e:
-            self.resilience_manager.diagnose(e.failures)
+            if self.resilience_manager.diagnose(e.failures):
+                self.put(path, data)
             raise
 
     def delete(self, path):

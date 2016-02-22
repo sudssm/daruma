@@ -12,11 +12,10 @@ k_key/k_file is the number of providers that need to be up to recover key/file
 tmp_dir is a local directory that will act as the providers
 """
 import shlex
-
-
+import traceback
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
-from providers.LocalFilesystemProvider import LocalFilesystemProvider
+from providers.TestProvider import TestProvider, TestProviderState
 import sys
 
 try:
@@ -36,7 +35,7 @@ except:
     sys.exit()
 
 
-providers = [LocalFilesystemProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
+providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
 if cmd == "init":
     SB = SecretBox.provision(providers, k_key, k_file)
 else:
@@ -44,18 +43,21 @@ else:
 
 while True:
     print "\n"
-    print "ls, get, put, del, exit"
+    print "ls, get, put, del, set, status, exit"
     cmd = shlex.split(raw_input("> "))
 
     if len(cmd) == 0:
         continue
 
     if cmd[0] == "ls":
-        files = SB.ls()
-        if len(files) == 0:
-            print "EMPTY"
-        for item in files:
-            print "-", item
+        try:
+            files = SB.ls()
+            if len(files) == 0:
+                print "EMPTY"
+            for item in files:
+                print "-", item
+        except Exception as e:
+            print traceback.format_exc()
     if cmd[0] == "get":
         if len(cmd) < 2:
             print "Usage: get <filename>"
@@ -65,13 +67,18 @@ while True:
             print SB.get(name)
         except exceptions.FileNotFound:
             print "File does not exist!"
+        except Exception as e:
+            print traceback.format_exc()
     if cmd[0] == "put":
         if len(cmd) < 3:
             print "Usage: put <filename> <contents>"
             continue
         name = cmd[1]
         data = cmd[2]
-        SB.put(name, data)
+        try:
+            SB.put(name, data)
+        except Exception as e:
+            print traceback.format_exc()
     if cmd[0] == "del":
         if len(cmd) < 2:
             print "Usage: del <filename>"
@@ -81,5 +88,33 @@ while True:
             SB.delete(name)
         except exceptions.FileNotFound:
             print "File does not exist!"
+        except Exception as e:
+            print traceback.format_exc()
+    if cmd[0] == "set":
+        if len(cmd) < 3:
+            print "Usage: set <all, n> <active, offline, authfail, corrupt>"
+            continue
+        try:
+            if cmd[1] == "all":
+                n = len(providers)
+            else:
+                n = int(cmd[1])
+            assert 0 < n
+            assert n <= len(providers)
+            assert cmd[2] in ["active", "offline", "authfail", "corrupt"]
+        except (AssertionError, ValueError):
+            print "Invalid input"
+        for provider in providers[0:n]:
+            if cmd[2] == "active":
+                provider.set_state(TestProviderState.ACTIVE)
+            if cmd[2] == "offline":
+                provider.set_state(TestProviderState.OFFLINE)
+            if cmd[2] == "authfail":
+                provider.set_state(TestProviderState.UNAUTHENTICATED)
+            if cmd[2] == "corrupt":
+                provider.set_state(TestProviderState.CORRUPTING)
+    if cmd[0] == "status":
+        for provider in providers:
+            print provider
     if cmd[0] == "exit":
         break

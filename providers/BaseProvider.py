@@ -47,6 +47,6 @@ class BaseProvider(object):
     def status(self):
         if self.errors > 20:
             return ProviderStatus.RED
-        if self.errors > 1:
+        if self.errors > 0:
             return ProviderStatus.YELLOW
         return ProviderStatus.GREEN
