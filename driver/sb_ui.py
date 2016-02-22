@@ -8,15 +8,16 @@ arg 1 is init if you want to start a new secretbox from scratch
          start if you want to resume an existing secretbox
 
 n is the number of local providers to make
+Script will always create a test Dropbox Provider
 k_key/k_file is the number of providers that need to be up to recover key/file
 tmp_dir is a local directory that will act as the providers
 """
 import shlex
 
-
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
+from providers.DropboxProvider import DropboxProvider
 import sys
 
 try:
@@ -38,6 +39,11 @@ except:
 
 providers = [LocalFilesystemProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
 if cmd == "init":
+    # start a dropbox provider
+    print "Visit", DropboxProvider.new_connection(), "to sign in to Dropbox"
+    auth_code = raw_input("Enter auth code: ")
+    dropbox_provider = DropboxProvider.finish_connection(auth_code)
+    providers.append(dropbox_provider)
     SB = SecretBox.provision(providers, k_key, k_file)
 else:
     SB = SecretBox.load(providers)

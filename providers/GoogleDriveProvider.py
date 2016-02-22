@@ -52,6 +52,7 @@ class GoogleDriveProvider(BaseProvider):
 
             return credentials
         except HttpError as e:
+            # TODO: Duplicate exception handling
             if e.resp.status in [401,403]:
                 raise exceptions.AuthFailure(None)
             raise exceptions.ProviderOperationFailure(None)

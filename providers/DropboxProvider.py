@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from custom_exceptions import exceptions
 from BaseProvider import BaseProvider
 
-# From Dropbox developer site. 
+# TODO use a manager
 DBOX_APP_KEY = "btmom5enals52c3"
 DBOX_APP_SECRET = "dl9yxq1331z9z81"
 
@@ -16,23 +16,23 @@ class DropboxProvider(BaseProvider):
         Initialize a dropbox provider.
 
         Args:
-            access_token: the access_token for the user. 
+            access_token: the access_token for the user.
         """
-        
+
         self.access_token = access_token
         self.client = dropbox.client.DropboxClient(self.access_token)
 
 
     @staticmethod
     def new_connection():
-        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY,DBOX_APP_SECRET)
+        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY, DBOX_APP_SECRET)
         authorize_url = flow.start()
         return authorize_url
 
 
     @staticmethod
     def finish_connection(authorization_code):
-        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY,DBOX_APP_SECRET)
+        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY, DBOX_APP_SECRET)
         try:
             access_token,_ = flow.finish(authorization_code)
             # TODO credential management
@@ -50,6 +50,7 @@ class DropboxProvider(BaseProvider):
         except Exception:
             raise exceptions.LibraryException
 
+        return DropboxProvider(access_token=access_token)
 
     @contextmanager
     def exception_handler(self):
@@ -64,35 +65,26 @@ class DropboxProvider(BaseProvider):
         except Exception:
             raise exceptions.LibraryException
 
-
     def connect(self):
         with self.exception_handler():
             self.client.account_info()
-        
 
     def get(self, filename):
         with self.exception_handler():
             f, metadata = self.client.get_file_and_metadata(filename)
             return f.read()
-        
 
     def put(self, filename, data):
         with self.exception_handler():
             self.client.put_file(filename, data, overwrite=True)
-        
+
 
     def delete(self, filename):
         with self.exception_handler():
             self.client.file_delete(filename)
-        
 
-    def wipe (self):
+    def wipe(self):
         with self.exception_handler():
             entries = self.client.delta()['entries']
             for e in entries:
                 self.client.file_delete(e[0])
-        
-
-
-
-
