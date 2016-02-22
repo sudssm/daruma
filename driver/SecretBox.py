@@ -30,16 +30,12 @@ class SecretBox:
         bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key
         file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
         Returns a constructed SecretBox object
-        Raises FatalOperationFailure or OperationFailure or ProviderFailure
+        Raises FatalOperationFailure or ProviderFailure
         """
 
         for provider in providers:
-            try:
-                provider.wipe()
-            except exceptions.ProviderOperationFailure:
-                # TODO maybe diagnose here?
-                # or maybe crash -- can't provision if one provider is down already
-                pass
+            # raises on failure
+            provider.wipe()
 
         master_key = generate_key()
         manifest_name = generate_filename()
@@ -51,8 +47,7 @@ class SecretBox:
         try:
             bootstrap_manager.distribute_bootstrap(bootstrap)
         except exceptions.FatalOperationFailure:
-            # TODO diagnose
-            # TODO if all are offline, raise network error?
+            # TODO check for network error
             raise
 
         file_manager = FileManager(providers, file_reconstruction_threshold, master_key, manifest_name, setup=True)
@@ -65,7 +60,7 @@ class SecretBox:
         Load an existing SecretBox
         Providers: a list of providers
         Returns a constructed SecretBox object
-        Raises FatalOperationFailure or OperationFailure
+        Raises FatalOperationFailure
         """
         bootstrap_manager = BootstrapManager(providers)
         failures = []
@@ -75,7 +70,7 @@ class SecretBox:
             bootstrap = e.result
             failures += e.failures
         except exceptions.FatalOperationFailure:
-            # TODO diagnose
+            # TODO check for network error
             raise
 
         file_manager = FileManager(providers, bootstrap.file_reconstruction_threshold, bootstrap.key, bootstrap.manifest_name)
@@ -83,7 +78,6 @@ class SecretBox:
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
 
         if failures is not None:
-            # TODO if a provider is permanently offline, this shouldn't crash
             resilience_manager.diagnose_and_repair_bootstrap(failures)
 
         return SecretBox(bootstrap_manager, file_manager, resilience_manager)
@@ -97,21 +91,8 @@ class SecretBox:
             file_reconstruction_threshold < len(providers)
 
     # change the master key
-    # TODO this is the same as diagnose_and_repair_bootstrap
     def update_master_key(self):
-        master_key = generate_key()
-        manifest_name = generate_filename()
-
-        bootstrap = Bootstrap(master_key, manifest_name, self.file_manager.file_reconstruction_threshold)
-
-        # upload new manifest first, then distribute new key to be atomic
-        try:
-            self.file_manager.update_key_and_name(master_key, manifest_name)
-            self.bootstrap_manager.distribute_bootstrap(bootstrap)
-        except exceptions.FatalOperationFailure:
-            # TODO diagnose
-            raise
-
+        self.resilience_manager.diagnose_and_repair_bootstrap(None)
     # public methods
 
     # add a new provider
@@ -128,11 +109,15 @@ class SecretBox:
         """
 
     def _load_manifest(self):
+        """
+        Load the manifest into the file manager
+        Without caching, this should be called before every other operation
+        Raises FatalOperationFailure if the load was not successful
+        """
         # TODO handle manifest caching
         try:
             self.file_manager.load_manifest()
         except exceptions.OperationFailure as e:
-            # TODO this repeats until someone is red, which is bad for read operations
             self.resilience_manager.diagnose_and_repair_bootstrap(e.failures)
         except exceptions.FatalOperationFailure as e:
             if self.resilience_manager.diagnose(e.failures):
@@ -140,11 +125,23 @@ class SecretBox:
             raise
 
     def ls(self):
+        """
+        List the files in the system
+        If some providers are in error, attempts to repair them
+        Upon return either all providers are stable or at least one provider is RED
+        Raises FatalOperationFailure if unsuccessful
+        """
         self._load_manifest()
-
         return self.file_manager.ls()
 
     def get(self, path):
+        """
+        Get the contents of a file given the file path
+        If some providers are in error, attempts to repair them
+        Upon return either all providers are stable or at least one provider is RED
+        Raises FileNotFound if path is invalid
+        Raises FatalOperationFailure if unsuccessful
+        """
         self._load_manifest()
 
         try:
@@ -160,6 +157,12 @@ class SecretBox:
             raise
 
     def put(self, path, data):
+        """
+        Put the data to path location
+        If some providers are in error, attempts to repair them
+        Upon return either all providers are stable or at least one provider is RED
+        Raises FatalOperationFailure if unsuccessful
+        """
         self._load_manifest()
 
         try:
@@ -168,19 +171,27 @@ class SecretBox:
             return result
         except exceptions.FatalOperationFailure as e:
             if self.resilience_manager.diagnose(e.failures):
-                self.put(path, data)
+                return self.put(path, data)
             raise
 
     def delete(self, path):
+        """
+        Delete the data at path
+        If some providers are in error, attempts to repair them
+        Upon return either all providers are stable or at least one provider is RED
+        Raises FileNotFound if path is invalid
+        Raises FatalOperationFailure if unsuccessful
+        """
         self._load_manifest()
 
         try:
             self.file_manager.delete(path)
             self.resilience_manager.log_success()
         except exceptions.OperationFailure as e:
-            # TODO diagnose and repair
-            # repair here is just garbage collect
+            self.resilience_manager.diagnose(e.failures)
+            self.resilience_manager.garbage_collect()
             return e.result
         except exceptions.FatalOperationFailure:
-            # TODO diagnose
+            if self.resilience_manager.diagnose(e.failures):
+                return self.delete(path)
             raise

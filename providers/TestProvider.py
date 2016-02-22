@@ -48,6 +48,7 @@ class TestProvider(LocalFilesystemProvider):
             result = super(TestProvider, self).get(filename)
         if self.state == TestProviderState.CORRUPTING:
             # TODO mutate file
+            # with probability half, change file size
             pass
         return result
 

@@ -36,6 +36,8 @@ class ResilienceManager:
         Returns True if all provider contained within failures is yellow or green (so we can retry)
         """
         # TODO maybe raise network failure here?
+        if failures is None:
+            return
         failed_providers = set()
         for failure in failures:
             if type(failure) is exceptions.AuthFailure:
@@ -60,15 +62,17 @@ class ResilienceManager:
     def diagnose_and_repair_file(self, failures, filename, data):
         """
         diagnose a list of failures, and then try to repair the file
-        If a provider repeatedly fails, will continue to attempt repair until red
-        Args: filename - the filename to replace
+        Args: failures - a list of ProviderFailures
+              filename - the filename to replace
               data - the correct value of the file
+        Invariant: Upon exit, either the system is stable or at least one provider is red
         """
         can_continue = self.diagnose(failures)
 
         try:
             # attempt to repair file
             self.file_manager.put(filename, data)
+            self.log_success()
         except exceptions.OperationFailure as e:
             # will necessarily happen if the error was due to a missing file
             # because deleting that file will not work. So, ignore all additional
@@ -77,6 +81,8 @@ class ResilienceManager:
             additional_errors = [failure for failure in e.failures if failure.provider not in original_providers]
             if len(additional_errors) > 0:
                 self.diagnose(additional_errors)
+            else:
+                self.log_success()
         except exceptions.FatalOperationFailure as e:
             # unable to repair
             # retry if all providers are not red
@@ -87,20 +93,22 @@ class ResilienceManager:
     def diagnose_and_repair_bootstrap(self, failures):
         """
         diagnose a list of failures, and then try to repair the bootstrap
-        If a provider repeatedly fails, will continue to attempt repair until red
+        Invariant: Upon exit, either the system is stable or at least one provider is red
         """
         can_continue = self.diagnose(failures)
 
         # we need to get the manifest to repair the bootstrap
         try:
             self.file_manager.load_manifest()
+            self.log_success()
         except exceptions.OperationFailure as e:
             can_continue = self.diagnose(e.failures)
         except exceptions.FatalOperationFailure as e:
             # can't proceed if unable to load manifest; retry
             if can_continue:
                 return self.diagnose_and_repair_bootstrap(e.failures)
-            return self.diagnose(e.failures)
+            self.diagnose(e.failures)
+            return
 
         master_key = generate_key()
         manifest_name = generate_filename()
@@ -109,7 +117,7 @@ class ResilienceManager:
         try:
             # TODO when we add caching
             # TODO what if part of this distribute fails? need to rollback or invalidate cache
-            # TODO what if manifest upload encounter network error -- then cached manifest is broken
+            # TODO what if manifest upload encounters network error -- then cached manifest is incorrect
             # TODO ensure that this is actually atomic
             self.file_manager.update_key_and_name(master_key, manifest_name)
             self.bootstrap_manager.distribute_bootstrap(bootstrap)
@@ -121,4 +129,5 @@ class ResilienceManager:
 
     def garbage_collect(self):
         # TODO
+        # requires provider ls support
         pass

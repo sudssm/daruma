@@ -13,18 +13,64 @@ def setup_function(function):
         provider.set_state(TestProviderState.ACTIVE)
 
 
-def test_failing():
+def test_repair_file():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
-    providers[0].set_state(TestProviderState.FAILING, 3)
-    # try getting, ensure that we caught the errors
+    providers[0].set_state(TestProviderState.FAILING)
+
     assert SB.get("test") == "data"
-    # one for load manifest, one for get file
-    assert providers[0].errors == 2
+    assert providers[0].status == ProviderStatus.RED
+
     providers[0].set_state(TestProviderState.ACTIVE)
-    # check that everything is fixed - we should get no more errors
+
+    # check that repairs happen properly
     assert SB.get("test") == "data"
-    assert providers[0].errors == 2
+    assert providers[0].status == ProviderStatus.YELLOW
+
+    # check that the 0th provider is now fully operational
+    providers[3].set_state(TestProviderState.OFFLINE)
+    providers[4].set_state(TestProviderState.OFFLINE)
+    assert SB.get("test") == "data"
+
+
+def test_wiped_provider():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+
+    providers[0].wipe()
+
+    # check that repairs happen properly
+    assert SB.get("test") == "data"
+    assert providers[0].status == ProviderStatus.YELLOW
+
+    # check that the 0th provider is now fully operational
+    providers[3].set_state(TestProviderState.OFFLINE)
+    providers[4].set_state(TestProviderState.OFFLINE)
+    assert SB.get("test") == "data"
+
+
+def test_temporary_offline_put():
+    SB = SecretBox.provision(providers, 3, 3)
+    # failing for 5 turns
+    providers[0].set_state(TestProviderState.FAILING, 5)
+    SB.put("test", "data")
+
+    assert SB.get("test") == "data"
+    assert providers[0].status == ProviderStatus.YELLOW
+
+
+def test_offline_provision():
+    providers[0].set_state(TestProviderState.FAILING, 4)
+    with pytest.raises(exceptions.ProviderFailure):
+        SecretBox.provision(providers, 3, 3)
+
+
+def test_temporary_offline_load():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+    providers[0].set_state(TestProviderState.FAILING, 4)
+    SB = SecretBox.load(providers)
+    assert SB.get("test") == "data"
     assert providers[0].status == ProviderStatus.YELLOW
 
 
@@ -51,3 +97,11 @@ def test_permanently_offline_put():
     with pytest.raises(exceptions.FatalOperationFailure):
         SB.put("test", "data")
     assert providers[0].status == ProviderStatus.RED
+
+
+def test_permanently_authfail_get():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+    providers[0].set_state(TestProviderState.UNAUTHENTICATED)
+    assert SB.get("test") == "data"
+    assert providers[0].status == ProviderStatus.AUTH_FAIL

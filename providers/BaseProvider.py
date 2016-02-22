@@ -5,10 +5,10 @@
 class ProviderStatus:
     """
     Status codes to report to the UI
-    Red: the provider is currently offline
-    Yellow: the provider is currently online, but has experienced difficulties in the past
-    Green: the provider is online and has been performing well
-    Auth: the provider is online but it returning auth failures
+    RED: the provider is currently offline or corrupting
+    YELLOW: the provider is currently online, but has experienced difficulties in the past
+    GREEN: the provider is online and has been performing well
+    AUTH_FAIL: the provider is online but it returning auth failures
     """
     RED, YELLOW, GREEN, AUTH_FAIL = "RED", "YELLOW", "GREEN", "AUTH_FAIL"
 
@@ -57,10 +57,21 @@ class BaseProvider(object):
         """
 
     def log_error(self, exception):
+        """
+        Store an error for internal logging use
+        """
+        # TODO probably should log more useful information
         self.error_log.append(exception)
 
     @property
     def status(self):
+        """
+        Get the current status of the provider
+        Returns AUTH_FAIL if the provider needs to be reauthenticated
+        Returns RED if the provider is currently misbehaving
+        Returns YELLOW if the provider has a history of misbehaving
+        Returns GREEN if all is well
+        """
         if not self.authenticated:
             return ProviderStatus.AUTH_FAIL
         if self.errors > 20:
