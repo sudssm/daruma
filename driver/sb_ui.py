@@ -138,6 +138,8 @@ while True:
                 color = colorama.Fore.YELLOW
             if provider.status == ProviderStatus.RED:
                 color = colorama.Fore.RED
+            if provider.status == ProviderStatus.AUTH_FAIL:
+                color = colorama.Fore.BLUE
             print(color + str(provider))
         print colorama.Fore.WHITE,
     if cmd[0] == "exit":
