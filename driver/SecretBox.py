@@ -1,6 +1,7 @@
 # This is the main project
 
 # TODO note to self: think about caching
+# make a daemon to periodically garbage collect and ping / reload manifest
 
 from managers.ResilienceManager import ResilienceManager
 from managers.BootstrapManager import BootstrapManager, Bootstrap
@@ -20,10 +21,6 @@ class SecretBox:
         self.bootstrap_manager = bootstrap_manager
         self.file_manager = file_manager
         self.resilience_manager = resilience_manager
-
-        # TODO should this call go somewhere else?
-        # load and cache the manifest
-        self._load_manifest()
 
     @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
@@ -142,9 +139,13 @@ class SecretBox:
             raise
 
     def ls(self):
+        self._load_manifest()
+
         return self.file_manager.ls()
 
     def get(self, path):
+        self._load_manifest()
+
         try:
             result = self.file_manager.get(path)
             self.resilience_manager.log_success()
@@ -157,6 +158,8 @@ class SecretBox:
             raise
 
     def put(self, path, data):
+        self._load_manifest()
+
         try:
             result = self.file_manager.put(path, data)
             self.resilience_manager.log_success()
@@ -166,6 +169,8 @@ class SecretBox:
             raise
 
     def delete(self, path):
+        self._load_manifest()
+
         try:
             self.file_manager.delete(path)
             self.resilience_manager.log_success()

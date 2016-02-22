@@ -7,24 +7,45 @@ from providers.BaseProvider import ProviderStatus
 
 class ResilienceManager:
     def __init__(self, providers, file_manager, bootstrap_manager):
+        """
+        Construct a ResilienceManager
+        """
         self.file_manager = file_manager
         self.bootstrap_manager = bootstrap_manager
         self.providers = providers
 
-    def log_success(self):
+    def _log_provider_success(self, provider):
+        """
+        Update the provider to reflect a successful operation
+        """
         # TODO
-        # to be called when all providers responded correctly
+
+    def log_success(self):
+        """
+        Update the providers to reflect a fully successful operation
+        """
         for provider in self.providers:
-            pass
+            self._log_provider_success(provider)
 
     def diagnose(self, failures):
-        # TODO ignore auth failures; raise them?
+        """
+        Update providers to reflect some failures
+        """
+        # TODO ignore auth failures; raise them? update provider status to AuthFail
         # TODO maybe raise network failure here?
-        # TODO
+        # TODO update providers not contained in failures to reflect successful operation
+        failed_providers = set()
         for failure in failures:
             failure.provider.errors += 1
+            failed_providers.add(failure.provider)
+        for provider in self.providers:
+            if provider not in failed_providers:
+                self._log_provider_success(provider)
 
     def _has_red_provider(self, failures):
+        """
+        Returns True if any provider contained within failures is red
+        """
         for failure in failures:
             if failure.provider.status == ProviderStatus.RED:
                 return True
@@ -33,6 +54,12 @@ class ResilienceManager:
     # TODO in general, in repairs, we don't have to upload new file if the error was
     # connection failure. if provider is down, we just diagnose and retry til red?
     def diagnose_and_repair_file(self, failures, filename, data):
+        """
+        diagnose a list of failures, and then try to repair the file
+        If a provider repeatedly fails, will continue to attempt repair until red
+        Args: filename - the filename to replace
+              data - the correct value of the file
+        """
         self.diagnose(failures)
 
         try:
@@ -51,17 +78,18 @@ class ResilienceManager:
             # if a provider is now red, just diagnose and stop
             if self._has_red_provider(e.failures):
                 self.diagnose(e.failures)
-                # TODO, raise a different error here?
-                return
             # otherwise retry
             else:
                 self.diagnose_and_repair_file(e.failures, filename, data)
 
     def diagnose_and_repair_bootstrap(self, failures):
+        """
+        diagnose a list of failures, and then try to repair the bootstrap
+        If a provider repeatedly fails, will continue to attempt repair until red
+        """
         self.diagnose(failures)
 
         # we need to get the manifest to repair the bootstrap
-        # TODO maybe remove this - the manifest is cached?
         try:
             self.file_manager.load_manifest()
         except exceptions.OperationFailure as e:
@@ -75,7 +103,9 @@ class ResilienceManager:
         bootstrap = Bootstrap(master_key, manifest_name, self.file_manager.file_reconstruction_threshold)
 
         try:
-            # TODO what if part of this distribute fails? need to rollback
+            # TODO when we add caching
+            # TODO what if part of this distribute fails? need to rollback or invalidate cache
+            # TODO what if manifest upload encounter network error -- then cached manifest is broken
             # TODO ensure that this is actually atomic
             self.file_manager.update_key_and_name(master_key, manifest_name)
             self.bootstrap_manager.distribute_bootstrap(bootstrap)
@@ -84,17 +114,9 @@ class ResilienceManager:
             # if a provider is now red, just diagnose and stop
             if self._has_red_provider(e.failures):
                 self.diagnose(e.failures)
-                # TODO, raise a different error here?
-                return
             # otherwise retry
             else:
                 self.diagnose_and_repair_bootstrap(e.failures)
-
-    def diagnose_and_repair_entry(self):
-        # for the bootstrap_reconstruction_threshold
-        # TODO
-        # maybe we don't need this; bootstrap manager distribute sort of takes care of it
-        pass
 
     def garbage_collect(self):
         # TODO
