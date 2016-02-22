@@ -6,7 +6,7 @@ class ProviderStatus:
     """
     Status codes to report to the UI
     RED: the provider is currently offline or corrupting
-    YELLOW: the provider is currently online, but has experienced difficulties in the past
+    YELLOW: the provider is currently online, but has experienced difficulties in the recent past
     GREEN: the provider is online and has been performing well
     AUTH_FAIL: the provider is online but it returning auth failures
     """

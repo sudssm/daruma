@@ -77,7 +77,7 @@ class SecretBox:
         # TODO this may load some cached state from disk
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
 
-        if failures is not None:
+        if len(failures) > 0:
             resilience_manager.diagnose_and_repair_bootstrap(failures)
 
         return SecretBox(bootstrap_manager, file_manager, resilience_manager)
@@ -92,7 +92,7 @@ class SecretBox:
 
     # change the master key
     def update_master_key(self):
-        self.resilience_manager.diagnose_and_repair_bootstrap(None)
+        self.resilience_manager.diagnose_and_repair_bootstrap([])
     # public methods
 
     # add a new provider
@@ -111,7 +111,7 @@ class SecretBox:
     def _load_manifest(self):
         """
         Load the manifest into the file manager
-        Without caching, this should be called before every other operation
+        Without caching, this should be called before every public operation
         Raises FatalOperationFailure if the load was not successful
         """
         # TODO handle manifest caching

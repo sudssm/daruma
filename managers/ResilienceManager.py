@@ -34,9 +34,11 @@ class ResilienceManager:
         """
         Update providers to reflect some failures
         Returns True if all provider contained within failures is yellow or green (so we can retry)
+        If failures is an empty list, does nothing (call log_success instead)
         """
         # TODO maybe raise network failure here?
-        if failures is None:
+
+        if len(failures) == 0:
             return
         failed_providers = set()
         for failure in failures:

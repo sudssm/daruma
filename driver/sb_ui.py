@@ -131,7 +131,7 @@ while True:
                 provider.set_state(TestProviderState.CORRUPTING)
     if cmd[0] == "status":
         for provider in providers:
-            color = colorama.Fore.WHITE
+            color = colorama.Fore.RESET
             if provider.status == ProviderStatus.GREEN:
                 color = colorama.Fore.GREEN
             if provider.status == ProviderStatus.YELLOW:
@@ -140,7 +140,7 @@ while True:
                 color = colorama.Fore.RED
             if provider.status == ProviderStatus.AUTH_FAIL:
                 color = colorama.Fore.BLUE
-            print(color + str(provider))
-        print colorama.Fore.WHITE,
+            print color + str(provider)
+        print colorama.Fore.RESET,
     if cmd[0] == "exit":
         break
