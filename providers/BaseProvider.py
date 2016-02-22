@@ -3,7 +3,14 @@
 
 
 class ProviderStatus:
-    RED, YELLOW, GREEN = "RED", "YELLOW", "GREEN"
+    """
+    Status codes to report to the UI
+    Red: the provider is currently offline
+    Yellow: the provider is currently online, but has experienced difficulties in the past
+    Green: the provider is online and has been performing well
+    Auth: the provider is online but it returning auth failures
+    """
+    RED, YELLOW, GREEN, AUTH_FAIL = "RED", "YELLOW", "GREEN", "AUTH_FAIL"
 
 
 class BaseProvider(object):
@@ -14,9 +21,18 @@ class BaseProvider(object):
         # this function will not be overridden
         # but rather called by other constructors that take parameters
 
+        # metadata for diagnosis
+        # TODO maybe factor this out into a provider manager?
         # TODO change this when diagnose becomes more sophisticated
         self.errors = 0
         self.error_log = []
+
+        # whether the system is currently authenticated
+        self.authenticated = True
+        # whether we recommend this provider be removed
+        # TODO
+        self.recomend_removal = False
+
         self.connect()
 
     # can throw ConnectionFailure, AuthFailure
@@ -45,6 +61,8 @@ class BaseProvider(object):
 
     @property
     def status(self):
+        if not self.authenticated:
+            return ProviderStatus.AUTH_FAIL
         if self.errors > 20:
             return ProviderStatus.RED
         if self.errors > 0:

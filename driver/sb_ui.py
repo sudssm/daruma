@@ -56,6 +56,8 @@ while True:
                 print "EMPTY"
             for item in files:
                 print "-", item
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except Exception as e:
             print traceback.format_exc()
     if cmd[0] == "get":
@@ -65,8 +67,12 @@ while True:
         name = cmd[1]
         try:
             print SB.get(name)
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except exceptions.FileNotFound:
             print "File does not exist!"
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except Exception as e:
             print traceback.format_exc()
     if cmd[0] == "put":
@@ -77,6 +83,8 @@ while True:
         data = cmd[2]
         try:
             SB.put(name, data)
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except Exception as e:
             print traceback.format_exc()
     if cmd[0] == "del":
@@ -86,8 +94,12 @@ while True:
         name = cmd[1]
         try:
             SB.delete(name)
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except exceptions.FileNotFound:
             print "File does not exist!"
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except Exception as e:
             print traceback.format_exc()
     if cmd[0] == "set":
@@ -104,6 +116,7 @@ while True:
             assert cmd[2] in ["active", "offline", "authfail", "corrupt"]
         except (AssertionError, ValueError):
             print "Invalid input"
+            print "Usage: set <all, n> <active, offline, authfail, corrupt>"
         for provider in providers[0:n]:
             if cmd[2] == "active":
                 provider.set_state(TestProviderState.ACTIVE)

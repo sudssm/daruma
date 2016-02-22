@@ -20,6 +20,8 @@ class TestProvider(LocalFilesystemProvider):
         The state will return to ACTIVE after (requests) function calls
         or never if requests is -1
         """
+        if state != TestProviderState.UNAUTHENTICATED:
+            self.authenticated = True
         self.state = state
         self.state_timer = requests
 

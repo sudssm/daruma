@@ -35,9 +35,7 @@ class FileDistributor:
         for provider, share in zip(self.providers, shares):
             try:
                 provider.put(filename, share)
-
-            # pass up AuthFailure, get user to relogin.
-            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
+            except exceptions.ProviderFailure as e:
                 failures.append(e)
 
         if len(failures) > 0:
@@ -134,7 +132,7 @@ class FileDistributor:
         for provider in self.providers:
             try:
                 shares_map[provider.get(filename)] = provider
-            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
+            except exceptions.ProviderFailure as e:
                 failures.append(e)
 
         shares = shares_map.keys()
@@ -160,7 +158,7 @@ class FileDistributor:
         for provider in self.providers:
             try:
                 provider.delete(filename)
-            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
+            except exceptions.ProviderFailure as e:
                 failures.append(e)
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)

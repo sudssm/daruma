@@ -35,23 +35,25 @@ class ResilienceManager:
         Update providers to reflect some failures
         Returns True if all provider contained within failures is yellow or green (so we can retry)
         """
-        # TODO ignore auth failures; raise them? update provider status to AuthFail
         # TODO maybe raise network failure here?
-        # TODO update providers not contained in failures to reflect successful operation
         failed_providers = set()
         for failure in failures:
-            failure.provider.errors += 1
+            if type(failure) is exceptions.AuthFailure:
+                # don't punish for AuthFailures
+                failure.provider.authenticated = False
+            else:
+                failure.provider.errors += 1
             failed_providers.add(failure.provider)
 
-        any_red = False
+        all_good = True
 
         for provider in self.providers:
             if provider not in failed_providers:
                 self._log_provider_success(provider)
-            if provider.status == ProviderStatus.RED:
-                any_red = True
+            if provider.status not in [ProviderStatus.GREEN, ProviderStatus.YELLOW]:
+                all_good = False
 
-        return not any_red
+        return all_good
 
     # TODO in general, in repairs, we don't have to upload new file if the error was
     # connection failure. if provider is down, we just diagnose and retry til red?
