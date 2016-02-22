@@ -16,8 +16,11 @@ import traceback
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
 from providers.TestProvider import TestProvider, TestProviderState
+from providers.BaseProvider import ProviderStatus
 import sys
+import colorama
 
+colorama.init()
 try:
     cmd = sys.argv[1]
     n = int(sys.argv[2])
@@ -128,6 +131,14 @@ while True:
                 provider.set_state(TestProviderState.CORRUPTING)
     if cmd[0] == "status":
         for provider in providers:
-            print provider
+            color = colorama.Fore.WHITE
+            if provider.status == ProviderStatus.GREEN:
+                color = colorama.Fore.GREEN
+            if provider.status == ProviderStatus.YELLOW:
+                color = colorama.Fore.YELLOW
+            if provider.status == ProviderStatus.RED:
+                color = colorama.Fore.RED
+            print(color + str(provider))
+        print colorama.Fore.WHITE,
     if cmd[0] == "exit":
         break
