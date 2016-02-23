@@ -11,6 +11,7 @@ providers = [TestProvider("tmp/" + str(i)) for i in xrange(5)]
 def setup_function(function):
     for provider in providers:
         provider.set_state(TestProviderState.ACTIVE)
+        provider.errors = 0
 
 
 def test_repair_file():
@@ -31,6 +32,27 @@ def test_repair_file():
     providers[3].set_state(TestProviderState.OFFLINE)
     providers[4].set_state(TestProviderState.OFFLINE)
     assert SB.get("test") == "data"
+
+
+def test_return_to_yellow():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+
+    providers[0].set_state(TestProviderState.OFFLINE)
+    providers[1].set_state(TestProviderState.OFFLINE)
+
+    SB.ls()
+
+    assert providers[0].status == ProviderStatus.RED
+    assert providers[1].status == ProviderStatus.RED
+
+    providers[0].set_state(TestProviderState.ACTIVE)
+    providers[1].set_state(TestProviderState.ACTIVE)
+
+    SB.ls()
+
+    assert providers[0].status == ProviderStatus.YELLOW
+    assert providers[1].status == ProviderStatus.YELLOW
 
 
 def test_wiped_provider():

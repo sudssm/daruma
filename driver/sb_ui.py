@@ -46,7 +46,8 @@ else:
 
 while True:
     print "\n"
-    print "ls, get, put, del, set, status, exit"
+    print "SB commands: ls, get, put, del, exit"
+    print "provider commands: set, wipe, status"
     cmd = shlex.split(raw_input("> "))
 
     if len(cmd) == 0:
@@ -142,5 +143,17 @@ while True:
                 color = colorama.Fore.BLUE
             print color + str(provider)
         print colorama.Fore.RESET,
+    if cmd[0] == "wipe":
+        if len(cmd) < 2:
+            print "Usage: wipe <provider #>"
+            continue
+        try:
+            n = int(cmd[1])
+            assert 0 <= n
+            assert n < len(providers)
+        except (AssertionError, ValueError):
+            print "Invalid input"
+            print "Usage: wipe <provider #>"
+        providers[n].wipe()
     if cmd[0] == "exit":
         break

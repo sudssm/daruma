@@ -123,6 +123,7 @@ class ResilienceManager:
             # TODO ensure that this is actually atomic
             self.file_manager.update_key_and_name(master_key, manifest_name)
             self.bootstrap_manager.distribute_bootstrap(bootstrap)
+            self.log_success()
         except exceptions.FatalOperationFailure as e:
             # retry if all providers are not red
             if can_continue:

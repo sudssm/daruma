@@ -117,6 +117,7 @@ class SecretBox:
         # TODO handle manifest caching
         try:
             self.file_manager.load_manifest()
+            self.resilience_manager.log_success()
         except exceptions.OperationFailure as e:
             self.resilience_manager.diagnose_and_repair_bootstrap(e.failures)
         except exceptions.FatalOperationFailure as e:
