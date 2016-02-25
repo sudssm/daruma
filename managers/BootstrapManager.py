@@ -65,10 +65,26 @@ class BootstrapManager:
                 failures.append(exceptions.ProviderOperationFailure(provider))
 
         # vote on threshold
+        largest_group_size = 0
+        threshold = None
+        for threshold_vote, sources in thresholds_map.items():
+            if len(sources) > largest_group_size:
+                threshold = threshold_vote
+                largest_group_size = len(sources)
+
+        # we protect against (k-1) providers failing
+        # so, a group of defectors larger than k are outside threat model
+        # just ensure that the largest group is size larger than k
+        if largest_group_size < threshold:
+            raise exceptions.FatalOperationFailure(failures)
+
+        self.bootstrap_reconstruction_threshold = threshold
+
         if len(thresholds_map) == 1:
             self.bootstrap_reconstruction_threshold = thresholds_map.keys()[0]
         else:
             for threshold, sources in thresholds_map.items():
+
                 if len(sources) > len(self.providers) / 2:
                     self.bootstrap_reconstruction_threshold = threshold
 
