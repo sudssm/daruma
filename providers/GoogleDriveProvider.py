@@ -29,10 +29,23 @@ class GoogleDriveProvider(BaseProvider):
         # key: filename, value: file ID
         self.file_index = {}
 
+    @staticmethod
+    @contextmanager
+    def exception_handler(provider):
+        try:
+            yield
+        except HttpError as e:
+            if e.resp.status in [401,403]:
+                raise exceptions.AuthFailure(provider)
+            raise exceptions.ProviderOperationFailure(provider)
+        except httplib2.ServerNotFoundError:
+            raise exceptions.ConnectionFailure(provider)
+        except Exception:
+            raise exceptions.LibraryException
 
     @staticmethod
     def get_credentials():
-        try:
+        with GoogleDriveProvider.exception_handler(None):
             # required python 2.7
             flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 
@@ -51,33 +64,11 @@ class GoogleDriveProvider(BaseProvider):
                 credentials = tools.run_flow(flow, store, flags)
 
             return credentials
-        except HttpError as e:
-            # TODO: Duplicate exception handling
-            if e.resp.status in [401,403]:
-                raise exceptions.AuthFailure(None)
-            raise exceptions.ProviderOperationFailure(None)
-        except httplib2.ServerNotFoundError:
-            raise exceptions.ConnectionFailure(None)
-        except Exception:
-            raise exceptions.LibraryException
-
-
-    @contextmanager
-    def exception_handler(self):
-        try:
-            yield
-        except HttpError as e:
-            if e.resp.status in [401,403]:
-                raise exceptions.AuthFailure(self)
-            raise exceptions.ProviderOperationFailure(self)
-        except httplib2.ServerNotFoundError:
-            raise exceptions.ConnectionFailure(self)
-        except Exception:
-            raise exceptions.LibraryException
+    
 
 
     def _update_cache(self):
-        with self.exception_handler():
+        with GoogleDriveProvider.exception_handler(self):
             response = self.service.files().list(q="name='%s'"%self.ROOT_DIR).execute()
             results = response.get('files',[])
             f = results[0]
@@ -89,7 +80,7 @@ class GoogleDriveProvider(BaseProvider):
 
     def connect(self):
         # check folder validity
-        with self.exception_handler():
+        with GoogleDriveProvider.exception_handler(self):
             response = self.service.files().list(q="name='%s'"%self.ROOT_DIR).execute()
             results = response.get('files',[])
 
@@ -116,7 +107,7 @@ class GoogleDriveProvider(BaseProvider):
 
 
     def get(self, filename):
-        with self.exception_handler():
+        with GoogleDriveProvider.exception_handler(self):
             file_id = self._get_id(filename)
             if file_id is None:
                 # file not exist
@@ -126,7 +117,7 @@ class GoogleDriveProvider(BaseProvider):
 
 
     def put(self, filename, data):
-        with self.exception_handler():
+        with GoogleDriveProvider.exception_handler(self):
             fh = io.BytesIO(data)
 
             # TODO 
@@ -146,7 +137,7 @@ class GoogleDriveProvider(BaseProvider):
 
 
     def delete(self, filename):
-        with self.exception_handler():
+        with GoogleDriveProvider.exception_handler(self):
             file_id = self._get_id(filename)
             if file_id is None:
                 # file not exist

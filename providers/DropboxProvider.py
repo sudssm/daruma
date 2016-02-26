@@ -24,6 +24,25 @@ class DropboxProvider(BaseProvider):
 
 
     @staticmethod
+    @contextmanager
+    def exception_handler(provider):
+        try:
+            yield
+        except dropbox.oauth.NotApprovedException:
+            raise exceptions.AuthFailure(provider)
+        except dropbox.oauth.ProviderException:
+            raise exceptions.ProviderOperationFailure(provider)
+        except urllib3.exceptions.MaxRetryError:
+            raise exceptions.ConnectionFailure(provider)
+        except dropbox.rest.ErrorResponse as e:
+            if e.status in [401,400]:
+                raise exceptions.AuthFailure(provider)
+            raise exceptions.ProviderOperationFailure(provider)
+        except Exception:
+            raise exceptions.LibraryException
+
+
+    @staticmethod
     def new_connection():
         flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY, DBOX_APP_SECRET)
         authorize_url = flow.start()
@@ -33,58 +52,32 @@ class DropboxProvider(BaseProvider):
     @staticmethod
     def finish_connection(authorization_code):
         flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY, DBOX_APP_SECRET)
-        try:
+        with DropboxProvider.exception_handler(None):
             access_token,_ = flow.finish(authorization_code)
             # TODO credential management
             return DropboxProvider(access_token=access_token)
-        except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(None)
-        except dropbox.oauth.NotApprovedException:
-            raise exceptions.AuthFailure(None)
-        except dropbox.oauth.ProviderException:
-            raise exceptions.ProviderOperationFailure(None)
-        except dropbox.rest.ErrorResponse as e:
-            if e.status == 400:
-                raise exceptions.AuthFailure(None)
-            raise exceptions.ProviderOperationFailure(None)
-        except Exception:
-            raise exceptions.LibraryException
-
-        return DropboxProvider(access_token=access_token)
-
-    @contextmanager
-    def exception_handler(self):
-        try:
-            yield
-        except urllib3.exceptions.MaxRetryError:
-            raise exceptions.ConnectionFailure(self)
-        except dropbox.rest.ErrorResponse as e:
-            if e.status == 401:
-                raise exceptions.AuthFailure(self)
-            raise exceptions.ProviderOperationFailure(self)
-        except Exception:
-            raise exceptions.LibraryException
+        
 
     def connect(self):
-        with self.exception_handler():
+        with DropboxProvider.exception_handler(self):
             self.client.account_info()
 
     def get(self, filename):
-        with self.exception_handler():
+        with DropboxProvider.exception_handler(self):
             f, metadata = self.client.get_file_and_metadata(filename)
             return f.read()
 
     def put(self, filename, data):
-        with self.exception_handler():
+        with DropboxProvider.exception_handler(self):
             self.client.put_file(filename, data, overwrite=True)
 
 
     def delete(self, filename):
-        with self.exception_handler():
+        with DropboxProvider.exception_handler(self):
             self.client.file_delete(filename)
 
     def wipe(self):
-        with self.exception_handler():
+        with DropboxProvider.exception_handler(self):
             entries = self.client.delta()['entries']
             for e in entries:
                 self.client.file_delete(e[0])
