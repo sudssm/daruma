@@ -85,7 +85,8 @@ def test_corrupt_share():
 
 
 def test_corrupt_k_recover():
-    BM = BootstrapManager(providers, 3)
+    threshold = 3
+    BM = BootstrapManager(providers, threshold)
     BM.distribute_bootstrap(bootstrap)
 
     providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "2")
@@ -95,24 +96,25 @@ def test_corrupt_k_recover():
         BM.recover_bootstrap()
     assert excinfo.value.result == bootstrap
     assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
-    assert BM.bootstrap_reconstruction_threshold == 3
+    assert BM.bootstrap_reconstruction_threshold == threshold
 
 
 def test_corrupt_k_2_recover():
-    BM = BootstrapManager(providers, 3)
+    threshold = 3
+    BM = BootstrapManager(providers, threshold)
     BM.distribute_bootstrap(bootstrap)
 
-    providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "1")
-    providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "1")
+    providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
+    providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
             BM.recover_bootstrap()
     assert excinfo.value.result == bootstrap
     assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
-    assert BM.bootstrap_reconstruction_threshold == 3
+    assert BM.bootstrap_reconstruction_threshold == threshold
 
 
-# outside our threat model, but clearly impossible
+# outside our threat model, but malicious providers propose a threshold too high to support
 def test_corrupt_k_fail():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)

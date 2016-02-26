@@ -82,9 +82,7 @@ class BootstrapManager:
 
         # add all providers who misvoted to failures
         for threshold_vote, sources in thresholds_map.items():
-            if threshold_vote == self.bootstrap_reconstruction_threshold:
-                pass
-            else:
+            if threshold_vote != self.bootstrap_reconstruction_threshold:
                 failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
 
         # reconstruct shares
