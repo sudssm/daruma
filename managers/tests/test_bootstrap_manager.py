@@ -3,8 +3,6 @@ from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
 from tools.utils import generate_filename
-from struct import pack
-from random import randint
 import pytest
 
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
