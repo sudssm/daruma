@@ -56,12 +56,10 @@ def test_erase_recover():
     BM.distribute_bootstrap(bootstrap)
     providers[0].wipe()
     providers[2].wipe()
-    try:
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
-        assert False
-    except exceptions.OperationFailure as e:
-        assert e.result == bootstrap
-        assert len(e.failures) == 2
+    assert excinfo.value.result == bootstrap
+    assert len(excinfo.value.failures) == 2
 
 
 def test_erase_fail():
@@ -70,11 +68,9 @@ def test_erase_fail():
     providers[0].wipe()
     providers[1].wipe()
     providers[2].wipe()
-    try:
+    with pytest.raises(exceptions.FatalOperationFailure) as excinfo:
         BM.recover_bootstrap()
-        assert False
-    except exceptions.FatalOperationFailure as e:
-        assert len(e.failures) == 3
+    assert len(excinfo.value.failures) == 3
 
 
 # TODO - once RSS is in, change this
@@ -90,23 +86,30 @@ def test_corrupt_share():
         BM.recover_bootstrap()
 
 
-def test_corrupt_k():
+def test_corrupt_k_recover():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
 
     providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "2")
     providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "2")
 
-    assert BM.recover_bootstrap() == bootstrap
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        BM.recover_bootstrap()
+    assert excinfo.value.result == bootstrap
+    assert len(excinfo.value.failures) == 2
 
-def test_corrupt_k_2():
+
+def test_corrupt_k_2_recover():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
 
     providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "1")
     providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "1")
 
-    assert BM.recover_bootstrap() == bootstrap
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+            BM.recover_bootstrap()
+    assert excinfo.value.result == bootstrap
+    assert len(excinfo.value.failures) == 2
 
 
 # outside our threat model, but clearly impossible

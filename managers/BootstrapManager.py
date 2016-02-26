@@ -56,9 +56,9 @@ class BootstrapManager:
         failures = []
         for provider in self.providers:
             try:
-                shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
                 # track provider votes for bootstrap threshold values
                 thresholds_map[int(provider.get(self.BOOTSTRAP_THRESHOLD_FILE_NAME))].append(provider)
+                shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
             except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
                 failures.append(e)
             except ValueError:
@@ -75,23 +75,19 @@ class BootstrapManager:
         # we protect against (k-1) providers failing
         # so, a group of defectors larger than k are outside threat model
         # just ensure that the largest group is size larger than k
-        if largest_group_size < threshold:
+        if threshold is None or largest_group_size < threshold:
             raise exceptions.FatalOperationFailure(failures)
 
         self.bootstrap_reconstruction_threshold = threshold
 
-        if len(thresholds_map) == 1:
-            self.bootstrap_reconstruction_threshold = thresholds_map.keys()[0]
-        else:
-            for threshold, sources in thresholds_map.items():
+        # add all providers who misvoted to failures
+        for threshold_vote, sources in thresholds_map.items():
+            if threshold_vote == self.bootstrap_reconstruction_threshold:
+                pass
+            else:
+                failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
 
-                if len(sources) > len(self.providers) / 2:
-                    self.bootstrap_reconstruction_threshold = threshold
-
-        # if still not set, we have a problem
-        if self.bootstrap_reconstruction_threshold is None:
-            raise exceptions.FatalOperationFailure(failures)
-
+        # reconstruct shares
         shares = shares_map.values()
         if len(shares) < self.bootstrap_reconstruction_threshold:
             raise exceptions.FatalOperationFailure(failures)
