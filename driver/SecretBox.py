@@ -21,6 +21,11 @@ class SecretBox:
         self.bootstrap_manager = bootstrap_manager
         self.file_manager = file_manager
         self.resilience_manager = resilience_manager
+        # load the manifest here
+        # that way, if we recovered the wrong k_reconstruction_threshold due to
+        # providers cheating us in a way that is outside our threat model, we
+        # fail immediately and throw a FatalOperationError
+        self._load_manifest()
 
     @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
