@@ -56,32 +56,37 @@ class BootstrapManager:
         failures = []
         for provider in self.providers:
             try:
-                shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
                 # track provider votes for bootstrap threshold values
                 thresholds_map[int(provider.get(self.BOOTSTRAP_THRESHOLD_FILE_NAME))].append(provider)
+                shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
             except exceptions.ProviderFailure as e:
                 failures.append(e)
             except ValueError:
                 # if the cast to int failed
                 failures.append(exceptions.InvalidShareFailure(provider))
 
-        # if we don't have at least n/2 thresholds, we can't have a quorum
-        if len(failures) > len(self.providers)/2:
-            raise exceptions.FatalOperationFailure(failures)
-
         # vote on threshold
-        for threshold, sources in thresholds_map.items():
-            if len(sources) > len(self.providers) / 2:
-                self.bootstrap_reconstruction_threshold = threshold
-            else:
-                # add providers to failures
-                for provider in sources:
-                    failures.append(exceptions.InvalidShareFailure(provider))
+        largest_group_size = 0
+        threshold = None
+        for threshold_vote, sources in thresholds_map.items():
+            if len(sources) > largest_group_size:
+                threshold = threshold_vote
+                largest_group_size = len(sources)
 
-        # if still not set, we have a problem
-        if self.bootstrap_reconstruction_threshold is None:
+        # we protect against (k-1) providers failing
+        # so, a group of defectors larger than k are outside threat model
+        # just ensure that the largest group is size larger than k
+        if threshold is None or largest_group_size < threshold:
             raise exceptions.FatalOperationFailure(failures)
 
+        self.bootstrap_reconstruction_threshold = threshold
+
+        # add all providers who misvoted to failures
+        for threshold_vote, sources in thresholds_map.items():
+            if threshold_vote != self.bootstrap_reconstruction_threshold:
+                failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
+
+        # reconstruct shares
         shares = shares_map.values()
         if len(shares) < self.bootstrap_reconstruction_threshold:
             raise exceptions.FatalOperationFailure(failures)
