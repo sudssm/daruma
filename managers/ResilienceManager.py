@@ -33,13 +33,13 @@ class ResilienceManager:
     def diagnose(self, failures):
         """
         Update providers to reflect some failures
-        Returns True if all provider contained within failures is yellow or green (so we can retry)
+        Returns True if all providers contained within failures are yellow or green (so we can retry)
         If failures is an empty list, does nothing (call log_success instead)
         """
         # TODO maybe raise network failure here?
 
         if len(failures) == 0:
-            return
+            return True
         failed_providers = set()
         for failure in failures:
             if type(failure) is exceptions.AuthFailure:
@@ -54,6 +54,7 @@ class ResilienceManager:
         for provider in self.providers:
             if provider not in failed_providers:
                 self._log_provider_success(provider)
+            # NB, provider status is computed in real time
             if provider.status not in [ProviderStatus.GREEN, ProviderStatus.YELLOW]:
                 all_good = False
 
