@@ -4,6 +4,10 @@ from watchdog.observers import Observer
 
 
 class SBFileSystemEventHandler(FileSystemEventHandler):
+    """
+    An internal class to handle events from the filesystem.
+    """
+
     def __init__(self, secretbox_instance):
         self.secretbox = secretbox_instance
 
@@ -33,37 +37,29 @@ class SBFileSystemEventHandler(FileSystemEventHandler):
         logging.info("Modified %s: %s", what, event.src_path)
 
 
-class FileWatcher():
+
+class FilesystemWatcher():
     """
-    An object used to de-register a filesystem watcher
+    A class representing the thread used to monitor the filesystem for changes
+    and call for the corresponding actions in the SecretBox driver.
+    This thread must be stopped after use by calling the object's stop method.
     """
-    def __init__(self, observer):
-        self.observer = observer
+
+    def __init__(self, path, secretbox_instance):
+        """
+        Args:
+            path: the file path to recursively watch for changes on.
+            securebox_instance: the currently running instance of SecretBox.
+        """
+        event_handler = SBFileSystemEventHandler(secretbox_instance)
+        self.observer = Observer()
+        self.observer.schedule(event_handler, path, recursive=True)
+        self.observer.start()
 
     def stop(self):
         """
-        De-registers the associated filesystem watcher and ends its thread.
+        De-registers the filesystem watcher and ends the thread.
         """
         self.observer.stop()
         self.observer.join()
-
-
-def start_file_watcher(path, secretbox_instance):
-    """
-    Starts watching the filesystem for changes in a new thread and calls
-    for corresponding actions in the SecretBox driver.
-    This thread must be stopped after use.
-
-    Args:
-        path: the file path to recursively watch for changes on
-        securebox_instance: the currently running instance of SecretBox
-
-    Returns:
-        A FileWatcher object to be stopped after use.
-    """
-    event_handler = SBFileSystemEventHandler(secretbox_instance)
-    observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
-    observer.start()
-    return FileWatcher(observer)
 
