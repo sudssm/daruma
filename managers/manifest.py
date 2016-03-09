@@ -14,6 +14,12 @@ class Attributes():
 class _Node(object):
     """
     Superclass for elements in our file system tree.
+    All node state is stored in an attributes dictionary that is
+    BSON-serializable.  Notably, this means that references to other nodes (e.g.
+    children of directories) are stores as references to their attributes, as
+    _Node objects (and their subclasses) will be constructed on the fly to wrap
+    them as needed.  This allows for very simple serialization and
+    deserialization.
     """
     def __init__(self, attributes):
         """
