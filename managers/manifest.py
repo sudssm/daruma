@@ -348,21 +348,3 @@ class Manifest:
         if type(current_node) is not Directory:  # This wouldn't get caught above
             raise exceptions.InvalidPath
         return current_node
-
-    def move(self, src_path, dst_path):
-        """
-        Updates the manifest in place by moving the node specified in src_path
-        (and any children, if applicable) to the path specified in dst_path.
-
-        Args:
-            old_path: string representing the true file path
-            new_path: string representing the new true file path
-        Raises:
-            InvalidPath if old_path is not found or new_path conflicts with
-            existing files.
-        """
-        target_node = self.remove(src_path)
-
-        dst_parent_directory = self.create_directory()
-
-        # TODO
