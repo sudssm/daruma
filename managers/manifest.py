@@ -53,10 +53,10 @@ class File(_Node):
     def from_values(name, code_name, size, key):
         """
         Args:
-            name: string of true file name (not the path)
-            code_name: string of code name
-            size: decimal value of file size
-            key: byte representation of encryption key
+            name: string of true file name (not the path).
+            code_name: string of code name.
+            size: decimal value of file size.
+            key: byte representation of encryption key.
 
         Returns:
             A File object initialized with the given arguments.
@@ -87,8 +87,8 @@ class Directory(_Node):
     def from_values(name, children=None):
         """
         Args:
-            name: string of Directory name (not the path)
-            children: list of uniquely named File and Directory objects
+            name: string of Directory name (not the path).
+            children: list of uniquely named File and Directory objects.
 
         Returns:
             A Directory object initialized with the given arguments.
@@ -110,7 +110,7 @@ class Directory(_Node):
         the same name.
 
         Args:
-            child_node: A File or Directory object to be added
+            child_node: A File or Directory object to be added.
         """
         child_name = child_node.name
         self.attributes[Attributes.CHILDREN][child_name] = child_node.attributes
@@ -171,7 +171,7 @@ class Manifest:
     def serialize(self):
         """
         Returns:
-            The BSON representation of the manifest
+            The BSON representation of the manifest.
         """
         return bson.dumps(self.root.attributes)
 
@@ -179,9 +179,9 @@ class Manifest:
     def deserialize(string):
         """
         Args:
-            string representation of a Manifest
+            string representation of a Manifest as output by serialize().
         Returns:
-            list of ManifestEntry attributes
+            A valid Manifest object if the string can be parsed
         Raises:
             ParseException if the string cannot be parsed
         """
@@ -288,8 +288,8 @@ class Manifest:
         necessary).
 
         Args:
-            true_name: string representing the true filename
-            new_code_name: string representing the new file code name
+            path: the path of the file to create
+            code_name: string representing the new file code name
             size: decimal representation of size
             key: byte representation of the encryption key
 
@@ -345,6 +345,6 @@ class Manifest:
                 current_node._add_child(new_directory)
                 current_node = new_directory
 
-        if type(current_node) is not Directory:  # This wouldn't get caught above
+        if type(current_node) is not Directory:  # This won't get caught above
             raise exceptions.InvalidPath
         return current_node
