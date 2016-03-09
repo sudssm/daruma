@@ -1,10 +1,8 @@
-import managers.manifest
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
-import copy
+from managers.manifest import *
 import pytest
 
-# Manifest tests
 codename1 = "ABCDEABCDEABCDEABCDEABCDEABCDEAB"
 codename2 = "HIJKLMNOPQHIJKLMNOPQHIJKLMNOPQHI"
 codename3 = "K86TJK86TJK86TJK86TJK86TJK86TJK8"
@@ -13,641 +11,341 @@ codename5 = "6H7K96H7K96H7K96H7K96H7K96H7K96H"
 codename6 = "SNAFUSNAFUSNAFUSNAFUSNAFUSNAFUSN"
 
 
-def test_regex_standard():
-    key1 = generate_key()
-    key2 = generate_key()
-    entries = []
+def test_ls_empty():
+    manifest = Manifest()
+    ls_results = manifest.list_directory_entries()
+    assert ls_results == []
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+def test_ls_single_file():
+    test_data = []
+    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()})
+    expected_nodes = [File.from_values(**entry) for entry in test_data]
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
+    manifest = Manifest()
+    for entry in test_data:
+        manifest.update_file(entry["name"], entry["code_name"], entry["size"], entry["key"])
 
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
+    ls_results = manifest.list_directory_entries()
+    assert sorted(ls_results) == sorted(expected_nodes)
 
 
-def test_regex_newline_start():
-    key1 = '\n\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb'
-    key2 = generate_key()
-    entries = []
+def test_ls_multiple_files():
+    test_data = []
+    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()})
+    test_data.append({"name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "key": generate_key()})
+    expected_nodes = [File.from_values(**entry) for entry in test_data]
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    manifest = Manifest()
+    for entry in test_data:
+        manifest.update_file(entry["name"], entry["code_name"], entry["size"], entry["key"])
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    ls_results = manifest.list_directory_entries()
+    assert sorted(ls_results) == sorted(expected_nodes)
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
 
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
-
-
-def test_regex_newline_mid():
-    key1 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    key2 = generate_key()
-    entries = []
-
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
-
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
-
-
-def test_regex_newline_end():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
-    key2 = generate_key()
-    entries = []
-
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
-
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
-
-
-def test_regex_comma_start():
-    key1 = ',\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb'
-    key2 = generate_key()
-    entries = []
-
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
-
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
-
-
-def test_regex_comma_mid():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>,\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb'
-    key2 = generate_key()
-    entries = []
-
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
-
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
-
-
-def test_regex_comma_end():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-    key2 = generate_key()
-    entries = []
-
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
-
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.lines) == sorted(entries)
-
-
-def test_regex_no_true():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-    key2 = generate_key()
-
-    content = "," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_no_random():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF,,45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_no_size():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename2 + ",," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_no_key():
-    key1 = ''
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_random_long():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + "," + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename1 + ",45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_random_short():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF,ABC,45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_key_long():
-    key1 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xd7k\xb6\xd5\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_key_short():
-    key1 = '\xc2\x95\x1b\xbe\x80jb\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    key2 = generate_key()
-
-    content = "CLARK_KENT.TXT," + codename1 + ",34," + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
-
-
-def test_regex_missing_delim():
+def test_ls_isnt_recursive():
     key1 = generate_key()
     key2 = generate_key()
 
-    content = "CLARK_KENT.TXT," + codename1 + ",34" + key1 + "\n" + \
-              "SUPERMAN.PDF," + codename2 + ",45," + key2 + "\n"
+    test_data = []
+    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": key1})
+    test_data.append({"name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "key": key2})
 
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.Manifest(content=content)
+    expected_children = [File.from_values(**entry) for entry in test_data]
+    expected_node = Directory.from_values("dir", expected_children)
+
+    manifest = Manifest()
+    manifest.update_file(os.path.join("dir", "CLARK_KENT.TXT"), codename1, 34, key1)
+    manifest.update_file(os.path.join("dir", "SUPERMAN.PDF"), codename2, 45, key2)
+
+    ls_results = manifest.list_directory_entries()
+    assert len(ls_results) is 1
+    assert ls_results[0] == expected_node
 
 
-def test_empty_ls():
-    empty = managers.manifest.Manifest(content="")
-    assert empty.ls() == []
+def test_ls_subdirectory():
+    dir_name = "dir"
+    test_data = []
+    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()})
+    test_data.append({"name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "key": generate_key()})
+    expected_nodes = [File.from_values(**entry) for entry in test_data]
+
+    manifest = Manifest()
+    for entry in test_data:
+        manifest.update_file(os.path.join(dir_name, entry["name"]), entry["code_name"], entry["size"], entry["key"])
+
+    ls_results = manifest.list_directory_entries(dir_name)
+    assert sorted(ls_results) == sorted(expected_nodes)
 
 
-def test_standard_ls_lines():
+def test_ls_nonexistent_path():
+    manifest = Manifest()
+
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.list_directory_entries("asdf")
+
+
+def test_ls_on_file():
+    manifest = Manifest()
+    manifest.update_file("CLARK_KENT.TXT", codename1, 34, generate_key())
+
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.list_directory_entries("CLARK_KENT.TXT")
+
+
+def test_empty_manifest_equals():
+    manifest1 = Manifest()
+    manifest2 = Manifest()
+
+    assert manifest1 == manifest2
+
+
+def test_interesting_manifest_equals():
     key1 = generate_key()
     key2 = generate_key()
-    entries = []
+    key3 = generate_key()
+    key4 = generate_key()
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    manifest1 = Manifest()
+    manifest1.update_file(os.path.join("dir1", "CLARK_KENT.TXT"), codename1, 34, key1)
+    manifest1.update_file(os.path.join("dir1", "dir2", "KAL_EL.xls"), codename2, 42, key2)
+    manifest1.update_file("SUPERMAN.PDF", codename3, 32, key3)
+    manifest1.update_file("MAN_OF_STEEL.JPG", codename4, 23, key4)
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    manifest2 = Manifest()
+    manifest2.update_file(os.path.join("dir1", "CLARK_KENT.TXT"), codename1, 34, key1)
+    manifest2.update_file(os.path.join("dir1", "dir2", "KAL_EL.xls"), codename2, 42, key2)
+    manifest2.update_file("SUPERMAN.PDF", codename3, 32, key3)
+    manifest2.update_file("MAN_OF_STEEL.JPG", codename4, 23, key4)
 
-    manifest = managers.manifest.Manifest(lines=entries)
-
-    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+    assert manifest1 == manifest2
 
 
-def test_standard_ls_content():
+def test_interesting_manifest_nequals():
     key1 = generate_key()
     key2 = generate_key()
-    entries = []
+    key3 = generate_key()
+    key4 = generate_key()
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    manifest1 = Manifest()
+    manifest1.update_file(os.path.join("dir1", "CLARK_KENT.TXT"), codename1, 34, key1)
+    manifest1.update_file(os.path.join("dir1", "dir2", "KAL_EL.xls"), codename2, 42, key2)
+    manifest1.update_file("SUPERMAN.PDF", codename3, 32, key3)
+    manifest1.update_file("MAN_OF_STEEL.JPG", codename4, 23, key4)
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    manifest2 = Manifest()
+    manifest2.update_file(os.path.join("dir1", "CLARK_KENT.TXT"), codename1, 34, key1)
+    manifest2.update_file(os.path.join("dir1", "dir2", "KAL_EL.xls"), codename2, 42, key2)
+    manifest2.update_file("SUPERMAN.PDF", codename3, 32, key3)
+    manifest2.update_file("MAN_OF_STEEL.JPG", codename4, 24, key4)  # Size is different
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
+    assert manifest1 != manifest2
 
-    manifest = managers.manifest.Manifest(content=content)
 
-    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+def test_empty_serialization():
+    manifest = Manifest()
+    manifest_string = manifest.serialize()
 
+    reconstructed_manifest = Manifest.deserialize(manifest_string)
+    assert manifest == reconstructed_manifest
 
-def test_newline_mid_ls_lines():
-    key1 = generate_key()
-    key2 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    entries = []
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+def test_interesting_serialization():
+    manifest = Manifest()
+    manifest.update_file(os.path.join("dir1", "CLARK_KENT.TXT"), codename1, 34, generate_key())
+    manifest.update_file(os.path.join("dir1", "dir2", "KAL_EL.xls"), codename2, 42, generate_key())
+    manifest.update_file("SUPERMAN.PDF", codename3, 32, generate_key())
+    manifest.update_file("MAN_OF_STEEL.JPG", codename4, 23, generate_key())
+    manifest_string = manifest.serialize()
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    reconstructed_manifest = Manifest.deserialize(manifest_string)
+    assert manifest == reconstructed_manifest
 
-    manifest = managers.manifest.Manifest(lines=entries)
 
-    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+def test_get_file_info():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    target_location = os.path.join("dir", test_attributes["name"])
+    expected_node = File.from_values(**test_attributes)
 
+    manifest = Manifest()
+    manifest.update_file(target_location, test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
 
-def test_newline_end_ls_lines():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
-    key2 = generate_key()
-    entries = []
+    get_results = manifest.get(target_location)
+    assert get_results == expected_node
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+def test_get_on_directory():
+    expected_node = Directory.from_values("dir1")
 
-    manifest = managers.manifest.Manifest(lines=entries)
+    manifest = Manifest()
+    manifest.create_directory("dir1")
 
-    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+    get_results = manifest.get("dir1")
+    assert get_results == expected_node
 
 
-def test_newline_mid_ls_content():
-    key1 = generate_key()
-    key2 = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    entries = []
+def test_get_nonexistent_path():
+    manifest = Manifest()
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get("asdf")
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
+def test_remove_file():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    target_location = os.path.join("dir", test_attributes["name"])
+    expected_node = File.from_values(**test_attributes)
 
-    manifest = managers.manifest.Manifest(content=content)
-    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+    manifest = Manifest()
+    manifest.update_file(target_location, test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
 
+    remove_results = manifest.remove(target_location)
+    assert remove_results == expected_node
 
-def test_newline_end_ls_content():
-    key1 = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
-    key2 = generate_key()
-    entries = []
+    ls_results = manifest.list_directory_entries("dir")
+    assert ls_results == []
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key1}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get(target_location)
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key2}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
+def test_remove_directory():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    target_location = os.path.join("dir", test_attributes["name"])
 
-    manifest = managers.manifest.Manifest(content=content)
+    manifest = Manifest()
+    manifest.update_file(target_location, test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+    expected_node = manifest.get("dir")
 
-    assert sorted(manifest.ls()) == ["CLARK_KENT.TXT", "SUPERMAN.PDF"]
+    remove_results = manifest.remove("dir")
+    assert remove_results == expected_node
 
+    ls_results = manifest.list_directory_entries()
+    assert ls_results == []
 
-def test_manifest_from_list():
-    entries = []
-    key = generate_key()
 
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "aes_key": key}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+def test_remove_invalid():
+    manifest = Manifest()
 
-    manifest = managers.manifest.Manifest(lines=entries)
-    assert str(manifest) == "CLARK_KENT.TXT," + codename1 + ",34," + key + "\n" + \
-                            "SUPERMAN.PDF," + codename2 + ",45," + key + "\n"
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.remove("asdfas")
 
 
-def test_manifest_from_content():
-    entries = []
-    key = generate_key()
+def test_remove_invalid_parent_is_file():
+    manifest = Manifest()
+    manifest.update_file("CLARK_KENT", codename1, 34, generate_key())
 
-    attributes = {"true_name": "FIREFLY.TXT", "code_name": codename1, "size": 34, "aes_key": key}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-    attributes = {"true_name": "SERENITY.PDF", "code_name": codename2, "size": 45, "aes_key": key}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.remove(os.path.join("CLARK_KENT", "asfasdfa"))
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
 
-    manifest = managers.manifest.Manifest(content=content)
-    assert str(manifest) == "FIREFLY.TXT," + codename1 + ",34," + key + "\n" + \
-                            "SERENITY.PDF," + codename2 + ",45," + key + "\n"
+def test_remove_root():
+    manifest = Manifest()
 
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.remove("")
 
-def test_manifest_from_both():
-    entries = []
-    key = generate_key()
 
-    attributes = {"true_name": "FIREFLY.TXT", "code_name": codename1, "size": 34, "aes_key": key}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
-    attributes = {"true_name": "SERENITY.PDF", "code_name": codename2, "size": 45, "aes_key": key}
-    entries.append(managers.manifest.ManifestEntry(attributes=attributes))
+def test_update_overwrite_file():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    replacement_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename2, "size": 23, "key": generate_key()}
+    expected_node = File.from_values(**replacement_attributes)
 
-    content = ""
-    for entry in entries:
-        content += str(entry) + "\n"
+    manifest = Manifest()
+    manifest.update_file(test_attributes["name"], test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+    manifest.update_file(replacement_attributes["name"], replacement_attributes["code_name"], replacement_attributes["size"], replacement_attributes["key"])
 
-    with pytest.raises(exceptions.IllegalArgumentException):
-        managers.manifest.Manifest(lines=entries, content=content)
+    get_results = manifest.get(replacement_attributes["name"])
+    assert get_results == expected_node
 
 
-def test_manifest_from_neither():
-    manifest = managers.manifest.Manifest()
-    assert manifest.lines == []
+def test_update_overwrite_file_in_directory():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    replacement_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename2, "size": 23, "key": generate_key()}
+    target_location = os.path.join("dir", test_attributes["name"])
+    expected_node = File.from_values(**replacement_attributes)
 
+    manifest = Manifest()
+    manifest.update_file(target_location, test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+    manifest.update_file(target_location, replacement_attributes["code_name"], replacement_attributes["size"], replacement_attributes["key"])
 
-def test_manifest_from_list_empty():
-    entries = []
-    manifest = managers.manifest.Manifest(lines=entries)
-    assert manifest.lines == []
+    get_results = manifest.get(target_location)
+    assert get_results == expected_node
 
 
-def test_manifest_from_content_empty():
-    content = ""
-    manifest = managers.manifest.Manifest(content=content)
-    assert manifest.lines == []
+def test_update_root():
+    manifest = Manifest()
 
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.update_file("", codename1, 32, generate_key())
 
-def test_roundtrip_empty():
-    content = ""
-    manifest = managers.manifest.Manifest(content=content)
 
-    assert str(manifest) == content
+def test_update_directory():
+    manifest = Manifest()
+    manifest.update_file(os.path.join("dir", "f1"), codename1, 23, generate_key())
 
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.update_file("dir", codename2, 34, generate_key())
 
-def test_standard_get_line():
-    keys = []
-    for i in range(5):
-        keys.append(generate_key())
-    attributes = []
-    entries = []
 
-    attributes.append({"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 9345, "aes_key": keys[0]})
-    attributes.append({"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 345, "aes_key": keys[1]})
-    attributes.append({"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]})
-    attributes.append({"true_name": "BATMAN.DOC", "code_name": codename4, "size": 586, "aes_key": keys[3]})
-    attributes.append({"true_name": "IF3685.TIOY4ET", "code_name": codename5, "size": 90, "aes_key": keys[4]})
+def test_update_bad_path():
+    manifest = Manifest()
+    manifest.update_file("dir", codename1, 34, generate_key())
 
-    for attr in attributes:
-        entries.append(managers.manifest.ManifestEntry(attributes=attr))
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.update_file(os.path.join("dir", "CLARK_KENT.TXT"), codename2, 53, generate_key())
 
-    manifest = managers.manifest.Manifest(lines=entries)
-    assert manifest.get_line("WONDERWOMAN.EXT") == {"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]}
 
+def test_mkdir_root():
+    expected_node = Directory.from_values("")
 
-def test_missing_get_line():
-    keys = []
-    for i in range(5):
-        keys.append(generate_key())
-    attributes = []
-    entries = []
+    manifest = Manifest()
+    manifest.create_directory("")
 
-    attributes.append({"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 9345, "aes_key": keys[0]})
-    attributes.append({"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 345, "aes_key": keys[1]})
-    attributes.append({"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]})
-    attributes.append({"true_name": "BATMAN.DOC", "code_name": codename4, "size": 586, "aes_key": keys[3]})
-    attributes.append({"true_name": "IF3685.TIOY4ET", "code_name": codename5, "size": 90, "aes_key": keys[4]})
+    get_results = manifest.get("")
+    assert get_results == expected_node
 
-    for attr in attributes:
-        entries.append(managers.manifest.ManifestEntry(attributes=attr))
 
-    manifest = managers.manifest.Manifest(lines=entries)
-    with pytest.raises(exceptions.FileNotFound):
-        manifest.get_line("DIANA.EXT")
+def test_mkdir_at_root():
+    expected_node = Directory.from_values("dir")
 
+    manifest = Manifest()
+    manifest.create_directory("dir")
 
-# ManifestEntry tests
+    get_results = manifest.get("dir")
+    assert get_results == expected_node
 
 
-def test_entry_regex_no_true():
-    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
+def test_mkdir_subdirectory():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    expected_file = File.from_values(**test_attributes)
+    expected_dir2 = Directory.from_values("dir2")
+    expected_dir = Directory.from_values("dir", [expected_file, expected_dir2])
+    expected_root = Directory.from_values("", [expected_dir])
 
-    attributes = {"true_name": "", "code_name": codename1, "size": 34, "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
+    manifest = Manifest()
+    manifest.update_file(os.path.join("dir", test_attributes["name"]), test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+    manifest.create_directory(os.path.join("dir", "dir2"))
 
+    root = manifest.get("")
+    assert root == expected_root
 
-def test_entry_regex_no_random():
-    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": "", "size": 45, "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
+def test_mkdir_over_existing():
+    manifest = Manifest()
+    manifest.update_file(os.path.join("dir", "CLARK_KENT.TXT"), codename1, 23, generate_key())
+    expected_root = manifest.get("")
 
+    manifest.create_directory("dir")
 
-def test_entry_regex_invalid_size():
-    key = generate_key()
+    root = manifest.get("")
+    assert root == expected_root
 
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 'A', "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
 
+def test_mkdir_with_conflicting_file():
+    manifest = Manifest()
+    manifest.update_file("dir", codename1, 23, generate_key())
 
-def test_entry_regex_no_key():
-    key = ''
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key}
-
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
-
-
-def test_entry_regex_random_long():
-    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb,'
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename1 + "a", "size": 45, "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
-
-
-def test_entry_regex_random_short():
-    key = generate_key()
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": "ABC", "size": 45, "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
-
-
-def test_entry_regex_key_long():
-    key = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xd7k\xb6\xd5\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
-
-
-def test_entry_regex_key_short():
-    key = '\xc2\x95\x1b\xbe\x80jb\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-
-    attributes = {"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 'A', "aes_key": key}
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(attributes=attributes)
-
-
-def test_entry_regex_missing_delim():
-    key = generate_key()
-
-    str_line = "CLARK_KENT.TXT," + codename1 + ",34" + key
-    with pytest.raises(exceptions.ParseException):
-        managers.manifest.ManifestEntry(str_line=str_line)
-
-
-def test_parse_newline_mid():
-    key = '\xc2\x95\x1b\xbe\xd3Z\xcaR\x80jb\xd7k\xb6\xd5\x8ezxw\xb3\x11;\x1b\xba\n\xdf\xe6.=\xb4\x96&'
-    str_line = 'CLARK_KENT.TXT,' + codename1 + ',10,' + key
-    entry = managers.manifest.ManifestEntry(str_line=str_line)
-    assert entry.attributes == {"true_name": "CLARK_KENT.TXT", "code_name": codename1,
-                                "size": 10, "aes_key": key}
-
-
-def test_parse_newline_end():
-    key = '\x9d\xee9I\x99\xef\x18U\x94\x15\x13V\xe6\xd5D~\x8d\xd2>\x07d\x11\x86\xb6\xf2x!\x91/\xd0\xbb\n'
-    str_line = 'CLARK_KENT.TXT,' + codename1 + ',10,' + key
-    entry = managers.manifest.ManifestEntry(str_line=str_line)
-    assert entry.attributes == {"true_name": "CLARK_KENT.TXT", "code_name": codename1,
-                                "size": 10, "aes_key": key}
-
-
-def test_manifest_line():
-    key = generate_key()
-    attributes = {"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 25, "aes_key": key}
-    manifest = managers.manifest.ManifestEntry(attributes=attributes)
-    assert "CLARK_KENT.TXT," + codename1 + ",25," + key == str(manifest)
-
-
-def test_entry_from_string():
-    key = generate_key()
-    str_entry = "CLARK_KENT.TXT," + codename1 + ",10," + key
-    entry = managers.manifest.ManifestEntry(str_line=str_entry)
-    assert entry.attributes == {"true_name": "CLARK_KENT.TXT", "code_name": codename1,
-                                "size": 10, "aes_key": key}
-
-
-def test_entry_from_attributes():
-    key = generate_key()
-    attrs = {"true_name": "CLARK_KENT.TXT", "code_name": codename1,
-             "size": 10, "aes_key": key}
-    entry = managers.manifest.ManifestEntry(attributes=attrs)
-    assert entry.attributes == attrs
-
-
-def test_entry_from_both():
-    key = generate_key()
-    str_entry = "CLARK_KENT.TXT" + codename1 + "," + key
-    attrs = {"true_name": "CLARK_KENT.TXT", "code_name": codename1,
-             "size": 10, "aes_key": key}
-    with pytest.raises(exceptions.IllegalArgumentException):
-        managers.manifest.ManifestEntry(str_line=str_entry, attributes=attrs)
-
-
-def test_entry_from_neither():
-    with pytest.raises(exceptions.IllegalArgumentException):
-        managers.manifest.ManifestEntry()
-
-
-def test_replace_manifest_update():
-    keys = []
-    for i in range(5):
-        keys.append(generate_key())
-    attributes = []
-    entries = []
-
-    attributes.append({"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 9345, "aes_key": keys[0]})
-    attributes.append({"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 345, "aes_key": keys[1]})
-    attributes.append({"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]})
-    attributes.append({"true_name": "BATMAN.DOC", "code_name": codename4, "size": 586, "aes_key": keys[3]})
-    attributes.append({"true_name": "IF3685.TIOY4ET", "code_name": codename5, "size": 90, "aes_key": keys[4]})
-
-    for attr in attributes:
-        entries.append(managers.manifest.ManifestEntry(attributes=attr))
-
-    manifest = managers.manifest.Manifest(lines=entries)
-    old_manifest = copy.deepcopy(manifest)
-
-    new_key = generate_key()
-    old_code_name = manifest.update_manifest("SUPERMAN.PDF", codename6, 52, new_key)  # TODO: assumes we do not rotate keys
-    superman = manifest.remove_line("SUPERMAN.PDF")
-    old_manifest.remove_line("SUPERMAN.PDF")
-
-    assert old_code_name == codename2 and manifest == old_manifest and \
-        superman["code_name"] == codename6 and superman["size"] == 52
-
-
-def test_create_manifest_update():
-    keys = []
-    for i in range(5):
-        keys.append(generate_key())
-    attributes = []
-    entries = []
-
-    attributes.append({"true_name": "CLARK_KENT.TXT", "code_name": codename1, "size": 9345, "aes_key": keys[0]})
-    attributes.append({"true_name": "SUPERMAN.PDF", "code_name": codename2, "size": 345, "aes_key": keys[1]})
-    attributes.append({"true_name": "WONDERWOMAN.EXT", "code_name": codename3, "size": 52345, "aes_key": keys[2]})
-    attributes.append({"true_name": "BATMAN.DOC", "code_name": codename4, "size": 586, "aes_key": keys[3]})
-    attributes.append({"true_name": "IF3685.TIOY4ET", "code_name": codename5, "size": 90, "aes_key": keys[4]})
-
-    for attr in attributes:
-        entries.append(managers.manifest.ManifestEntry(attributes=attr))
-
-    manifest = managers.manifest.Manifest(lines=entries)
-    old_manifest = copy.deepcopy(manifest)
-
-    new_key = generate_key()
-    old_code_name = manifest.update_manifest("DIANA.PDF", codename6, 52, new_key)
-    diana = manifest.remove_line("DIANA.PDF")
-
-    assert old_code_name is None and old_manifest == manifest and \
-        diana["code_name"] == codename6 and diana["size"] == 52
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.create_directory("dir")

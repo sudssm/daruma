@@ -31,17 +31,17 @@ class FileManager:
         self.manifest = None
         try:
             manifest_str = self.distributor.get(self.manifest_name, self.master_key)
-            self.manifest = Manifest(content=manifest_str)
+            self.manifest = Manifest.deserialize(manifest_str)
         except exceptions.OperationFailure as e:
             # set manifest to recovered value and pass along failures
-            self.manifest = Manifest(content=e.result)
+            self.manifest = Manifest.deserialize(e.result)
             raise exceptions.OperationFailure(e.failures, None)
 
     def distribute_manifest(self):
         """
         Raises FatalOperationFailure if any provider fails
         """
-        content = str(self.manifest)
+        content = self.manifest.serialize()
         self.distributor.put(self.manifest_name, content, self.master_key)
 
     def update_key_and_name(self, master_key, manifest_name):
@@ -66,7 +66,7 @@ class FileManager:
             # pass up failures
             raise exceptions.OperationFailure(e.failures, self.manifest.ls())
 
-        return self.manifest.ls()
+        return [entry.name for entry in self.manifest.list_directory_entries()]
 
     def put(self, name, data):
         """
@@ -77,7 +77,7 @@ class FileManager:
         codename = generate_filename()
         key = self.distributor.put(codename, data)
 
-        old_codename = self.manifest.update_manifest(name, codename, len(data), key)
+        old_codename = self.manifest.update_file (name, codename, len(data), key)
 
         # update the manifest
         self.distribute_manifest()
@@ -103,10 +103,13 @@ class FileManager:
             # keep track of the exceptions
             failures = e.failures
 
-        entry = self.manifest.get_line(name)
+        try:
+            entry = self.manifest.get(name)
+        except exceptions.InvalidPath:
+            raise exceptions.FileNotFound
 
-        codename = entry["code_name"]
-        key = entry["aes_key"]
+        codename = entry.code_name
+        key = entry.key
 
         try:
             data = self.distributor.get(codename, key)
@@ -121,11 +124,11 @@ class FileManager:
 
     def delete(self, name):
         self.load_manifest()
-        entry = self.manifest.remove_line(name)
+        entry = self.manifest.remove(name)
 
         self.distribute_manifest()
         try:
-            self.distributor.delete(entry["code_name"])
+            self.distributor.delete(entry.code_name)
         except exceptions.FatalOperationFailure as e:
             # some provider deletes failed, but it wasn't fatal
             raise exceptions.OperationFailure(e.failures, None)

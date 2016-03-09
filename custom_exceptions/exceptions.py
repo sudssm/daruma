@@ -80,6 +80,12 @@ class FileNotFound(Exception):
     """
 
 
+class InvalidPath(Exception):
+    """
+    User provides an invalid fully-defined path
+    """
+
+
 # manager exceptions
 class OperationFailure(Exception):
     """
