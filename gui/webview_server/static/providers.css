@@ -51,8 +51,9 @@ body {
 	margin-top: 10px;
 }
 
-.provider-icon {
+.provider-icon-square {
 	height: 70px;
+	margin-right: 25px;
 }
 
 .provider-name {

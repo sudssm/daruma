@@ -24,8 +24,8 @@
 			<ul id="provider-list">
 				{% for provider in providers %}
 				<li class="inset-box">
-					<img class="provider-icon" src="http://www.w3schools.com/html/html5.gif">
-					<span class="provider-name">AliceBox</span>
+					<img class="provider-icon-square" src="{{ url_for('static', filename='logos/square/dropbox.png') }}">
+					<span class="provider-name">{{ provider }}</span>
 					<ul class="status-list">
 						<li>Status: <span class="status-green">Fully Operational</span></li>
 						<li>Last Online: <span class="status-orange">A week ago</span></li>
