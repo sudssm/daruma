@@ -94,9 +94,3 @@ class FatalOperationFailure(Exception):
     """
     def __init__(self, failures):
         self.failures = failures
-
-
-class UnsupportedPlatformException(Exception):
-    """
-    Raised when the project is run on an OS it does not support
-    """
