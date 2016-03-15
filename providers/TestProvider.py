@@ -49,10 +49,13 @@ class TestProvider(LocalFilesystemProvider):
         with self.exception_handler():
             result = super(TestProvider, self).get(filename)
         if self.state == TestProviderState.CORRUPTING:
+            # with probability half, choose a random even size between 2 and 100
+            # otherwise use the same size as the true data
             if random() > 0.5:
                 size = randrange(50)*2
             else:
                 size = len(result)/2
+            # choose and hex-encode _size_ random bits
             corrupt = pack("h"*size, *[randint(0, 255) for i in xrange(size)])
             return "".join(corrupt)
         else:

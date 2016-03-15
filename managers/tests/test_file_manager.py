@@ -62,8 +62,8 @@ def test_wrong_master_key():
     for provider in providers:
         provider.wipe()
     FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, 3, generate_key(), manifest_name)
     with pytest.raises(exceptions.FatalOperationFailure):
-        FM = FileManager(providers, 3, generate_key(), manifest_name)
         FM.load_manifest()
 
 
@@ -71,8 +71,8 @@ def test_wrong_manifest_name():
     for provider in providers:
         provider.wipe()
     FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, 3, master_key, generate_filename())
     with pytest.raises(exceptions.FatalOperationFailure):
-        FM = FileManager(providers, 3, master_key, generate_filename())
         FM.load_manifest()
 
 

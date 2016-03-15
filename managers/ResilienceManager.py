@@ -18,7 +18,7 @@ class ResilienceManager:
         """
         Update the provider to reflect a successful operation
         """
-        # TODO
+        # TODO fill this in when implementing exponential decay
         if provider.status == ProviderStatus.RED:
             # bring back to yellow since he's online now
             provider.errors = 1
@@ -49,16 +49,16 @@ class ResilienceManager:
                 failure.provider.errors += 1
             failed_providers.add(failure.provider)
 
-        all_good = True
+        no_red_providers = True
 
         for provider in self.providers:
             if provider not in failed_providers:
                 self._log_provider_success(provider)
             # NB, provider status is computed in real time
             if provider.status not in [ProviderStatus.GREEN, ProviderStatus.YELLOW]:
-                all_good = False
+                no_red_providers = False
 
-        return all_good
+        return no_red_providers
 
     # TODO in general, in repairs, we don't have to upload new file if the error was
     # connection failure. if provider is down, we just diagnose and retry til red?
@@ -70,16 +70,16 @@ class ResilienceManager:
               data - the correct value of the file
         Invariant: Upon exit, either the system is stable or at least one provider is red
         """
-        can_continue = self.diagnose(failures)
+        can_retry = self.diagnose(failures)
 
         try:
             # attempt to repair file
             self.file_manager.put(filename, data)
             self.log_success()
         except exceptions.OperationFailure as e:
-            # will necessarily happen if the error was due to a missing file
-            # because deleting that file will not work. So, ignore all additional
-            # from providers in failures
+            # ignore any failures caused by the same provider that we are repairing
+            # (if the provider failed because it was missing the file, then deleting the missing file
+            # in file_manager.put will also fail). Ignore these errors to avoid double-penalties.
             original_providers = [failure.provider for failure in failures]
             additional_errors = [failure for failure in e.failures if failure.provider not in original_providers]
             if len(additional_errors) > 0:
@@ -89,7 +89,7 @@ class ResilienceManager:
         except exceptions.FatalOperationFailure as e:
             # unable to repair
             # retry if all providers are not red
-            if can_continue:
+            if can_retry:
                 return self.diagnose_and_repair_file(e.failures, filename, data)
             self.diagnose(e.failures)
 
@@ -98,17 +98,17 @@ class ResilienceManager:
         diagnose a list of failures, and then try to repair the bootstrap
         Invariant: Upon exit, either the system is stable or at least one provider is red
         """
-        can_continue = self.diagnose(failures)
+        can_retry = self.diagnose(failures)
 
         # we need to get the manifest to repair the bootstrap
         try:
             self.file_manager.load_manifest()
             self.log_success()
         except exceptions.OperationFailure as e:
-            can_continue = self.diagnose(e.failures)
+            can_retry = self.diagnose(e.failures)
         except exceptions.FatalOperationFailure as e:
             # can't proceed if unable to load manifest; retry
-            if can_continue:
+            if can_retry:
                 return self.diagnose_and_repair_bootstrap(e.failures)
             self.diagnose(e.failures)
             return
@@ -127,7 +127,7 @@ class ResilienceManager:
             self.log_success()
         except exceptions.FatalOperationFailure as e:
             # retry if all providers are not red
-            if can_continue:
+            if can_retry:
                 return self.diagnose_and_repair_bootstrap(e.failures)
             self.diagnose(e.failures)
 

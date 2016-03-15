@@ -61,7 +61,7 @@ class FileManager:
 
     def put(self, name, data):
         """
-        Raises FatalOperationFailure if any provider operation throws an exceptions
+        Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exceptions
         """
         codename = generate_filename()
         key = self.distributor.put(codename, data)
@@ -71,20 +71,21 @@ class FileManager:
         # update the manifest
         self.distribute_manifest()
 
+        # we are performing a replacement
         if old_codename is not None:
             try:
                 self.distributor.delete(old_codename)
             except exceptions.FatalOperationFailure as e:
-                # this isn't actually fatal
+                # this isn't actually fatal - we just have some extra garbage floating around
                 raise exceptions.OperationFailure(e.failures, None)
 
     def get(self, name):
         """
         attempt to get a file
         Returns file contents
-        Raises FileNotFound if file does not exist
-        Raises OperationFailure with errors and file contents if recoverable
-        Raises FatalOperationFailure if unrecoverable
+        Raises FileNotFound if file does not exist (from manifest.get_line)
+        Raises OperationFailure with errors and file contents if recoverable (from distributor.get)
+        Raises FatalOperationFailure if unrecoverable (from distributor.get)
         """
         entry = self.manifest.get_line(name)
 
@@ -94,6 +95,12 @@ class FileManager:
         return self.distributor.get(codename, key)
 
     def delete(self, name):
+        """
+        delete a file
+        Raises FileNotFound if file does not exist (from manifest.remove_line)
+        Raises OperationFailure with errors and file contents if recoverable (from distributor.delete)
+            Raises FatalOperationFailure if unrecoverable (from distribute_manifest)
+        """
         entry = self.manifest.remove_line(name)
 
         try:
@@ -101,7 +108,7 @@ class FileManager:
         except FatalOperationFailure:
             # local manifest is different from remote manifest; we need to rollback
             # TODO need a way to get the old manifest back
-            # and then distribute it
+            # and then distribute it (handle when implementing caching)
             raise
 
         try:

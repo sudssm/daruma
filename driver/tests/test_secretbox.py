@@ -73,7 +73,10 @@ def test_corrupt_fail():
 
 
 def test_different_ks():
-    SB = SecretBox.provision(providers, 3, 2)
+    bootstrap_reconstruction_threshold = 3
+    file_reconstruction_threshold = 2
+    SB = SecretBox.provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
+
     SB.put("test", "data")
     providers[0].wipe()
     providers[1].wipe()

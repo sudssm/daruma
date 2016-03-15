@@ -22,9 +22,7 @@ class SecretBox:
         self.file_manager = file_manager
         self.resilience_manager = resilience_manager
         # load the manifest here
-        # that way, if we recovered the wrong k_reconstruction_threshold due to
-        # providers cheating us in a way that is outside our threat model, we
-        # fail immediately and throw a FatalOperationError
+        # ensures that we fail immediately with FatalOperationError if we recovered the wrong reconstruction threshold
         self._load_manifest()
 
     @staticmethod
@@ -97,6 +95,7 @@ class SecretBox:
 
     # change the master key
     def update_master_key(self):
+        # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
     # public methods
 
@@ -126,7 +125,8 @@ class SecretBox:
         except exceptions.OperationFailure as e:
             self.resilience_manager.diagnose_and_repair_bootstrap(e.failures)
         except exceptions.FatalOperationFailure as e:
-            if self.resilience_manager.diagnose(e.failures):
+            can_retry = self.resilience_manager.diagnose(e.failures)
+            if can_retry:
                 return self._load_manifest()
             raise
 
@@ -158,7 +158,8 @@ class SecretBox:
             self.resilience_manager.diagnose_and_repair_file(e.failures, path, e.result)
             return e.result
         except exceptions.FatalOperationFailure as e:
-            if self.resilience_manager.diagnose(e.failures):
+            can_retry = self.resilience_manager.diagnose(e.failures)
+            if can_retry:
                 return self.get(path)
             raise
 
@@ -176,7 +177,8 @@ class SecretBox:
             self.resilience_manager.log_success()
             return result
         except exceptions.FatalOperationFailure as e:
-            if self.resilience_manager.diagnose(e.failures):
+            can_retry = self.resilience_manager.diagnose(e.failures)
+            if can_retry:
                 return self.put(path, data)
             raise
 
@@ -198,6 +200,7 @@ class SecretBox:
             self.resilience_manager.garbage_collect()
             return e.result
         except exceptions.FatalOperationFailure:
-            if self.resilience_manager.diagnose(e.failures):
+            can_retry = self.resilience_manager.diagnose(e.failures)
+            if can_retry:
                 return self.delete(path)
             raise
