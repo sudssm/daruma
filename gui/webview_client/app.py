@@ -22,11 +22,11 @@ class MainAppMenu(wx.TaskBarIcon):
     def __init__(self, app_frame, host):
         """
         Args:
-            app_frame: A frame for the enclosing app to be closed on exit.
+            app_frame: A frame for the enclosing app (to be closed on exit).
             host: The (hostname, port) tuple for the UI server.
         """
         super(MainAppMenu, self).__init__()
-        self.app_frame = app_frame  # Stored to close the app with
+        self.app_frame = app_frame
         self.host = host
 
         icon_path = pkg_resources.resource_filename(__name__, ICON_NAME)
