@@ -4,8 +4,10 @@ import wx
 from gui.webview_server.server import SERVER_HOST, SERVER_PORT
 import gui.webview_client.webview as webview
 
-BASE_SERVER_URL = "http://" + SERVER_HOST + ":" + str(SERVER_PORT)
 ICON_NAME = os.path.join("icons", "menubar.png")
+ICON_HOVERTEXT = "trust-no-one"
+
+BASE_SERVER_URL = "http://" + SERVER_HOST + ":" + str(SERVER_PORT)
 
 
 class MainAppMenu(wx.TaskBarIcon):
@@ -15,9 +17,12 @@ class MainAppMenu(wx.TaskBarIcon):
 
         icon_path = pkg_resources.resource_filename(__name__, ICON_NAME)
         icon = wx.IconFromBitmap(wx.Bitmap(icon_path))
-        self.SetIcon(icon, "trust-no-one")
+        self.SetIcon(icon, ICON_HOVERTEXT)
 
     def CreatePopupMenu(self):
+        """
+        Called when the taskbar icon is opened.
+        """
         menu = wx.Menu()
 
         providers_item = menu.Append(wx.ID_ANY, "Providers")
@@ -31,9 +36,15 @@ class MainAppMenu(wx.TaskBarIcon):
         return menu
 
     def on_open_providers(self, event):
+        """
+        Opens the provider dashboard webview.
+        """
         webview.WebviewWindow(BASE_SERVER_URL + "/providers").Show()
 
     def on_exit(self, event):
+        """
+        Called with the quit item is selected.
+        """
         wx.CallAfter(self.Destroy)
         self.app_frame.Close()
 
@@ -44,6 +55,7 @@ class SBApp(wx.App):
 
     def OnInit(self):
         frame = wx.Frame(parent=None)
+        self.SetTopWindow(frame)
         MainAppMenu(frame)
         return True
 

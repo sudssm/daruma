@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 app = Flask(__name__)
 
-SERVER_HOST = "127.0.0.1"
+SERVER_HOST = "localhost"
 SERVER_PORT = 5000
 
 
