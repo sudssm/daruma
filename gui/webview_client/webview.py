@@ -3,16 +3,18 @@ import wx.html2 as webview
 
 
 class WebviewWindow(wx.Dialog):
-    def __init__(self, url=None):
+    def __init__(self, url=None, size=(700, 700)):
         """
         Constructs a new webview window.  This window disables the history but
         displays the webpage title as its own title.
 
         Args:
             url: Optionally indicates the initial URL to load.
+            size: A (width, height) tuple indicating the desired window size in
+                  pixels.  Defaults to 700x700.
         """
         super(WebviewWindow, self).__init__(parent=None)
-        self.SetSize((700, 700))
+        self.SetSize(size)
         self.browser = webview.WebView.New(self)
         self.Bind(webview.EVT_WEBVIEW_TITLE_CHANGED, self._on_refresh_title, self.browser)
 
