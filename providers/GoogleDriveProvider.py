@@ -17,7 +17,7 @@ SCOPES = 'https://www.googleapis.com/auth/drive.file'
 GDRIVE_CLIENT_SECRET_FILE = 'gdrive_client_secret.json'
 CREDENTIAL_DIR = '.credentials'
 APPLICATION_NAME = 'Trust No One'
-
+REDIRECT_URL = "127.0.0.1" # Localhost
 
 class GoogleDriveProvider(BaseProvider):
     

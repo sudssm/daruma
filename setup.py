@@ -9,6 +9,7 @@ setup(
         "secretsharing==0.2.6",
         "PyECLib==1.1.1",
         "uuid==1.30",
-        "dropbox==4.0"
+        "dropbox==4.0",
+        "appdirs==1.4.0"
     ]
 )
