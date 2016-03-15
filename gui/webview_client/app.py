@@ -1,19 +1,33 @@
 import os
 import pkg_resources
 import wx
-from gui.webview_server.server import SERVER_HOST, SERVER_PORT
 import gui.webview_client.webview as webview
 
 ICON_NAME = os.path.join("icons", "menubar.png")
 ICON_HOVERTEXT = "trust-no-one"
 
-BASE_SERVER_URL = "http://" + SERVER_HOST + ":" + str(SERVER_PORT)
+
+def get_url_for_host(host, endpoint=""):
+    """
+    Returns the url to view for the given host and endpoint.
+
+    Args:
+        host: The (hostname, port) tuple for the UI server.
+        endpoint: The optional endpoint to be viewed.
+    """
+    return "http://" + host[0] + ":" + str(host[1]) + "/" + endpoint
 
 
 class MainAppMenu(wx.TaskBarIcon):
-    def __init__(self, app_frame):
+    def __init__(self, app_frame, host):
+        """
+        Args:
+            app_frame: A frame for the enclosing app to be closed on exit.
+            host: The (hostname, port) tuple for the UI server.
+        """
         super(MainAppMenu, self).__init__()
         self.app_frame = app_frame  # Stored to close the app with
+        self.host = host
 
         icon_path = pkg_resources.resource_filename(__name__, ICON_NAME)
         icon = wx.IconFromBitmap(wx.Bitmap(icon_path))
@@ -39,7 +53,7 @@ class MainAppMenu(wx.TaskBarIcon):
         """
         Opens the provider dashboard webview.
         """
-        webview.WebviewWindow(BASE_SERVER_URL + "/providers").Show()
+        webview.WebviewWindow(get_url_for_host(self.host, "providers")).Show()
 
     def on_exit(self, event):
         """
@@ -50,16 +64,25 @@ class MainAppMenu(wx.TaskBarIcon):
 
 
 class SBApp(wx.App):
-    def __init__(self):
+    def __init__(self, host):
+        """
+        Args:
+            host: The (hostname, port) tuple for the UI server.
+        """
+        self.host = host
         super(SBApp, self).__init__(redirect=False)
 
     def OnInit(self):
         frame = wx.Frame(parent=None)
         self.SetTopWindow(frame)
-        MainAppMenu(frame)
+        MainAppMenu(frame, self.host)
         return True
 
 
-def run_app():
-    app = SBApp()
+def run_app(host):
+    """
+    Args:
+        host: The (hostname, port) tuple for the UI server.
+    """
+    app = SBApp(host)
     app.MainLoop()
