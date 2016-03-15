@@ -1,10 +1,11 @@
+import os
 import pkg_resources
 import wx
 from gui.webview_server.server import SERVER_HOST, SERVER_PORT
 import gui.webview_client.webview as webview
 
 BASE_SERVER_URL = "http://" + SERVER_HOST + ":" + str(SERVER_PORT)
-ICON_NAME = "icon.bmp"
+ICON_NAME = os.path.join("icons", "menubar.png")
 
 
 class MainAppMenu(wx.TaskBarIcon):
@@ -13,7 +14,7 @@ class MainAppMenu(wx.TaskBarIcon):
         self.app_frame = app_frame  # Stored to close the app with
 
         icon_path = pkg_resources.resource_filename(__name__, ICON_NAME)
-        icon = wx.Icon(icon_path)
+        icon = wx.IconFromBitmap(wx.Bitmap(icon_path))
         self.SetIcon(icon, "trust-no-one")
 
     def CreatePopupMenu(self):
