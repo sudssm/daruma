@@ -59,10 +59,11 @@ class BootstrapManager:
                 # track provider votes for bootstrap threshold values
                 thresholds_map[int(provider.get(self.BOOTSTRAP_THRESHOLD_FILE_NAME))].append(provider)
                 shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
-            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
+            except exceptions.ProviderFailure as e:
                 failures.append(e)
             except ValueError:
-                failures.append(exceptions.ProviderOperationFailure(provider))
+                # if the cast to int failed
+                failures.append(exceptions.InvalidShareFailure(provider))
 
         # vote on threshold
         largest_group_size = 0
@@ -118,7 +119,7 @@ class BootstrapManager:
             try:
                 provider.put(self.BOOTSTRAP_THRESHOLD_FILE_NAME, str(self.bootstrap_reconstruction_threshold))
                 provider.put(self.BOOTSTRAP_FILE_NAME, share)
-            except (exceptions.ConnectionFailure, exceptions.ProviderOperationFailure) as e:
+            except exceptions.ProviderFailure as e:
                 failures.append(e)
 
         if len(failures) > 0:

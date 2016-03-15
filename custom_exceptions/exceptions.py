@@ -8,7 +8,6 @@ class LibraryException(Exception):
     """
 
 
-# Should we get rid of this?
 class IllegalArgumentException(Exception):
     """
     Passed invalid arguments to a constructor or method
@@ -21,37 +20,51 @@ class NetworkException(Exception):
     """
 
 
+# tools exceptions
+class SandboxProcessFailure(Exception):
+    """
+    A function run in the process sandbox exited with an unsuccessful exit code.
+    The exit code is stored in the exitcode field.
+    """
+    def __init__(self, exitcode):
+        self.exitcode = exitcode
+
+
 # provider exceptions
-class ConnectionFailure(Exception):
+class ProviderFailure(Exception):
+    """
+    Class of exceptions that capture an individual provider failing
+    """
+    def __init__(self, provider):
+        self.provider = provider
+        provider.log_error(self)
+
+    def __str__(self):
+        return "<" + self.__class__.__name__ + " in " + str(self.provider) + ">"
+
+
+class ConnectionFailure(ProviderFailure):
     """
     Provider is considered off-line
     """
-    def __init__(self, provider):
-        self.provider = provider
 
 
-class AuthFailure(Exception):
+class AuthFailure(ProviderFailure):
     """
     Failed to authenticate the API token with the provider
     """
-    def __init__(self, provider):
-        self.provider = provider
 
 
-class ProviderOperationFailure(Exception):
+class ProviderOperationFailure(ProviderFailure):
     """
     The provider rejected the desired operation (reason unknown)
     """
-    def __init__(self, provider):
-        self.provider = provider
 
 
-class InvalidShareFailure(Exception):
+class InvalidShareFailure(ProviderFailure):
     """
-    The provider returned an invalid share
+    The provider returned the wrong value for a file
     """
-    def __init__(self, provider):
-        self.provider = provider
 
 
 # crypto exceptions
@@ -88,7 +101,7 @@ class OperationFailure(Exception):
     Raised only by read operations - any failure in a write operation will be fatal
     result should only be None if the original operation wasn't supposed to return anything
     (this only happens when the operation updates a cache)
-    failures - a list of Exceptions; one of [AuthFailure, ProviderOperationFailure, ConnectionFailure]
+    failures - a list of ProviderFailures
     """
     def __init__(self, failures, result):
         self.failures = failures
@@ -98,16 +111,7 @@ class OperationFailure(Exception):
 class FatalOperationFailure(Exception):
     """
     A multi-provider operation had some failure that was fatal
-    failures - a list of Exceptions; one of [AuthFailure, ProviderOperationFailure, ConnectionFailure]
+    failures - a list of ProviderFailures
     """
     def __init__(self, failures):
         self.failures = failures
-
-
-class SandboxProcessFailure(Exception):
-    """
-    A function run in the process sandbox exited with an unsuccessful exit code.
-    The exit code is stored in the exitcode field.
-    """
-    def __init__(self, exitcode):
-        self.exitcode = exitcode
