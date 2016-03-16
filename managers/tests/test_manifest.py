@@ -175,6 +175,36 @@ def test_get_file_info():
     assert get_results == expected_node
 
 
+def test_get_file_codename():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+
+    manifest = Manifest()
+    manifest.update_file(test_attributes["name"], test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+
+    get_results = manifest.get(test_attributes["name"])
+    assert get_results.code_name == test_attributes["code_name"]
+
+
+def test_get_file_size():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+
+    manifest = Manifest()
+    manifest.update_file(test_attributes["name"], test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+
+    get_results = manifest.get(test_attributes["name"])
+    assert get_results.size == test_attributes["size"]
+
+
+def test_get_file_key():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+
+    manifest = Manifest()
+    manifest.update_file(test_attributes["name"], test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
+
+    get_results = manifest.get(test_attributes["name"])
+    assert get_results.key == test_attributes["key"]
+
+
 def test_get_on_directory():
     expected_node = Directory.from_values("dir1")
 

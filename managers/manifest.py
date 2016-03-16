@@ -83,6 +83,10 @@ class File(_Node):
     def key(self):
         return self.attributes[Attributes.KEY]
 
+    @property
+    def size(self):
+        return self.attributes[Attributes.SIZE]
+
 
 class Directory(_Node):
     """
