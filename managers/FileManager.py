@@ -57,23 +57,12 @@ class FileManager:
         # used most often for reprovisioning new or broken provider
 
     def ls(self):
-        # TODO note that this will change once we start intelligently caching manifests
-        try:
-            # can't raise, since we need to allow reads even if a provider is down
-            # instead, we combine the exceptions
-            self.load_manifest()
-        except exceptions.OperationFailure as e:
-            # pass up failures
-            raise exceptions.OperationFailure(e.failures, self.manifest.ls())
-
         return [entry.name for entry in self.manifest.list_directory_entries()]
 
     def put(self, name, data):
         """
-        Raises FatalOperationFailure if any provider operation throws an exceptions
+        Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exceptions
         """
-        # if this fails, we raise up the error; system is read-only if any provider is down
-        self.load_manifest()
         codename = generate_filename()
         key = self.distributor.put(codename, data)
 
@@ -82,27 +71,22 @@ class FileManager:
         # update the manifest
         self.distribute_manifest()
 
+        # we are performing a replacement
         if old_codename is not None:
-            self.distributor.delete(old_codename)
+            try:
+                self.distributor.delete(old_codename)
+            except exceptions.FatalOperationFailure as e:
+                # this isn't actually fatal - we just have some extra garbage floating around
+                raise exceptions.OperationFailure(e.failures, None)
 
     def get(self, name):
         """
         attempt to get a file
         Returns file contents
         Raises FileNotFound if file does not exist
-        Raises OperationFailure with errors and file contents if recoverable
-        Raises FatalOperationFailure if unrecoverable
+        Raises OperationFailure with errors and file contents if recoverable (from distributor.get)
+        Raises FatalOperationFailure if unrecoverable (from distributor.get)
         """
-        # TODO note that this will change once we start intelligently caching manifests
-        failures = []
-        try:
-            # can't raise, since we need to allow reads even if a provider is down
-            # instead, we combine the exceptions
-            self.load_manifest()
-        except exceptions.OperationFailure as e:
-            # keep track of the exceptions
-            failures = e.failures
-
         try:
             entry = self.manifest.get(name)
         except exceptions.InvalidPath:
@@ -111,22 +95,25 @@ class FileManager:
         codename = entry.code_name
         key = entry.key
 
-        try:
-            data = self.distributor.get(codename, key)
-        except exceptions.OperationFailure as e:
-            data = e.result
-            failures += e.failures
-
-        if len(failures) > 0:
-            raise exceptions.OperationFailure(failures, e.result)
-
-        return data
+        return self.distributor.get(codename, key)
 
     def delete(self, name):
-        self.load_manifest()
+        """
+        delete a file
+        Raises FileNotFound if file does not exist (from manifest.remove_line)
+        Raises OperationFailure with errors and file contents if recoverable (from distributor.delete)
+            Raises FatalOperationFailure if unrecoverable (from distribute_manifest)
+        """
         entry = self.manifest.remove(name)
 
-        self.distribute_manifest()
+        try:
+            self.distribute_manifest()
+        except FatalOperationFailure:
+            # local manifest is different from remote manifest; we need to rollback
+            # TODO need a way to get the old manifest back
+            # and then distribute it (handle when implementing caching)
+            raise
+
         try:
             self.distributor.delete(entry.code_name)
         except exceptions.FatalOperationFailure as e:

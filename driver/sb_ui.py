@@ -12,13 +12,15 @@ k_key/k_file is the number of providers that need to be up to recover key/file
 tmp_dir is a local directory that will act as the providers
 """
 import shlex
-
-
+import traceback
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
-from providers.LocalFilesystemProvider import LocalFilesystemProvider
+from providers.TestProvider import TestProvider, TestProviderState
+from providers.BaseProvider import ProviderStatus
 import sys
+import colorama
 
+colorama.init()
 try:
     cmd = sys.argv[1]
     n = int(sys.argv[2])
@@ -36,7 +38,7 @@ except:
     sys.exit()
 
 
-providers = [LocalFilesystemProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
+providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
 if cmd == "init":
     SB = SecretBox.provision(providers, k_key, k_file)
 else:
@@ -44,15 +46,24 @@ else:
 
 while True:
     print "\n"
-    print "ls, get, put, del, exit"
+    print "SB commands: ls, get, put, del, exit"
+    print "provider commands: set, wipe, status"
     cmd = shlex.split(raw_input("> "))
 
+    if len(cmd) == 0:
+        continue
+
     if cmd[0] == "ls":
-        files = SB.ls()
-        if len(files) == 0:
-            print "EMPTY"
-        for item in files:
-            print "-", item
+        try:
+            files = SB.ls()
+            if len(files) == 0:
+                print "EMPTY"
+            for item in files:
+                print "-", item
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
+        except Exception as e:
+            print traceback.format_exc()
     if cmd[0] == "get":
         if len(cmd) < 2:
             print "Usage: get <filename>"
@@ -60,15 +71,26 @@ while True:
         name = cmd[1]
         try:
             print SB.get(name)
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except exceptions.FileNotFound:
             print "File does not exist!"
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
+        except Exception as e:
+            print traceback.format_exc()
     if cmd[0] == "put":
         if len(cmd) < 3:
             print "Usage: put <filename> <contents>"
             continue
         name = cmd[1]
         data = cmd[2]
-        SB.put(name, data)
+        try:
+            SB.put(name, data)
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
+        except Exception as e:
+            print traceback.format_exc()
     if cmd[0] == "del":
         if len(cmd) < 2:
             print "Usage: del <filename>"
@@ -76,7 +98,62 @@ while True:
         name = cmd[1]
         try:
             SB.delete(name)
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
         except exceptions.FileNotFound:
             print "File does not exist!"
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
+        except Exception as e:
+            print traceback.format_exc()
+    if cmd[0] == "set":
+        if len(cmd) < 3:
+            print "Usage: set <all, n> <active, offline, authfail, corrupt>"
+            continue
+        try:
+            if cmd[1] == "all":
+                n = len(providers)
+            else:
+                n = int(cmd[1])
+            assert 0 < n
+            assert n <= len(providers)
+            assert cmd[2] in ["active", "offline", "authfail", "corrupt"]
+        except (AssertionError, ValueError):
+            print "Invalid input"
+            print "Usage: set <all, n> <active, offline, authfail, corrupt>"
+        for provider in providers[0:n]:
+            if cmd[2] == "active":
+                provider.set_state(TestProviderState.ACTIVE)
+            if cmd[2] == "offline":
+                provider.set_state(TestProviderState.OFFLINE)
+            if cmd[2] == "authfail":
+                provider.set_state(TestProviderState.UNAUTHENTICATED)
+            if cmd[2] == "corrupt":
+                provider.set_state(TestProviderState.CORRUPTING)
+    if cmd[0] == "status":
+        for provider in providers:
+            color = colorama.Fore.RESET
+            if provider.status == ProviderStatus.GREEN:
+                color = colorama.Fore.GREEN
+            if provider.status == ProviderStatus.YELLOW:
+                color = colorama.Fore.YELLOW
+            if provider.status == ProviderStatus.RED:
+                color = colorama.Fore.RED
+            if provider.status == ProviderStatus.AUTH_FAIL:
+                color = colorama.Fore.BLUE
+            print color + str(provider)
+        print colorama.Fore.RESET,
+    if cmd[0] == "wipe":
+        if len(cmd) < 2:
+            print "Usage: wipe <provider #>"
+            continue
+        try:
+            n = int(cmd[1])
+            assert 0 <= n
+            assert n < len(providers)
+        except (AssertionError, ValueError):
+            print "Invalid input"
+            print "Usage: wipe <provider #>"
+        providers[n].wipe()
     if cmd[0] == "exit":
         break
