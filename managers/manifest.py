@@ -197,12 +197,12 @@ class Manifest:
         """
         try:
             attributes = bson.loads(string)
-            parsed_root = _Node.from_attributes(attributes)
-            manifest = Manifest()
-            manifest.root = parsed_root
-            return manifest
         except Exception:
             raise exceptions.ParseException
+        parsed_root = _node_from_attributes(attributes)
+        manifest = Manifest()
+        manifest.root = parsed_root
+        return manifest
 
     @staticmethod
     def _tokenize_path(path):
@@ -274,7 +274,7 @@ class Manifest:
     def remove(self, path):
         """
         Args:
-            path of path to be removed
+            path of the file to be removed
         Returns:
             The File or Directory that was removed if it is found
         Raises:
@@ -288,6 +288,8 @@ class Manifest:
             target_node = parent_node._remove_child(file_name)
             return target_node
         except (KeyError, AttributeError):
+            # The parent_node was not found, was a file, or didn't have the
+            # specified child.
             raise exceptions.InvalidPath
 
     def update_file(self, path, code_name, size, key):
@@ -313,10 +315,16 @@ class Manifest:
         else:
             parent_directory = self.create_directory(parent_directory_path)
 
-        if parent_directory._has_child(file_name):
+        # Check if we are attempting to modify a directory
+        try:
             existing_child = parent_directory._get_child(file_name)
+        except KeyError:
+            # We're creating a new file, move along
+            pass
+        else:
             if type(existing_child) is Directory:
                 raise exceptions.InvalidPath
+
         new_file = File.from_values(file_name, code_name, size, key)
         parent_directory._add_child(new_file)
 
