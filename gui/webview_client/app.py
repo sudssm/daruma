@@ -35,7 +35,8 @@ class MainAppMenu(wx.TaskBarIcon):
 
     def CreatePopupMenu(self):
         """
-        Called when the taskbar icon is opened.
+        Automatically called when the taskbar icon is clicked.
+        Overriden from superclass.
         """
         menu = wx.Menu()
 
@@ -57,7 +58,7 @@ class MainAppMenu(wx.TaskBarIcon):
 
     def on_exit(self, event):
         """
-        Called with the quit item is selected.
+        Called when the quit item is selected.
         """
         wx.CallAfter(self.Destroy)
         self.app_frame.Close()

@@ -5,6 +5,9 @@ from gui.webview_client.app import run_app
 
 
 def platform_specific_setup():
+    """
+    Run code specific to the host OS to set up our app.
+    """
     if sys.platform.startswith('darwin'):
         # On OSX, we need to give ourselves an App Transport Security exception
         # so that we can read data from localhost over HTTP.

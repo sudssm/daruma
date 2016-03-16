@@ -5,7 +5,8 @@ import wx.html2 as webview
 class WebviewWindow(wx.Dialog):
     def __init__(self, url=None, size=(700, 700)):
         """
-        Constructs a new webview window.  This window disables the history but
+        Constructs a new webview window to give the illusion of a native
+        window.  In particular, this view doesn't have "back" functionality and
         displays the webpage title as its own title.
 
         Args:
