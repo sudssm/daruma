@@ -24,7 +24,7 @@ class _Node(object):
     def __init__(self, attributes):
         """
         Creates a node around an existing set of attributes.  Should not be
-        called directly, instead call _Node.from_attributes() or a subclass's
+        called directly, instead call _node_from_attributes() or a subclass's
         from_values() method.
         """
         self.attributes = attributes
@@ -34,16 +34,6 @@ class _Node(object):
         _Nodes are comparable by the values in their backing dictionaries.
         """
         return cmp(self.attributes, other.attributes)
-
-    @staticmethod
-    def from_attributes(attributes):
-        """
-        Constructs the proper subclass of _Node from the given attributes.
-        """
-        if Attributes.CHILDREN in attributes:
-            return Directory(attributes)
-        else:
-            return File(attributes)
 
     @property
     def name(self):
@@ -139,14 +129,14 @@ class Directory(_Node):
             KeyError: If no such child exists.
         """
         child_attributes = self.attributes[Attributes.CHILDREN][name]
-        return _Node.from_attributes(child_attributes)
+        return _node_from_attributes(child_attributes)
 
     def _get_children(self):
         """
         A list of the children _Nodes of this directory.
         """
         children = self.attributes[Attributes.CHILDREN]
-        return [_Node.from_attributes(children[name]) for name in children]
+        return [_node_from_attributes(children[name]) for name in children]
 
     def _remove_child(self, name):
         """
@@ -160,7 +150,17 @@ class Directory(_Node):
         children = self.attributes[Attributes.CHILDREN]
         child = children[name]
         del children[name]
-        return _Node.from_attributes(child)
+        return _node_from_attributes(child)
+
+
+def _node_from_attributes(attributes):
+    """
+    Constructs the proper subclass of _Node from the given attributes.
+    """
+    if Attributes.CHILDREN in attributes:
+        return Directory(attributes)
+    else:
+        return File(attributes)
 
 
 class Manifest:
