@@ -1,8 +1,11 @@
 import json
+import os
 from appdirs import *
 
+
 APP_NAME = "Trust No One"
-FILE_NAME = user_config_dir(APP_NAME) + "config.json"
+APP_DIR = user_config_dir(APP_NAME)
+FILE_NAME = os.path.join(user_config_dir(APP_DIR), "credentials.json")
 
 
 class CredentialManager(object):
@@ -14,15 +17,24 @@ class CredentialManager(object):
 
         Args:
             provider: a provider class
+        Returns:
+            The credentials for the specified provider
         """
 
+        if not os.path.exists(FILE_NAME):
+            CredentialManager.create_file()
+
+        
         credential_file = open(FILE_NAME, 'r')
+            
         
         # load user credentials 
         try:
             credentials = json.load(credential_file)
         except ValueError:
             credentials = {}
+
+        credential_file.close()
 
         return credentials.get(provider.__name__)
 
@@ -37,7 +49,12 @@ class CredentialManager(object):
             credential: the user credential for that provider
         """
 
+        if not os.path.exists(FILE_NAME):
+            CredentialManager.create_file()
+
         credential_file = open(FILE_NAME, 'r+')
+
+        # load user credentials
         try:
             credentials = json.load(credential_file)
         except ValueError:
@@ -51,4 +68,26 @@ class CredentialManager(object):
         credential_file.truncate()
         credential_file.close()
 
-        
+    @staticmethod
+    def clear_credentials():
+        if not os.path.exists(FILE_NAME):
+            CredentialManager.create_file()
+
+        f = open(FILE_NAME, 'w')
+        f.close()
+
+    @staticmethod
+    def create_file():
+        # create app folder if it does not exist
+        if not os.path.exists(APP_DIR) or not os.path.isdir(APP_DIR):
+            os.makedirs(APP_DIR)
+
+        # create credentials.json if it does not exist
+        if not os.path.exists(FILE_NAME):
+            f = open(FILE_NAME, 'a')
+            f.close()
+
+
+
+
+

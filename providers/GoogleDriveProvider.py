@@ -14,8 +14,8 @@ import io
 
 
 SCOPES = 'https://www.googleapis.com/auth/drive.file'
-GDRIVE_CLIENT_SECRET_FILE = 'gdrive_client_secret.json'
-CREDENTIAL_DIR = '.credentials'
+GDRIVE_CLIENT_SECRET_FILE = '/Users/raylei/Desktop/Stuff/senior_design/trust-no-one/providers/gdrive_client_secret.json'
+CREDENTIAL_DIR = '/Users/raylei/Desktop/Stuff/senior_design/trust-no-one/providers/.credentials'
 APPLICATION_NAME = 'Trust No One'
 REDIRECT_URL = "127.0.0.1" # Localhost
 
@@ -28,6 +28,7 @@ class GoogleDriveProvider(BaseProvider):
         
         # key: filename, value: file ID
         self.file_index = {}
+        self.connect()
 
     @staticmethod
     @contextmanager
@@ -75,7 +76,7 @@ class GoogleDriveProvider(BaseProvider):
             self.folder_ID = f['id']
             response = self.service.files().list(q="'%s' in parents"%self.folder_ID).execute()
             for f in response.get('files',[]):
-                self.file_index[f['title']] = f['id']
+                self.file_index[f['name']] = f['id']
         
 
     def connect(self):
@@ -111,7 +112,7 @@ class GoogleDriveProvider(BaseProvider):
             file_id = self._get_id(filename)
             if file_id is None:
                 # file not exist
-                raise Exception # TODO
+                raise exceptions.ProviderOperationFailure(self)
 
             return self.service.files().get_media(fileId=file_id).execute()
 
@@ -148,4 +149,6 @@ class GoogleDriveProvider(BaseProvider):
 
     def wipe (self):
         self.delete(self.ROOT_DIR)
+        self.file_index = {}
+        self.connect()
 
