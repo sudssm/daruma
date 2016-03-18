@@ -64,6 +64,8 @@ while True:
                 print "EMPTY"
             for item in files:
                 print "-", item["name"]
+        except exceptions.InvalidPath:
+            print "Error: no such file or directory"
         except exceptions.FatalOperationFailure:
             print "Operation Failed! check status"
         except Exception as e:
