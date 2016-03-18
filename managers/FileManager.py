@@ -2,7 +2,7 @@
 # this thingy should also eventually handle striping
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
-from manifest import Manifest
+from manifest import Manifest, File
 from tools.utils import generate_filename
 # TODO cache the manifest intelligently
 
@@ -56,8 +56,48 @@ class FileManager:
         # to fetch it, re-encode it with the new list of providers, and put it
         # used most often for reprovisioning new or broken provider
 
-    def ls(self):
-        return [entry.name for entry in self.manifest.list_directory_entries()]
+    def ls(self, path):
+        """
+        Lists information about the entries at the given path.  If the given
+        path points to a file, lists just the information about that file.
+
+        Node information is represented by a dictionary with the following keys:
+            - name
+            - is_directory
+            - size (only available if not is_directory)
+
+        Args:
+            path: A string corresponding to the path of the directory to list.
+                  (the empty string will query the root directory)
+
+        Returns: A list of dictionaries corresponding to the names of files and
+                 and directories in the specified directory.
+
+        Raises:
+            InvalidPath (from manifest.list_directory_entries) if the path does
+            not exist.
+        """
+        def external_attributes_from_node(node):
+            external_attributes = {
+                "name": node.name,
+                "is_directory": False,
+            }
+
+            try:
+                external_attributes["size"] = node.size
+            except AttributeError:
+                # The node is a directory
+                external_attributes["is_directory"] = True
+
+            return external_attributes
+        target_node = self.manifest.get(path)
+        try:
+            nodes_to_list = target_node.get_children()
+        except AttributeError:
+            # We assumed target_node was a Directory, but it's actually a file.
+            nodes_to_list = [target_node]
+
+        return [external_attributes_from_node(node) for node in nodes_to_list]
 
     def put(self, name, data):
         """

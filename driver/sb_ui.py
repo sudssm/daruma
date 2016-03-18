@@ -55,11 +55,15 @@ while True:
 
     if cmd[0] == "ls":
         try:
-            files = SB.ls()
+            if len(cmd) > 1:
+                target = cmd[1]
+            else:
+                target = ""
+            files = SB.ls(target)
             if len(files) == 0:
                 print "EMPTY"
             for item in files:
-                print "-", item
+                print "-", item["name"]
         except exceptions.FatalOperationFailure:
             print "Operation Failed! check status"
         except Exception as e:

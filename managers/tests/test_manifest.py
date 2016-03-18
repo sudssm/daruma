@@ -11,89 +11,6 @@ codename5 = "6H7K96H7K96H7K96H7K96H7K96H7K96H"
 codename6 = "SNAFUSNAFUSNAFUSNAFUSNAFUSNAFUSN"
 
 
-def test_ls_empty():
-    manifest = Manifest()
-    ls_results = manifest.list_directory_entries()
-    assert ls_results == []
-
-
-def test_ls_single_file():
-    test_data = []
-    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()})
-    expected_nodes = [File.from_values(**entry) for entry in test_data]
-
-    manifest = Manifest()
-    for entry in test_data:
-        manifest.update_file(entry["name"], entry["code_name"], entry["size"], entry["key"])
-
-    ls_results = manifest.list_directory_entries()
-    assert sorted(ls_results) == sorted(expected_nodes)
-
-
-def test_ls_multiple_files():
-    test_data = []
-    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()})
-    test_data.append({"name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "key": generate_key()})
-    expected_nodes = [File.from_values(**entry) for entry in test_data]
-
-    manifest = Manifest()
-    for entry in test_data:
-        manifest.update_file(entry["name"], entry["code_name"], entry["size"], entry["key"])
-
-    ls_results = manifest.list_directory_entries()
-    assert sorted(ls_results) == sorted(expected_nodes)
-
-
-def test_ls_isnt_recursive():
-    key1 = generate_key()
-    key2 = generate_key()
-
-    test_data = []
-    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": key1})
-    test_data.append({"name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "key": key2})
-
-    expected_children = [File.from_values(**entry) for entry in test_data]
-    expected_node = Directory.from_values("dir", expected_children)
-
-    manifest = Manifest()
-    manifest.update_file(os.path.join("dir", "CLARK_KENT.TXT"), codename1, 34, key1)
-    manifest.update_file(os.path.join("dir", "SUPERMAN.PDF"), codename2, 45, key2)
-
-    ls_results = manifest.list_directory_entries()
-    assert len(ls_results) is 1
-    assert ls_results[0] == expected_node
-
-
-def test_ls_subdirectory():
-    dir_name = "dir"
-    test_data = []
-    test_data.append({"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()})
-    test_data.append({"name": "SUPERMAN.PDF", "code_name": codename2, "size": 45, "key": generate_key()})
-    expected_nodes = [File.from_values(**entry) for entry in test_data]
-
-    manifest = Manifest()
-    for entry in test_data:
-        manifest.update_file(os.path.join(dir_name, entry["name"]), entry["code_name"], entry["size"], entry["key"])
-
-    ls_results = manifest.list_directory_entries(dir_name)
-    assert sorted(ls_results) == sorted(expected_nodes)
-
-
-def test_ls_nonexistent_path():
-    manifest = Manifest()
-
-    with pytest.raises(exceptions.InvalidPath):
-        manifest.list_directory_entries("asdf")
-
-
-def test_ls_on_file():
-    manifest = Manifest()
-    manifest.update_file("CLARK_KENT.TXT", codename1, 34, generate_key())
-
-    with pytest.raises(exceptions.InvalidPath):
-        manifest.list_directory_entries("CLARK_KENT.TXT")
-
-
 def test_empty_manifest_equals():
     manifest1 = Manifest()
     manifest2 = Manifest()
@@ -215,6 +132,15 @@ def test_get_on_directory():
     assert get_results == expected_node
 
 
+def test_get_root():
+    expected_node = Directory.from_values("")
+
+    manifest = Manifest()
+
+    get_results = manifest.get("")
+    assert get_results == expected_node
+
+
 def test_get_nonexistent_path():
     manifest = Manifest()
 
@@ -233,8 +159,8 @@ def test_remove_file():
     remove_results = manifest.remove(target_location)
     assert remove_results == expected_node
 
-    ls_results = manifest.list_directory_entries("dir")
-    assert ls_results == []
+    result_children = manifest.get("dir").get_children()
+    assert result_children == []
 
     with pytest.raises(exceptions.InvalidPath):
         manifest.get(target_location)
@@ -251,8 +177,8 @@ def test_remove_directory():
     remove_results = manifest.remove("dir")
     assert remove_results == expected_node
 
-    ls_results = manifest.list_directory_entries()
-    assert ls_results == []
+    result_children = manifest.get("").get_children()
+    assert result_children == []
 
 
 def test_remove_invalid():

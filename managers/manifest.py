@@ -104,6 +104,13 @@ class Directory(_Node):
                      }
         return Directory(attributes)
 
+    def get_children(self):
+        """
+        A list of the children Files and Directories of this directory.
+        """
+        children = self.attributes[Attributes.CHILDREN]
+        return [_node_from_attributes(children[name]) for name in children]
+
     def _add_child(self, child_node):
         """
         Adds a child to the directory, overwriting any existing children with
@@ -125,12 +132,6 @@ class Directory(_Node):
         else:
             return _node_from_attributes(old_child)
 
-    def _has_child(self, name):
-        """
-        Returns whether this directory has a child with the given name.
-        """
-        return name in self.attributes[Attributes.CHILDREN]
-
     def _get_child(self, name):
         """
         Returns the child of this directory with the given name.
@@ -140,13 +141,6 @@ class Directory(_Node):
         """
         child_attributes = self.attributes[Attributes.CHILDREN][name]
         return _node_from_attributes(child_attributes)
-
-    def _get_children(self):
-        """
-        A list of the children _Nodes of this directory.
-        """
-        children = self.attributes[Attributes.CHILDREN]
-        return [_node_from_attributes(children[name]) for name in children]
 
     def _remove_child(self, name):
         """
@@ -247,23 +241,6 @@ class Manifest:
             return current_node
         except KeyError:  # A required child node didn't exist
             return None
-
-    def list_directory_entries(self, path=""):
-        """
-        Args:
-            path: the path to a directory. Defaults to root.
-        Returns:
-            A list of Directory and File objects for each item in the specified
-            directory.
-        Raises:
-            InvalidPath if the path does not exist or is not a directory.
-        """
-        node = self._find_node(path)
-
-        if node is None or type(node) is File:
-            raise exceptions.InvalidPath
-
-        return node._get_children()
 
     def get(self, path):
         """

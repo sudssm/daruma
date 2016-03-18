@@ -8,13 +8,13 @@ providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 
 def test_init():
     SB = SecretBox.provision(providers, 3, 3)
-    assert len(SB.ls()) == 0
+    assert len(SB.ls("")) == 0
 
 
 def test_roundtrip():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
-    assert SB.ls() == ["test"]
+    assert SB.ls("") == [{"name": "test", "is_directory": False, "size": 4}]
     assert SB.get("test") == "data"
 
 
@@ -43,10 +43,10 @@ def test_multiple_sessions():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     SB.put("test2", "moredata")
-    assert sorted(SB.ls()) == ["test", "test2"]
+    assert sorted(SB.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
 
     SecretBox.load(providers)
-    assert sorted(SB.ls()) == ["test", "test2"]
+    assert sorted(SB.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
     assert SB.get("test") == "data"
     assert SB.get("test2") == "moredata"
 

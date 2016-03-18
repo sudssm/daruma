@@ -1,3 +1,4 @@
+import os
 from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
@@ -15,7 +16,7 @@ def test_init():
         provider.wipe()
     FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
-    assert len(FM.ls()) == 0
+    assert len(FM.ls("")) == 0
 
 
 def test_roundtrip():
@@ -24,8 +25,27 @@ def test_roundtrip():
     FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
     FM.put("test", "data")
-    assert FM.ls() == ["test"]
+    assert FM.ls("") == [{"name": "test", "is_directory": False, "size": 4}]
     assert FM.get("test") == "data"
+
+
+def test_ls_file():
+    for provider in providers:
+        provider.wipe()
+    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+    FM.put("test", "data")
+    assert FM.ls("test") == [{"name": "test", "is_directory": False, "size": 4}]
+
+
+def test_ls_subdirectory():
+    for provider in providers:
+        provider.wipe()
+    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+    target_location = os.path.join("dir", "test")
+    FM.put(target_location, "data")
+    assert FM.ls("dir") == [{"name": "test", "is_directory": False, "size": 4}]
 
 
 def test_get_nonexistent():
@@ -64,10 +84,10 @@ def test_update_deletes_old_file():
     FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
     FM.put("test", "data")
-    old_file_code_name = FM.manifest.list_directory_entries()[0].code_name
+    old_file_code_name = FM.manifest.get("test").code_name
 
     FM.put("test", "newdata")
-    new_file_code_name = FM.manifest.list_directory_entries()[0].code_name
+    new_file_code_name = FM.manifest.get("test").code_name
 
     assert new_file_code_name != old_file_code_name
     for provider in providers:
@@ -100,11 +120,11 @@ def test_multiple_sessions():
     FM.load_manifest()
     FM.put("test", "data")
     FM.put("test2", "moredata")
-    assert sorted(FM.ls()) == ["test", "test2"]
+    assert sorted(FM.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
 
     FM = FileManager(providers, 3, master_key, manifest_name)
     FM.load_manifest()
-    assert sorted(FM.ls()) == ["test", "test2"]
+    assert sorted(FM.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
     assert FM.get("test") == "data"
     assert FM.get("test2") == "moredata"
 
@@ -143,7 +163,7 @@ def test_corrupt_fail():
     try:
         FM = FileManager(providers, 3, master_key, manifest_name)
         FM.load_manifest()
-        FM.ls()
+        FM.ls("")
         assert False
     except exceptions.FatalOperationFailure as e:
         assert len(e.failures) == 3

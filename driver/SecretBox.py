@@ -130,15 +130,22 @@ class SecretBox:
                 return self._load_manifest()
             raise
 
-    def ls(self):
+    def ls(self, path):
         """
-        List the files in the system
+        Lists information about the entries at the given path.  If the given
+        path points to a file, lists just the information about that file.
+
+        Node information is represented by a dictionary with the following keys:
+            - name
+            - is_directory
+            - size (only available if not is_directory)
+
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
         Raises FatalOperationFailure if unsuccessful
         """
         self._load_manifest()
-        return self.file_manager.ls()
+        return self.file_manager.ls(path)
 
     def get(self, path):
         """
