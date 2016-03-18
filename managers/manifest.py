@@ -111,9 +111,19 @@ class Directory(_Node):
 
         Args:
             child_node: A File or Directory object to be added.
+
+        Returns:
+            The child node with the same name that was replaced (or None if
+            no child node was replaced).
         """
         child_name = child_node.name
+        old_child = self.attributes[Attributes.CHILDREN].get(child_name)
         self.attributes[Attributes.CHILDREN][child_name] = child_node.attributes
+
+        if old_child is None:
+            return None
+        else:
+            return _node_from_attributes(old_child)
 
     def _has_child(self, name):
         """
@@ -305,6 +315,10 @@ class Manifest:
             size: decimal representation of size
             key: byte representation of the encryption key
 
+        Returns:
+            The code_name of the specified file before the update (or None if
+            this is a new file).
+
         Raises:
             InvalidPath if there are existing Files or Directories that
             conflict with the given path.
@@ -315,18 +329,17 @@ class Manifest:
         else:
             parent_directory = self.create_directory(parent_directory_path)
 
-        # Check if we are attempting to modify a directory
-        try:
-            existing_child = parent_directory._get_child(file_name)
-        except KeyError:
-            # We're creating a new file, move along
-            pass
-        else:
-            if type(existing_child) is Directory:
-                raise exceptions.InvalidPath
-
         new_file = File.from_values(file_name, code_name, size, key)
-        parent_directory._add_child(new_file)
+        old_node = parent_directory._add_child(new_file)
+
+        if old_node is None:
+            return None
+
+        try:
+            return old_node.code_name
+        except AttributeError:
+            # old_node was a Directory
+            raise exceptions.InvalidPath
 
     def create_directory(self, path):
         """

@@ -66,7 +66,7 @@ class FileManager:
         codename = generate_filename()
         key = self.distributor.put(codename, data)
 
-        old_codename = self.manifest.update_file (name, codename, len(data), key)
+        old_codename = self.manifest.update_file(name, codename, len(data), key)
 
         # update the manifest
         self.distribute_manifest()

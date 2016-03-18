@@ -58,6 +58,23 @@ def test_update():
     assert FM.get("test") == "newdata"
 
 
+def test_update_deletes_old_file():
+    for provider in providers:
+        provider.wipe()
+    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+    FM.put("test", "data")
+    old_file_code_name = FM.manifest.list_directory_entries()[0].code_name
+
+    FM.put("test", "newdata")
+    new_file_code_name = FM.manifest.list_directory_entries()[0].code_name
+
+    assert new_file_code_name != old_file_code_name
+    for provider in providers:
+        with pytest.raises(exceptions.ProviderOperationFailure):
+            provider.get(old_file_code_name)
+
+
 def test_wrong_master_key():
     for provider in providers:
         provider.wipe()
