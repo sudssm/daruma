@@ -106,15 +106,15 @@ class FileManager:
         codename = generate_filename()
         key = self.distributor.put(codename, data)
 
-        old_codename = self.manifest.update_file(name, codename, len(data), key)
+        old_node = self.manifest.update_file(name, codename, len(data), key)
 
         # update the manifest
         self.distribute_manifest()
 
         # we are performing a replacement
-        if old_codename is not None:
+        if old_node is not None:
             try:
-                self.distributor.delete(old_codename)
+                self.distributor.delete(old_node.code_name)
             except exceptions.FatalOperationFailure as e:
                 # this isn't actually fatal - we just have some extra garbage floating around
                 raise exceptions.OperationFailure(e.failures, None)

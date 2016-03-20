@@ -272,13 +272,13 @@ class Manifest:
             the root directory
         """
         parent_directory_path, file_name = os.path.split(path)
-        parent_node = self._find_node(parent_directory_path)
+        parent_node = self.get(parent_directory_path)
 
         try:
             target_node = parent_node._remove_child(file_name)
             return target_node
         except (KeyError, AttributeError):
-            # The parent_node was not found, was a file, or didn't have the
+            # The parent_node was a file, or didn't have the
             # specified child.
             raise exceptions.InvalidPath
 
