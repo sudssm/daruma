@@ -2,7 +2,7 @@
 # this thingy should also eventually handle striping
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
-from manifest import Manifest, File
+from manifest import Manifest
 from tools.utils import generate_filename
 # TODO cache the manifest intelligently
 
@@ -92,12 +92,12 @@ class FileManager:
             return external_attributes
         target_node = self.manifest.get(path)
         try:
-            nodes_to_list = target_node.get_children()
+            ls_nodes = target_node.get_children()
         except AttributeError:
             # We assumed target_node was a Directory, but it's actually a file.
-            nodes_to_list = [target_node]
+            ls_nodes = [target_node]
 
-        return [external_attributes_from_node(node) for node in nodes_to_list]
+        return [external_attributes_from_node(node) for node in ls_nodes]
 
     def put(self, name, data):
         """
@@ -128,12 +128,12 @@ class FileManager:
         Raises FatalOperationFailure if unrecoverable (from distributor.get)
         """
         try:
-            entry = self.manifest.get(name)
+            node = self.manifest.get(name)
         except exceptions.InvalidPath:
             raise exceptions.FileNotFound
 
-        codename = entry.code_name
-        key = entry.key
+        codename = node.code_name
+        key = node.key
 
         return self.distributor.get(codename, key)
 
@@ -144,7 +144,7 @@ class FileManager:
         Raises OperationFailure with errors and file contents if recoverable (from distributor.delete)
             Raises FatalOperationFailure if unrecoverable (from distribute_manifest)
         """
-        entry = self.manifest.remove(name)
+        node = self.manifest.remove(name)
 
         try:
             self.distribute_manifest()
@@ -155,7 +155,7 @@ class FileManager:
             raise
 
         try:
-            self.distributor.delete(entry.code_name)
+            self.distributor.delete(node.code_name)
         except exceptions.FatalOperationFailure as e:
             # some provider deletes failed, but it wasn't fatal
             raise exceptions.OperationFailure(e.failures, None)

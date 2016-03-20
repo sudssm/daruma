@@ -63,6 +63,7 @@ while True:
             if len(files) == 0:
                 print "EMPTY"
             for item in files:
+                #TODO: Sudarshan - prettyprint this
                 print "-", item["name"]
         except exceptions.InvalidPath:
             print "Error: no such file or directory"

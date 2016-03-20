@@ -26,6 +26,7 @@ class _Node(object):
         Creates a node around an existing set of attributes.  Should not be
         called directly, instead call _node_from_attributes() or a subclass's
         from_values() method.
+        N.B. attributes must minimally include a name entry.
         """
         self.attributes = attributes
 
@@ -58,11 +59,11 @@ class File(_Node):
             A File object initialized with the given arguments.
         """
         attributes = {
-                        Attributes.NAME: name,
-                        Attributes.CODE_NAME: code_name,
-                        Attributes.SIZE: size,
-                        Attributes.KEY: key
-                     }
+            Attributes.NAME: name,
+            Attributes.CODE_NAME: code_name,
+            Attributes.SIZE: size,
+            Attributes.KEY: key
+        }
         return File(attributes)
 
     @property
@@ -109,7 +110,7 @@ class Directory(_Node):
         A list of the children Files and Directories of this directory.
         """
         children = self.attributes[Attributes.CHILDREN]
-        return [_node_from_attributes(children[name]) for name in children]
+        return [_node_from_attributes(child) for child in children.values()]
 
     def _add_child(self, child_node):
         """
@@ -234,8 +235,8 @@ class Manifest:
         """
         path_nodes = self._tokenize_path(path)
 
+        current_node = self.root
         try:
-            current_node = self.root
             for node_name in path_nodes:
                 current_node = current_node._get_child(node_name)
             return current_node
@@ -303,7 +304,7 @@ class Manifest:
             conflict with the given path.
         """
         parent_directory_path, file_name = os.path.split(path)
-        if file_name is "":
+        if file_name == "":
             raise exceptions.InvalidPath
         else:
             parent_directory = self.create_directory(parent_directory_path)
@@ -340,18 +341,20 @@ class Manifest:
 
         current_node = self.root
         try:
-            for node_pos, node_name in enumerate(path_tokens):
+            while len(path_tokens) > 0:
+                node_name = path_tokens.pop(0)
                 current_node = current_node._get_child(node_name)
-        except AttributeError:
-            # We tried to call _get_child on a File object
-            raise exceptions.InvalidPath
         except KeyError:
             # The most recent token didn't exist as the child of a node, so the
             # remaining nodes must be created.
-            for node_name in path_tokens[node_pos:]:
+            path_tokens.insert(0, node_name)  # Replace the first missing node
+            for node_name in path_tokens:
                 new_directory = Directory.from_values(node_name)
                 current_node._add_child(new_directory)
                 current_node = new_directory
+        except AttributeError:
+            # We tried to call _get_child on a File object
+            raise exceptions.InvalidPath
 
         if type(current_node) is not Directory:  # This won't get caught above
             raise exceptions.InvalidPath
