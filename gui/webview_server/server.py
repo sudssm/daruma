@@ -16,8 +16,8 @@ class UI_Server(object):
     _INITIAL_SERVER_PORT = 49152  # A standard start of the ephemeral port range
 
     def __init__(self):
-        self._host = "localhost"
-        self._port = UI_Server._INITIAL_SERVER_PORT
+        self.host = "localhost"
+        self.port = UI_Server._INITIAL_SERVER_PORT
 
     def start(self):
         """
@@ -31,17 +31,9 @@ class UI_Server(object):
         # does not expose port numbers once the server is started.
         while True:
             try:
-                app.run(host=self._host, port=self._port)
+                app.run(host=self.host, port=self.port)
                 break
             except socket.error:
-                self._port += 1
-                if self._port > UI_Server._MAX_SERVER_PORT:
+                self.port += 1
+                if self.port > UI_Server._MAX_SERVER_PORT:
                     raise
-
-    @property
-    def host(self):
-        return self._host
-
-    @property
-    def port(self):
-        return self._port
