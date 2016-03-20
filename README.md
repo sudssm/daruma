@@ -3,7 +3,8 @@
 ## Installation
 
 ### OS X & Linux
-While in the project directory: `pip install --user -e .`
+While in the project directory: `pip install --user -e . --process-dependency-links robustsecretsharing`
+Note: this assumes that ssh keys are configured for git
 
 ## Run UI
 See instructions in `driver/sb_ui.py`
