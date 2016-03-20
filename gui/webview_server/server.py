@@ -26,7 +26,7 @@ class UI_Server(object):
         Raises:
             socket.error: No port was available.
         """
-        # Selects an ephemeral port via trail-and-error.
+        # Selects an ephemeral port via trial-and-error.
         # The standard technique of choosing port 0 does not apply, as flask
         # does not expose port numbers once the server is started.
         while True:
