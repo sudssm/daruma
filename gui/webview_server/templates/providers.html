@@ -1,0 +1,44 @@
+<!doctype html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>SecretBox | Providers</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='providers.css') }}">
+    </head>
+
+    <body>
+        <h2>SecretBox System</h2>
+        <div id="system-section">
+            <div class="inset-box">
+                <ul id="system-status-list" class="status-list">
+                    <li>Status: <span class="status-green">Fully Operational</span></li>
+                    <li>Capacity Used: <span class="status-green">46%</span></li>
+                </ul>
+            <button id="add-provider-button" type="button">Add provider</button>
+            </div>
+        </div>
+
+        <h2>Providers</h2>
+        <div id="provider-section">
+            <ul id="provider-list">
+                {% for provider in providers %}
+                <li class="inset-box">
+                    <img class="provider-icon-square" src="{{ url_for('static', filename='logos/square/dropbox.png') }}">
+                    <span class="provider-name">{{ provider }}</span>
+                    <ul class="status-list">
+                        <li>Status: <span class="status-green">Fully Operational</span></li>
+                        <li>Last Online: <span class="status-orange">A week ago</span></li>
+                        <li>Capacity Used: <span class="status-red">99%</span></li>
+                    </ul>
+                    <fieldset class="provider-controls">
+                        <button type="button">Edit</button>
+                        <button type="button">Remove</button>
+                    </fieldset>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </body>
+</html>
