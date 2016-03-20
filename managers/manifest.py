@@ -239,7 +239,9 @@ class Manifest:
             for node_name in path_nodes:
                 current_node = current_node._get_child(node_name)
             return current_node
-        except KeyError:  # A required child node didn't exist
+        except (AttributeError, KeyError):
+            # We tried to find the child of a File or a required child node
+            # didn't exist.
             return None
 
     def get(self, path):
@@ -309,14 +311,12 @@ class Manifest:
         new_file = File.from_values(file_name, code_name, size, key)
         old_node = parent_directory._add_child(new_file)
 
-        if old_node is None:
-            return None
-
-        try:
-            return old_node.code_name
-        except AttributeError:
-            # old_node was a Directory
+        if type(old_node) is Directory:
+            # First revert change
+            parent_directory._add_child(old_node)
             raise exceptions.InvalidPath
+
+        return old_node
 
     def create_directory(self, path):
         """

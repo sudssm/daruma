@@ -148,6 +148,14 @@ def test_get_nonexistent_path():
         manifest.get("asdf")
 
 
+def test_get_malformed_path():
+    manifest = Manifest()
+    manifest.update_file("dir", codename1, 34, generate_key())
+
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get(os.path.join("dir", "CLARK_KENT.TXT"))
+
+
 def test_remove_file():
     test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
     target_location = os.path.join("dir", test_attributes["name"])
@@ -219,16 +227,17 @@ def test_update_new_file():
 def test_update_overwrite_file():
     test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
     replacement_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename2, "size": 23, "key": generate_key()}
-    expected_node = File.from_values(**replacement_attributes)
+    expected_old_node = File.from_values(**test_attributes)
+    expected_replacement_node = File.from_values(**replacement_attributes)
 
     manifest = Manifest()
     manifest.update_file(test_attributes["name"], test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
-    old_code_name = manifest.update_file(replacement_attributes["name"], replacement_attributes["code_name"], replacement_attributes["size"], replacement_attributes["key"])
+    old_file = manifest.update_file(replacement_attributes["name"], replacement_attributes["code_name"], replacement_attributes["size"], replacement_attributes["key"])
 
-    assert old_code_name == codename1
+    assert old_file == expected_old_node
 
     get_results = manifest.get(replacement_attributes["name"])
-    assert get_results == expected_node
+    assert get_results == expected_replacement_node
 
 
 def test_update_overwrite_file_in_directory():
@@ -253,11 +262,19 @@ def test_update_root():
 
 
 def test_update_directory():
+    test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
+    expected_node = File.from_values(**test_attributes)
+
     manifest = Manifest()
-    manifest.update_file(os.path.join("dir", "f1"), codename1, 23, generate_key())
+    target_location = os.path.join("dir", test_attributes["name"])
+    manifest.update_file(target_location, test_attributes["code_name"], test_attributes["size"], test_attributes["key"])
 
     with pytest.raises(exceptions.InvalidPath):
         manifest.update_file("dir", codename2, 34, generate_key())
+
+    # Test that the manifest hasn't been modified
+    get_results = manifest.get(target_location)
+    assert get_results == expected_node
 
 
 def test_update_bad_path():
