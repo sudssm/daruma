@@ -16,7 +16,7 @@ class _Node(object):
     Superclass for elements in our file system tree.
     All node state is stored in an attributes dictionary that is
     BSON-serializable.  Notably, this means that references to other nodes (e.g.
-    children of directories) are stores as references to their attributes, as
+    children of directories) are stored as references to their attributes, as
     _Node objects (and their subclasses) will be constructed on the fly to wrap
     them as needed.  This allows for very simple serialization and
     deserialization.
@@ -107,7 +107,8 @@ class Directory(_Node):
 
     def get_children(self):
         """
-        A list of the children Files and Directories of this directory.
+        A list of the immediate children Files and Directories of this
+        directory.
         """
         children = self.attributes[Attributes.CHILDREN]
         return [_node_from_attributes(child) for child in children.values()]
@@ -212,7 +213,12 @@ class Manifest:
     @staticmethod
     def _tokenize_path(path):
         """
-        Returns an array of strings representing the directories (and filename
+        Args:
+            path: the path of the node to find, with Directories separated by
+                the system delimiter.
+
+        Returns:
+            An array of strings representing the directories (and filename
         where applicable) in the given path.
         """
         path = os.path.normpath(path)
@@ -228,8 +234,8 @@ class Manifest:
     def _find_node(self, path):
         """
         Args:
-            path: the path of the node to find, with Directories separated by
-                the system delimiter.
+            path: a path suitable to be passed to _tokenize_path.
+
         Returns:
             The node at that path or None if the node was not found
         """
@@ -271,11 +277,11 @@ class Manifest:
             InvalidPath if path is not found or if an attempt was made to remove
             the root directory
         """
-        parent_directory_path, file_name = os.path.split(path)
+        parent_directory_path, target_name = os.path.split(path)
         parent_node = self.get(parent_directory_path)
 
         try:
-            target_node = parent_node._remove_child(file_name)
+            target_node = parent_node._remove_child(target_name)
             return target_node
         except (KeyError, AttributeError):
             # The parent_node was a file, or didn't have the
