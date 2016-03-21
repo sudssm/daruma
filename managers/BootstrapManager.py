@@ -58,7 +58,7 @@ class BootstrapManager:
         failures = []
         for provider in self.providers:
             try:
-                threshold_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
+                threshold_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",", 2)
                 # track provider votes for bootstrap threshold values
                 thresholds_map[int(threshold_vote)].append(provider)
 
