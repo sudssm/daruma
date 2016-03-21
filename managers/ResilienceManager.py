@@ -6,6 +6,8 @@ from providers.BaseProvider import ProviderStatus
 
 
 class ResilienceManager:
+    DECAY_RATE = .7
+
     def __init__(self, providers, file_manager, bootstrap_manager):
         """
         Construct a ResilienceManager
@@ -18,10 +20,8 @@ class ResilienceManager:
         """
         Update the provider to reflect a successful operation
         """
-        # TODO fill this in when implementing exponential decay
-        if provider.status == ProviderStatus.RED:
-            # bring back to yellow since he's online now
-            provider.errors = 1
+        # 1 success should bring the provider out of red
+        provider.score = self.DECAY_RATE * provider.score + (1-self.DECAY_RATE)
 
     def log_success(self):
         """
@@ -46,7 +46,8 @@ class ResilienceManager:
                 # don't punish for AuthFailures
                 failure.provider.authenticated = False
             else:
-                failure.provider.errors += 1
+                # TODO implement average of window method
+                failure.provider.score = self.DECAY_RATE * failure.provider.score
             failed_providers.add(failure.provider)
 
         no_red_providers = True
