@@ -142,10 +142,18 @@ class SecretBox:
 
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
-        Raises FatalOperationFailure if unsuccessful
+        Raises InvalidPath or FatalOperationFailure if unsuccessful
         """
         self._load_manifest()
         return self.file_manager.ls(path)
+
+    def mk_dir(self, path):
+        """
+        Create a directory
+        Raises InvalidPath or FatalOperationFailure if unsuccessful
+        """
+        self._load_manifest()
+        self.file_manager.mk_dir(path)
 
     def get(self, path):
         """

@@ -46,7 +46,7 @@ else:
 
 while True:
     print "\n"
-    print "SB commands: ls, get, put, del, exit"
+    print "SB commands: ls, mkdir, get, put, del, exit"
     print "provider commands: set, wipe, status"
     cmd = shlex.split(raw_input("> "))
 
@@ -54,19 +54,34 @@ while True:
         continue
 
     if cmd[0] == "ls":
+        if len(cmd) > 1:
+            target = cmd[1]
+        else:
+            target = ""
         try:
-            if len(cmd) > 1:
-                target = cmd[1]
-            else:
-                target = ""
             files = SB.ls(target)
-            if len(files) == 0:
-                print "EMPTY"
-            for item in files:
-                #TODO: Sudarshan - prettyprint this
-                print "-", item["name"]
         except exceptions.InvalidPath:
             print "Error: no such file or directory"
+        except exceptions.FatalOperationFailure:
+            print "Operation Failed! check status"
+        except Exception as e:
+            print traceback.format_exc()
+
+        if len(files) == 0:
+            print "EMPTY"
+        for item in files:
+            is_dir = item['is_directory']
+            print "DIR" if is_dir else "" + str(item['size']),
+            print "\t" + item['name']
+    if cmd[0] == "mkdir":
+        if len(cmd) < 2:
+            print "Usage: mkdir <path>"
+            continue
+        path = cmd[1]
+        try:
+            SB.mk_dir(path)
+        except exceptions.InvalidPath:
+            print "Error: Invalid Path"
         except exceptions.FatalOperationFailure:
             print "Operation Failed! check status"
         except Exception as e:
@@ -78,8 +93,6 @@ while True:
         name = cmd[1]
         try:
             print SB.get(name)
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
         except exceptions.FileNotFound:
             print "File does not exist!"
         except exceptions.FatalOperationFailure:
@@ -105,8 +118,6 @@ while True:
         name = cmd[1]
         try:
             SB.delete(name)
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
         except exceptions.FileNotFound:
             print "File does not exist!"
         except exceptions.FatalOperationFailure:
