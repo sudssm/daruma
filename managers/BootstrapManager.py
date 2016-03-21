@@ -1,7 +1,7 @@
 # This file handles keys using SSSS
 import tools.shamir_secret_sharing
 from tools.encryption import KEY_SIZE
-from tools.utils import FILENAME_SIZE
+from tools.utils import FILENAME_SIZE, generate_random_name
 from collections import defaultdict
 import struct
 from custom_exceptions import exceptions
@@ -38,7 +38,7 @@ class Bootstrap:
 
 class BootstrapManager:
     BOOTSTRAP_FILE_NAME = "mellon"
-    BOOTSTRAP_THRESHOLD_FILE_NAME = "outjokeside"
+    BOOTSTRAP_PLAINTEXT_FILE_NAME = "outjokeside"
 
     def __init__(self, providers, bootstrap_reconstruction_threshold=None):
         self.providers = providers
@@ -49,20 +49,25 @@ class BootstrapManager:
         Returns a Bootstrap object, collected from self.Providers
         Raises FatalOperationFailure or OperationFailure
         """
-        # maps provider to bootstrap share
+        # maps self-proclaimed provider_id to provider
+        provider_id_map = {}
+        # maps provider_id to bootstrap share
         shares_map = {}
         # maps threshold vote to providers that voted
         thresholds_map = defaultdict(list)
         failures = []
         for provider in self.providers:
             try:
+                threshold_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
                 # track provider votes for bootstrap threshold values
-                thresholds_map[int(provider.get(self.BOOTSTRAP_THRESHOLD_FILE_NAME))].append(provider)
-                shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
+                thresholds_map[int(threshold_vote)].append(provider)
+
+                provider_id_map[provider_id] = provider
+                shares_map[provider_id] = provider.get(self.BOOTSTRAP_FILE_NAME)
             except exceptions.ProviderFailure as e:
                 failures.append(e)
             except ValueError:
-                # if the cast to int failed
+                # if the cast to int or unpacking failed
                 failures.append(exceptions.InvalidShareFailure(provider))
 
         # vote on threshold
@@ -92,7 +97,7 @@ class BootstrapManager:
             raise exceptions.FatalOperationFailure(failures)
 
         # attempt to recover key
-        # TODO find cheaters
+        # TODO find cheaters - just pass in the entire map
         try:
             string = tools.shamir_secret_sharing.reconstruct(shares, Bootstrap.SIZE, len(self.providers))
             bootstrap = Bootstrap.parse(string)
@@ -110,14 +115,18 @@ class BootstrapManager:
         """
         string = str(bootstrap)
 
+        provider_ids = [generate_random_name() for provider in self.providers]
+
+        # TODO pass in provider_ids to robust when RSS done
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
         shares = tools.shamir_secret_sharing.share(string, self.bootstrap_reconstruction_threshold, len(self.providers))
 
         # write shares to providers
         failures = []
-        for provider, share in zip(self.providers, shares):
+        for provider, provider_id, share in zip(self.providers, provider_ids, shares):
             try:
-                provider.put(self.BOOTSTRAP_THRESHOLD_FILE_NAME, str(self.bootstrap_reconstruction_threshold))
+                bootstrap_plaintext = str(self.bootstrap_reconstruction_threshold) + "," + provider_id
+                provider.put(self.BOOTSTRAP_PLAINTEXT_FILE_NAME, bootstrap_plaintext)
                 provider.put(self.BOOTSTRAP_FILE_NAME, share)
             except exceptions.ProviderFailure as e:
                 failures.append(e)

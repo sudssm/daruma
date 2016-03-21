@@ -6,7 +6,7 @@ FILENAME_SIZE = 32
 
 
 # create a length-32 string of random uppercase letters and numbers
-def generate_filename():
+def generate_random_name():
     return str(uuid4()).replace('-', '').upper()
 
 

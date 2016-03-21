@@ -3,7 +3,7 @@
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 # TODO cache the manifest intelligently
 
 
@@ -63,7 +63,7 @@ class FileManager:
         """
         Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exceptions
         """
-        codename = generate_filename()
+        codename = generate_random_name()
         key = self.distributor.put(codename, data)
 
         old_codename = self.manifest.update_manifest(name, codename, len(data), key)

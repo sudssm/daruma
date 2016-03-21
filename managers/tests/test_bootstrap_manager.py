@@ -2,13 +2,13 @@ from managers.BootstrapManager import BootstrapManager, Bootstrap
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 import pytest
 
 providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
 
 key = generate_key()
-name = generate_filename()
+name = generate_random_name()
 file_reconstruction_threshold = 2
 bootstrap = Bootstrap(key, name, file_reconstruction_threshold)
 
@@ -84,13 +84,18 @@ def test_corrupt_share():
         BM.recover_bootstrap()
 
 
+def modify_bootstrap_k(provider, new_k):
+    _, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
+    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, str(new_k) + "," + provider_id)
+
+
 def test_corrupt_k_recover():
     threshold = 3
     BM = BootstrapManager(providers, threshold)
     BM.distribute_bootstrap(bootstrap)
 
-    providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "2")
-    providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "2")
+    for provider in providers[0:2]:
+        modify_bootstrap_k(provider, 2)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
@@ -104,8 +109,8 @@ def test_corrupt_k_2_recover():
     BM = BootstrapManager(providers, threshold)
     BM.distribute_bootstrap(bootstrap)
 
-    providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
-    providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
+    for provider in providers[0:2]:
+        modify_bootstrap_k(provider, 4)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
             BM.recover_bootstrap()
@@ -119,9 +124,8 @@ def test_corrupt_k_fail():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
 
-    providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
-    providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
-    providers[2].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
+    for provider in providers[0:3]:
+            modify_bootstrap_k(provider, 4)
 
     with pytest.raises(exceptions.FatalOperationFailure):
         BM.recover_bootstrap()
@@ -132,10 +136,8 @@ def test_corrupt_k_but_not_fail():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
 
-    providers[0].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
-    providers[1].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
-    providers[2].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
-    providers[3].put(BootstrapManager.BOOTSTRAP_THRESHOLD_FILE_NAME, "4")
+    for provider in providers[0:4]:
+            modify_bootstrap_k(provider, 4)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
             BM.recover_bootstrap()
