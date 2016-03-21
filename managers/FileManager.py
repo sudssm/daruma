@@ -101,7 +101,7 @@ class FileManager:
 
     def put(self, name, data):
         """
-        Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exceptions
+        Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exception
         """
         codename = generate_filename()
         key = self.distributor.put(codename, data)
@@ -118,6 +118,16 @@ class FileManager:
             except exceptions.FatalOperationFailure as e:
                 # this isn't actually fatal - we just have some extra garbage floating around
                 raise exceptions.OperationFailure(e.failures, None)
+
+    def mk_dir(self, path):
+        """
+        Creates a directory with the specified path, creating intermediate directories along the way
+        Does nothing if the directory already exists
+        Raises InvalidPath (from manifest.create_directory) if the path is invalid for a directory
+        Raises FatalOperationFailure (from distributor.put) if any provider operation throws an exception
+        """
+        self.manifest.create_directory(path)
+        self.distribute_manifest()
 
     def get(self, name):
         """
