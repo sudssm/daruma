@@ -35,14 +35,14 @@ class GoogleDriveProvider(BaseProvider):
     def exception_handler(provider):
         try:
             yield
-        except HttpError as e:
-            if e.resp.status in [401,403]:
-                raise exceptions.AuthFailure(provider)
-            raise exceptions.ProviderOperationFailure(provider)
+        # except HttpError as e:
+            # if e.resp.status in [401,403]:
+            #     raise exceptions.AuthFailure(provider)
+            # raise exceptions.ProviderOperationFailure(provider)
         except httplib2.ServerNotFoundError:
             raise exceptions.ConnectionFailure(provider)
-        except Exception:
-            raise exceptions.LibraryException
+        # except Exception:
+        #     raise exceptions.LibraryException
 
     @staticmethod
     def get_credentials():
@@ -128,7 +128,6 @@ class GoogleDriveProvider(BaseProvider):
 
             file_metadata = {
                 'name' : filename,
-                'mimeType' : 'application/vnd.google-apps.file',
                 'parents':[self.folder_ID]
             }
 
@@ -145,6 +144,7 @@ class GoogleDriveProvider(BaseProvider):
                 raise Exception # TODO
 
             self.service.files().delete(fileId=file_id).execute()
+            self.file_index.pop(filename, None)
 
 
     def wipe (self):

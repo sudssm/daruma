@@ -22,21 +22,18 @@ class CredentialManager(object):
         """
 
         if not os.path.exists(FILE_NAME):
-            CredentialManager.create_file()
+            CredentialManager.create_credential_file_if_not_exist()
 
         
-        credential_file = open(FILE_NAME, 'r')
-            
+        with open(FILE_NAME, 'r') as credential_file:        
         
-        # load user credentials 
-        try:
-            credentials = json.load(credential_file)
-        except ValueError:
-            credentials = {}
+            # load user credentials 
+            try:
+                credentials = json.load(credential_file)
+            except ValueError:
+                credentials = {}
 
-        credential_file.close()
-
-        return credentials.get(provider.__name__)
+            return credentials.get(provider.__name__)
 
 
     @staticmethod
@@ -50,34 +47,33 @@ class CredentialManager(object):
         """
 
         if not os.path.exists(FILE_NAME):
-            CredentialManager.create_file()
+            CredentialManager.create_credential_file_if_not_exist()
 
-        credential_file = open(FILE_NAME, 'r+')
+        with open(FILE_NAME, 'r+') as credential_file:
 
-        # load user credentials
-        try:
-            credentials = json.load(credential_file)
-        except ValueError:
-            credentials = {}
+            # load user credentials
+            try:
+                credentials = json.load(credential_file)
+            except ValueError:
+                credentials = {}
 
-        credentials[provider.__name__] = credential
+            credentials[provider.__name__] = credential
 
-        # overwrite file
-        credential_file.seek(0)
-        credential_file.write(json.dumps(credentials))
-        credential_file.truncate()
-        credential_file.close()
+            # overwrite file
+            credential_file.seek(0)
+            credential_file.write(json.dumps(credentials))
+            credential_file.truncate()
 
     @staticmethod
     def clear_credentials():
         if not os.path.exists(FILE_NAME):
-            CredentialManager.create_file()
+            CredentialManager.create_credential_file_if_not_exist()
 
         f = open(FILE_NAME, 'w')
         f.close()
 
     @staticmethod
-    def create_file():
+    def create_credential_file_if_not_exist():
         # create app folder if it does not exist
         if not os.path.exists(APP_DIR) or not os.path.isdir(APP_DIR):
             os.makedirs(APP_DIR)
