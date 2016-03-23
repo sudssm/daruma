@@ -305,6 +305,77 @@ def test_mkdir_at_root():
     assert get_results == expected_node
 
 
+def test_move_in_root():
+    manifest = Manifest()
+    manifest.update_file("file", codename1, 3, generate_key())
+    node = manifest.get("file")
+    manifest.move("file", "new_file")
+
+    assert node == manifest.get("new_file")
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get("file")
+
+
+def test_move_file():
+    manifest = Manifest()
+    manifest.update_file("dir/file", codename1, 3, generate_key())
+    node = manifest.get("dir/file")
+    manifest.move("dir/file", "dir/new_file")
+    print manifest.root.attributes
+
+    assert node == manifest.get("dir/new_file")
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get("dir/file")
+
+
+def test_move_folder():
+    manifest = Manifest()
+    manifest.create_directory("dir")
+    node = manifest.get("dir")
+    manifest.move("dir", "new_dir")
+
+    assert node == manifest.get("new_dir")
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get("dir")
+
+
+def test_move_to_existing():
+    manifest = Manifest()
+    manifest.update_file("file", codename1, 3, generate_key())
+    manifest.update_file("new_file", codename1, 3, generate_key())
+    node = manifest.get("file")
+
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.move("file", "new_file")
+
+
+def test_move_from_invalid():
+    manifest = Manifest()
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.move("file", "new_file")
+
+
+def test_nested_move():
+    manifest = Manifest()
+    manifest.create_directory("bar")
+    manifest.update_file("foo/file", codename1, 3, generate_key())
+    node = manifest.get("foo")
+    manifest.move("foo", "bar/foo2")
+
+    assert node == manifest.get("bar/foo2")
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get("foo")
+
+
+def test_move_into_self():
+    manifest = Manifest()
+    manifest.update_file("foo/file", codename1, 3, generate_key())
+    node = manifest.get("foo")
+    manifest.move("foo", "foo/foo")
+
+    assert node == manifest.get("foo/foo")
+
+
 def test_mkdir_subdirectory():
     test_attributes = {"name": "CLARK_KENT.TXT", "code_name": codename1, "size": 34, "key": generate_key()}
     expected_file = File.from_values(**test_attributes)

@@ -302,7 +302,7 @@ class Manifest:
             key: byte representation of the encryption key
 
         Returns:
-            The code_name of the specified file before the update (or None if
+            The node of the specified file before the update (or None if
             this is a new file).
 
         Raises:
@@ -365,3 +365,29 @@ class Manifest:
         if type(current_node) is not Directory:  # This won't get caught above
             raise exceptions.InvalidPath
         return current_node
+
+    def move(self, old_path, new_path):
+        """
+        Updates the manifest by moving the node at old_path to new_path
+        Args: old_path, the path to some node
+              new_path, the path of the node to create
+        Raises: InvalidPath if old_path does not point to a node,
+                or if new_path is not a valid destination,
+                or if new_path already exists
+        """
+        # ensure that the new_path doesn't exist
+        if self._find_node(new_path):
+            raise exceptions.InvalidPath
+        # ensure that the old_path exists
+        node_attributes = self.get(old_path).attributes
+
+        old_parent, old_target = os.path.split(old_path)
+        new_parent, new_target = os.path.split(new_path)
+
+        old_parent_directory = self.get(old_parent)
+        old_parent_directory._remove_child(old_target)
+
+        node_attributes['name'] = new_target
+
+        new_parent_directory = self.create_directory(new_parent)
+        new_parent_directory._add_child(_Node(node_attributes))

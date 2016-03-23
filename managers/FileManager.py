@@ -129,6 +129,14 @@ class FileManager:
         self.manifest.create_directory(path)
         self.distribute_manifest()
 
+    def move(self, old_path, new_path):
+        """
+        Move a file or folder from old_path to new_path
+        Raises InvalidPath (from manifest.move) if either path is invalid, or if new_path exists
+        """
+        self.manifest.move(old_path, new_path)
+        self.distribute_manifest()
+
     def get(self, name):
         """
         attempt to get a file

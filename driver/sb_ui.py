@@ -17,8 +17,23 @@ from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
 from providers.TestProvider import TestProvider, TestProviderState
 from providers.BaseProvider import ProviderStatus
+from contextlib import contextmanager
 import sys
 import colorama
+
+
+@contextmanager
+def exception_handler():
+    try:
+        yield
+    except exceptions.FileNotFound:
+        print "File does not exist!"
+    except exceptions.InvalidPath:
+        print "Error: no such file or directory"
+    except exceptions.FatalOperationFailure:
+        print "Operation Failed! check status"
+    except Exception as e:
+        print traceback.format_exc()
 
 colorama.init()
 try:
@@ -46,9 +61,11 @@ else:
 
 while True:
     print "\n"
-    print "SB commands: ls, mkdir, get, put, del, exit"
+    print "SB commands: ls, mv, mkdir, get, put, del, exit"
     print "provider commands: set, wipe, status"
-    cmd = shlex.split(raw_input("> "))
+
+    with exception_handler():
+        cmd = shlex.split(raw_input("> "))
 
     if len(cmd) == 0:
         continue
@@ -58,76 +75,68 @@ while True:
             target = cmd[1]
         else:
             target = ""
-        try:
-            files = SB.ls(target)
-        except exceptions.InvalidPath:
-            print "Error: no such file or directory"
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
-        except Exception as e:
-            print traceback.format_exc()
 
-        if len(files) == 0:
-            print "EMPTY"
-        for item in files:
-            is_dir = item['is_directory']
-            print "DIR" if is_dir else "" + str(item['size']),
-            print "\t" + item['name']
+        with exception_handler():
+            files = SB.ls(target)
+
+            if len(files) == 0:
+                print "EMPTY"
+            for item in files:
+                is_dir = item['is_directory']
+                print "DIR" if is_dir else "" + str(item['size']),
+                print "\t" + item['name']
+
+    if cmd[0] == "mv":
+        if len(cmd) < 3:
+            print "Usage: mv <old_path> <new_path>"
+            continue
+        old_path = cmd[1]
+        new_path = cmd[2]
+
+        with exception_handler():
+            SB.move(old_path, new_path)
+
     if cmd[0] == "mkdir":
         if len(cmd) < 2:
             print "Usage: mkdir <path>"
             continue
         path = cmd[1]
-        try:
+
+        with exception_handler():
             SB.mk_dir(path)
-        except exceptions.InvalidPath:
-            print "Error: Invalid Path"
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
-        except Exception as e:
-            print traceback.format_exc()
+
     if cmd[0] == "get":
         if len(cmd) < 2:
             print "Usage: get <filename>"
             continue
         name = cmd[1]
-        try:
+
+        with exception_handler():
             print SB.get(name)
-        except exceptions.FileNotFound:
-            print "File does not exist!"
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
-        except Exception as e:
-            print traceback.format_exc()
+
     if cmd[0] == "put":
         if len(cmd) < 3:
             print "Usage: put <filename> <contents>"
             continue
         name = cmd[1]
         data = cmd[2]
-        try:
+        with exception_handler():
             SB.put(name, data)
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
-        except Exception as e:
-            print traceback.format_exc()
+
     if cmd[0] == "del":
         if len(cmd) < 2:
             print "Usage: del <filename>"
             continue
         name = cmd[1]
-        try:
+
+        with exception_handler():
             SB.delete(name)
-        except exceptions.FileNotFound:
-            print "File does not exist!"
-        except exceptions.FatalOperationFailure:
-            print "Operation Failed! check status"
-        except Exception as e:
-            print traceback.format_exc()
+
     if cmd[0] == "set":
         if len(cmd) < 3:
             print "Usage: set <all, n> <active, offline, authfail, corrupt>"
             continue
+
         try:
             if cmd[1] == "all":
                 n = len(providers)
@@ -148,6 +157,7 @@ while True:
                 provider.set_state(TestProviderState.UNAUTHENTICATED)
             if cmd[2] == "corrupt":
                 provider.set_state(TestProviderState.CORRUPTING)
+
     if cmd[0] == "status":
         for provider in providers:
             color = colorama.Fore.RESET
@@ -161,6 +171,7 @@ while True:
                 color = colorama.Fore.BLUE
             print color + str(provider)
         print colorama.Fore.RESET,
+
     if cmd[0] == "wipe":
         if len(cmd) < 2:
             print "Usage: wipe <provider #>"
@@ -173,5 +184,6 @@ while True:
             print "Invalid input"
             print "Usage: wipe <provider #>"
         providers[n].wipe()
+
     if cmd[0] == "exit":
         break

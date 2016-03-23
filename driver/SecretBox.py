@@ -155,6 +155,14 @@ class SecretBox:
         self._load_manifest()
         self.file_manager.mk_dir(path)
 
+    def move(self, old_path, new_path):
+        """
+        Move a file or folder
+        Raises InvalidPath if either path is invalid or if new_path exists
+        """
+        self._load_manifest()
+        self.file_manager.move(old_path, new_path)
+
     def get(self, path):
         """
         Get the contents of a file given the file path
