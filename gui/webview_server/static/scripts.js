@@ -1,3 +1,13 @@
+/********************
+ * Slider functions *
+ ********************/
+function goToSlide(slideContainerId, slideNo) {
+    "use strict";
+    var slideContainer = document.getElementById(slideContainerId);
+
+    slideContainer.style.marginLeft = (-100 * slideNo) + "%";
+}
+
 /*******************
  * Modal functions *
  *******************/
