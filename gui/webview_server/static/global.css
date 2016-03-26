@@ -24,3 +24,44 @@ h2 {
     display: flex;
     align-items: center;
 }
+
+#click-blocker {
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	left: 0;
+	right: 0;
+	display: none;
+}
+
+.modal {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	transition: top 500ms ease-in;
+	margin: 0 auto;
+	width: 480px;
+	min-height: 280px;
+	max-height: 60%;
+	height: 100%;
+	overflow:hidden;
+	box-shadow: 0 0 8px #A0A0A0;
+	border-style: solid;
+	border-color: #C2C2C2;
+	border-width: 1px;
+	border-top-width: 0;
+	background-color: #ECECEC;
+	padding: 0 20px 10px 20px;
+	pointer-events: auto;
+}
+
+.modal.hidden {
+	top: -500px;
+}
+
+.modal .cancel-button {
+	margin-top: 10px;
+	align-self: flex-start;
+}
+
