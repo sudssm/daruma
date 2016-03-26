@@ -47,3 +47,13 @@ function showModalById(id) {
     }, 5);
 }
 
+function onAddProviderButtonClick() {
+    "use strict";
+    goToSlide("add-provider-slide-container", 0);
+    showModalById("add-provider-modal");
+}
+
+function onAddProviderCancel() {
+    "use strict";
+    hideModalById("add-provider-modal");
+}

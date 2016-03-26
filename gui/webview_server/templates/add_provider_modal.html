@@ -1,0 +1,28 @@
+<div id="add-provider-modal" class="modal hidden">
+    <div class="slider-window">
+        <ul id="add-provider-slide-container" class="slide-container">
+            <li class="slide">
+                <h2>Choose a provider:</h2>
+                <ul id="provider-chooser-box" class="inset-box">
+                    {% for provider in providers %}
+                    <li>
+                        <img class="provider-icon-wide" src="{{ url_for('static', filename='logos/wide/dropbox.png') }}" onclick="goToSlide('add-provider-slide-container', 1)">
+                    </li>
+                    {% endfor %}
+                </ul>
+                <button class="cancel-button" type="button" onclick="onAddProviderCancel()">Cancel</button>
+            </li><!-- Commented to remove inline spacing
+
+            --><li class="slide">
+                <iframe id="provider-login-frame" src="http://www.example.com"></iframe>
+                <button class="cancel-button" type="button" onclick="onAddProviderCancel()">Cancel</button>
+            </li><!-- Commented to remove inline spacing
+
+            --><li class="slide">
+                <h2>Login Success</h2>
+                Status of redistribution:<br><br>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+            </li>
+        </ul>
+    </div>
+</div>
