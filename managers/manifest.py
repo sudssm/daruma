@@ -369,6 +369,7 @@ class Manifest:
     def move(self, old_path, new_path):
         """
         Updates the manifest by moving the node at old_path to new_path
+        Moves and renames the target node, using fully-defined paths
         Args: old_path, the path to some node
               new_path, the path of the node to create
         Raises: InvalidPath if old_path does not point to a node,
@@ -379,7 +380,7 @@ class Manifest:
         if self._find_node(new_path):
             raise exceptions.InvalidPath
         # ensure that the old_path exists
-        node_attributes = self.get(old_path).attributes
+        moved_node_attributes = self.get(old_path).attributes
 
         old_parent, old_target = os.path.split(old_path)
         new_parent, new_target = os.path.split(new_path)
@@ -387,7 +388,7 @@ class Manifest:
         old_parent_directory = self.get(old_parent)
         old_parent_directory._remove_child(old_target)
 
-        node_attributes['name'] = new_target
+        moved_node_attributes['name'] = new_target
 
         new_parent_directory = self.create_directory(new_parent)
-        new_parent_directory._add_child(_Node(node_attributes))
+        new_parent_directory._add_child(_Node(moved_node_attributes))
