@@ -47,6 +47,7 @@ class ResilienceManager:
                 failure.provider.authenticated = False
             else:
                 # TODO implement average of window method
+                # score = alpha*score + (1-alpha)*(new_score=0)
                 failure.provider.score = self.DECAY_RATE * failure.provider.score
             failed_providers.add(failure.provider)
 
