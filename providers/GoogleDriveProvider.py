@@ -28,21 +28,21 @@ class GoogleDriveProvider(BaseProvider):
         
         # key: filename, value: file ID
         self.file_index = {}
-        self.connect()
+        super(GoogleDriveProvider, self).__init__()
 
     @staticmethod
     @contextmanager
     def exception_handler(provider):
         try:
             yield
-        # except HttpError as e:
-            # if e.resp.status in [401,403]:
-            #     raise exceptions.AuthFailure(provider)
-            # raise exceptions.ProviderOperationFailure(provider)
+        except HttpError as e:
+            if e.resp.status in [401,403]:
+                raise exceptions.AuthFailure(provider)
+            raise exceptions.ProviderOperationFailure(provider)
         except httplib2.ServerNotFoundError:
             raise exceptions.ConnectionFailure(provider)
-        # except Exception:
-        #     raise exceptions.LibraryException
+        except Exception:
+            raise exceptions.LibraryException
 
     @staticmethod
     def get_credentials():

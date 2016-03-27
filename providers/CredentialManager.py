@@ -7,6 +7,10 @@ APP_NAME = "Trust No One"
 APP_DIR = user_config_dir(APP_NAME)
 FILE_NAME = os.path.join(user_config_dir(APP_DIR), "credentials.json")
 
+# Generatin Client credentials
+CLIENT_FILE = os.path.join(user_config_dir(APP_DIR), "clients.json")
+
+
 
 class CredentialManager(object):
 
