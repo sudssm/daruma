@@ -6,6 +6,8 @@ import shutil
 app = Flask(__name__)
 
 UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "/files"
+if not os.path.exists(UPLOAD_FOLDER):
+    os.mkdir(UPLOAD_FOLDER)
 
 
 @app.route('/')
@@ -60,7 +62,4 @@ def wipe():
         return jsonify(success=False)
 
 if __name__ == '__main__':
-    if not os.path.exists(UPLOAD_FOLDER):
-        print "Create", UPLOAD_FOLDER, "first!"
-        sys.exit()
     app.run(debug=True)
