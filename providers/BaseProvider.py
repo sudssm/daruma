@@ -14,6 +14,8 @@ class ProviderStatus:
 
 
 class BaseProvider(object):
+    RED_THRESHOLD = .1
+    YELLOW_THRESHOLD = .95
     # the path to our files on the cloud provider
     ROOT_DIR = "secretbox"
 
@@ -23,8 +25,8 @@ class BaseProvider(object):
 
         # metadata for diagnosis
         # TODO maybe factor this out into a provider manager?
-        # TODO change this when diagnose becomes more sophisticated
-        self.errors = 0
+        # TODO maybe get this score from a cached file if available?
+        self.score = 1
         self.error_log = []
 
         # whether the system is currently authenticated
@@ -74,8 +76,8 @@ class BaseProvider(object):
         """
         if not self.authenticated:
             return ProviderStatus.AUTH_FAIL
-        if self.errors > 20:
+        if self.score < self.RED_THRESHOLD:
             return ProviderStatus.RED
-        if self.errors > 0:
+        if self.score < self.YELLOW_THRESHOLD:
             return ProviderStatus.YELLOW
         return ProviderStatus.GREEN

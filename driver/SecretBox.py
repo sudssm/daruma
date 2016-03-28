@@ -130,15 +130,38 @@ class SecretBox:
                 return self._load_manifest()
             raise
 
-    def ls(self):
+    def ls(self, path):
         """
-        List the files in the system
+        Lists information about the entries at the given path.  If the given
+        path points to a file, lists just the information about that file.
+
+        Node information is represented by a dictionary with the following keys:
+            - name
+            - is_directory
+            - size (only available if not is_directory)
+
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
-        Raises FatalOperationFailure if unsuccessful
+        Raises InvalidPath or FatalOperationFailure if unsuccessful
         """
         self._load_manifest()
-        return self.file_manager.ls()
+        return self.file_manager.ls(path)
+
+    def mk_dir(self, path):
+        """
+        Create a directory
+        Raises InvalidPath or FatalOperationFailure if unsuccessful
+        """
+        self._load_manifest()
+        self.file_manager.mk_dir(path)
+
+    def move(self, old_path, new_path):
+        """
+        Move a file or folder
+        Raises InvalidPath if either path is invalid or if new_path exists
+        """
+        self._load_manifest()
+        self.file_manager.move(old_path, new_path)
 
     def get(self, path):
         """
