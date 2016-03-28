@@ -74,4 +74,4 @@ class TestProvider(LocalFilesystemProvider):
             return super(TestProvider, self).wipe()
 
     def __str__(self):
-        return "<TestProvider@" + self.provider_path + "-" + self.state + "-" + self.status + ">"
+        return "<TestProvider@" + self.provider_path + "-" + self.state + "-" + self.status + "-" + str(self.score) + ">"
