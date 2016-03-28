@@ -14,9 +14,9 @@ function goToSlide(slideContainerId, slideNo) {
 function hideModalById(id) {
     $(document).off("keypress");
 
-    var modal = $(id);
-    modal.addClass("hidden");
-    modal.one("transitionend", function (event) {
+    var $modal = $(id);
+    $modal.addClass("hidden");
+    $modal.one("transitionend", function (event) {
         $("#click-blocker").hide();
     });
 }
