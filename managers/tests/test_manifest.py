@@ -408,3 +408,26 @@ def test_mkdir_with_conflicting_file():
 
     with pytest.raises(exceptions.InvalidPath):
         manifest.create_directory("dir")
+
+
+def test_generate_files_empty():
+    manifest = Manifest()
+
+    assert list(manifest.generate_files_under("")) == []
+
+
+def test_generate_files_tree():
+    key1 = generate_key()
+
+    manifest = Manifest()
+
+    expected_files = [
+        File.from_values("bar", codename1, 23, key1),
+        File.from_values("asdf", codename1, 23, key1),
+    ]
+    created_filepaths = ["foo", "asd", "dir1/bar", "dir1/dir2/asdf", "dir3/baz"]
+
+    for path in created_filepaths:
+        manifest.update_file(path, codename1, 23, key1)
+
+    assert sorted(manifest.generate_files_under("dir1")) == sorted(expected_files)
