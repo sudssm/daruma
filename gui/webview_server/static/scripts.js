@@ -1,11 +1,10 @@
+"use strict";
+
 /********************
  * Slider functions *
  ********************/
 function goToSlide(slideContainerId, slideNo) {
-    "use strict";
-    var slideContainer = document.getElementById(slideContainerId);
-
-    slideContainer.style.marginLeft = (-100 * slideNo) + "%";
+    $(slideContainerId).css("margin-left", (-100 * slideNo) + "%");
 }
 
 /*******************
@@ -13,47 +12,35 @@ function goToSlide(slideContainerId, slideNo) {
  *******************/
 
 function hideModalById(id) {
-    "use strict";
-    var background = document.getElementById("click-blocker");
-    var modal = document.getElementById(id);
+    $(document).off("keypress");
 
-    document.onkeypress = null;
-
-    modal.classList.add("hidden");
-
-    modal.addEventListener("transitionend", function hide_blocker() {
-        modal.removeEventListener("transitionend", hide_blocker);
-        background.style.display = "none";
-    }, false);
+    var modal = $(id);
+    modal.addClass("hidden");
+    modal.one("transitionend", function (event) {
+        $("#click-blocker").hide();
+    });
 }
 
 function showModalById(id) {
-    "use strict";
-    var background = document.getElementById("click-blocker");
-    var modal = document.getElementById(id);
-
-    background.style.display = "block";
+    $("#click-blocker").show();
 
     // Need to wait for the display change to redraw before starting animation.
     setTimeout(function () {
-        modal.classList.remove("hidden");
+        $(id).removeClass("hidden");
 
-        document.onkeypress = function (evt) {
-            if (evt.keyCode === 27) {
-                // Hide on escape key
+        $(document).keypress(function (event) {
+            if (event.which === 27) { // Hide on escape key
                 hideModalById(id);
             }
-        };
+        });
     }, 5);
 }
 
 function onAddProviderButtonClick() {
-    "use strict";
-    goToSlide("add-provider-slide-container", 0);
-    showModalById("add-provider-modal");
+    goToSlide("#add-provider-slide-container", 0);
+    showModalById("#add-provider-modal");
 }
 
 function onAddProviderCancel() {
-    "use strict";
-    hideModalById("add-provider-modal");
+    hideModalById("#add-provider-modal");
 }

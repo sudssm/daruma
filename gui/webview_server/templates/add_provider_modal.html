@@ -6,7 +6,7 @@
                 <ul id="provider-chooser-box" class="inset-box">
                     {% for provider in providers %}
                     <li>
-                        <img class="provider-icon-wide" src="{{ url_for('static', filename='logos/wide/dropbox.png') }}" onclick="goToSlide('add-provider-slide-container', 1)">
+                        <img class="provider-icon-wide" src="{{ url_for('static', filename='logos/wide/dropbox.png') }}" onclick="goToSlide('#add-provider-slide-container', 1)">
                     </li>
                     {% endfor %}
                 </ul>
