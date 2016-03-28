@@ -388,7 +388,7 @@ class Manifest:
         old_parent_directory = self.get(old_parent)
         old_parent_directory._remove_child(old_target)
 
-        moved_node_attributes['name'] = new_target
+        moved_node_attributes[Attributes.NAME] = new_target
 
         new_parent_directory = self.create_directory(new_parent)
         new_parent_directory._add_child(_Node(moved_node_attributes))
