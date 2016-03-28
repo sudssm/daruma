@@ -10,12 +10,17 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <button class="cancel-button" type="button" onclick="onAddProviderCancel()">Cancel</button>
+                <div class="nav-button-container">
+                    <button class="cancel-button" type="button" onclick="onAddProviderCancel()">Cancel</button>
+                </div>
             </li><!-- Commented to remove inline spacing
 
             --><li class="slide">
                 <iframe id="provider-login-frame" src="http://www.example.com"></iframe>
-                <button class="cancel-button" type="button" onclick="onAddProviderCancel()">Cancel</button>
+                <div class="nav-button-container">
+                    <button class="cancel-button" type="button" onclick="onAddProviderCancel()">Cancel</button>
+                    <button class="previous-button" type="button" onclick="goToSlide('#add-provider-slide-container', 0)">Previous</button>
+                </div>
             </li><!-- Commented to remove inline spacing
 
             --><li class="slide">
