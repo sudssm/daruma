@@ -14,6 +14,15 @@ setup(
     ],
     dependency_links=[
         "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@sss#egg=robustsecretsharing-0.1"
-    ]
-
+    ],
+    extras_require={
+        "gui": [
+            "flask>=0.10.1",
+            "wxPython==3.0.2.0",
+            "wxPython-common==3.0.2.0"
+        ],
+        ":sys_platform == 'darwin'": [
+            'pyobjc==3.0.4'
+        ]
+    }
 )
