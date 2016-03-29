@@ -30,5 +30,12 @@ setup(
     },
     app=["gui/sb_gui.py"],
     data_files=["gui/webview_server/templates", 'gui/webview_server/static'],
-    options=dict(py2app=dict(packages=['jinja2', 'flask']))
+    options={
+        "py2app": {
+            "packages": ['jinja2', 'flask'],
+            'plist': {
+                'LSUIElement': True,
+            }
+        }
+    }
 )
