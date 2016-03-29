@@ -42,9 +42,10 @@ build_setup = dict(
 # Platform-specific build setup
 if sys.platform == "darwin":
     build_setup["options"]["py2app"] = {
+        "optimize": 2,
         "packages": ['jinja2', 'flask'],
-        'plist': {
-            'LSUIElement': True,
+        "plist": {
+            "LSUIElement": True,
         }
     }
 
