@@ -18,6 +18,23 @@ def get_url_for_host(host, endpoint=""):
     return "http://" + host[0] + ":" + str(host[1]) + "/" + endpoint
 
 
+class WindowManager(object):
+    """
+    Contains references to all windows in use by the application.
+    To use, add windows to the enclosed windows dictionary.
+    """
+    def __init__(self):
+        self.windows = {}
+
+    def close_all(self):
+        """
+        Closes all tracked windows and resets the WindowManager.
+        """
+        for window in self.windows.values():
+            window.Close()
+        self.windows = {}
+
+
 class MainAppMenu(wx.TaskBarIcon):
     def __init__(self, app_frame, host):
         """
@@ -32,6 +49,8 @@ class MainAppMenu(wx.TaskBarIcon):
         icon_stream = pkg_resources.resource_stream(__name__, ICON_NAME)
         icon = wx.IconFromBitmap(wx.ImageFromStream(icon_stream).ConvertToBitmap())
         self.SetIcon(icon, ICON_HOVERTEXT)
+
+        self.window_manager = WindowManager()
 
     def CreatePopupMenu(self):
         """
@@ -54,13 +73,26 @@ class MainAppMenu(wx.TaskBarIcon):
         """
         Opens the provider dashboard webview.
         """
-        webview.WebviewWindow(get_url_for_host(self.host, "providers")).Show()
+        def on_close_providers(event):
+            provider_window = self.window_manager.windows.pop("providers")
+            provider_window.Destroy()
+        provider_window = self.window_manager.windows.get("providers")
+        if provider_window is None:
+            provider_window = webview.WebviewWindow(get_url_for_host(self.host, "providers"))
+            self.window_manager.windows["providers"] = provider_window
+            provider_window.Bind(wx.EVT_CLOSE, on_close_providers)
+            provider_window.CenterOnScreen()
+            provider_window.Show()
+        else:
+            # TODO: bring app to foreground
+            provider_window.Raise()
 
     def on_exit(self, event):
         """
         Called when the quit item is selected.
         """
         wx.CallAfter(self.Destroy)
+        self.window_manager.close_all()
         self.app_frame.Close()
 
 
