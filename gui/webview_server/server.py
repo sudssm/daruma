@@ -1,6 +1,12 @@
 import socket
+import sys
+import os
 from flask import Flask, render_template
-app = Flask(__name__)
+
+if getattr(sys, "frozen", None):
+    app = Flask(__name__, static_folder=os.path.join(os.getcwd(), "static"), template_folder=os.path.join(os.getcwd(), "templates"))
+else:
+    app = Flask(__name__)
 
 
 @app.route('/providers')

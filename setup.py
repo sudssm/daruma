@@ -4,6 +4,10 @@ setup(
     name="trustnoone",
     version="0.1",
     packages=find_packages(),
+    include_package_data=True,
+    setup_requires=[
+        "py2app"
+    ],
     install_requires=[
         "PyNaCl==1.0.1",
         "PyECLib==1.2.0",
@@ -23,5 +27,8 @@ setup(
         ":sys_platform == 'darwin'": [
             'pyobjc==3.0.4'
         ]
-    }
+    },
+    app=["gui/sb_gui.py"],
+    data_files=["gui/webview_server/templates", 'gui/webview_server/static'],
+    options=dict(py2app=dict(packages=['jinja2', 'flask']))
 )
