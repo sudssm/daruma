@@ -1,6 +1,7 @@
 from OAuthRedirectServer import OAuthRedirectServer
 from CredentialManager import CredentialManager
 from custom_exceptions import exceptions
+import threading
 
 # Fixed port
 AUTH_PORT = 51168
@@ -24,9 +25,10 @@ class ProviderFactory(object):
         auth_url, flow = provider.new_connection_redirect(AUTH_PORT)
 
         # setup authentication server
-        # TODO: Might need a new thread
-        server = OAuthRedirectServer(provider.finish_connection, AUTH_PORT, dropboxflow=flow)
-        server.start()
+        server = OAuthRedirectServer(provider.finish_connection_redirect, AUTH_PORT, dropboxflow=flow)
+        auth_server_thread = threading.Thread(target=server.start, name="auth_server_thread")
+        auth_server_thread.daemon = True
+        auth_server_thread.start()
 
         # return authentication url
         return auth_url
