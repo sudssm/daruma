@@ -27,8 +27,7 @@ class CredentialManager(object):
 
         if not os.path.exists(FILE_NAME):
             CredentialManager.create_credential_file_if_not_exist()
-
-        
+  
         with open(FILE_NAME, 'r') as credential_file:        
         
             # load user credentials 

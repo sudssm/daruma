@@ -45,38 +45,45 @@ class DropboxProvider(BaseProvider):
         except urllib3.exceptions.MaxRetryError:
             raise exceptions.ConnectionFailure(provider)
         except dropbox.rest.ErrorResponse as e:
-            if e.status in [401,400]:
+            if e.status in [401, 400]:
                 raise exceptions.AuthFailure(provider)
             raise exceptions.ProviderOperationFailure(provider)
-        except Exception:
-            raise exceptions.LibraryException
-
+        # except Exception:
+        #     raise exceptions.LibraryException
 
     @staticmethod
-    def new_connection(port):
-        flow = dropbox.client.DropboxOAuth2Flow(DBOX_APP_KEY, DBOX_APP_SECRET, "http://localhost:%s"%str(port), {}, "dropbox-auth-csrf-token")
+    def new_connection_redirect(port):
+        flow = dropbox.client.DropboxOAuth2Flow(DBOX_APP_KEY, DBOX_APP_SECRET, "http://localhost:%s" % str(port), {}, "dropbox-auth-csrf-token")
+        authorize_url = flow.start()
+        return authorize_url, flow
+
+    @staticmethod
+    def finish_connection_redirect(url, flow):
+        # parse url
+        params = parse_qs(urlparse(url).query)
+        params = dict([(k, v[0]) for (k, v) in params.items()])
+
+        # get access_token
+        with DropboxProvider.exception_handler(None):
+            access_token, _, _ = flow.finish(params)
+            
+            # store access_token
+            CredentialManager.update_credentials(DropboxProvider, access_token)
+
+    @staticmethod
+    def new_connection():
+        flow = dropbox.client.DropboxOAuth2FlowNoRedirect(DBOX_APP_KEY, DBOX_APP_SECRET)
         authorize_url = flow.start()
         return authorize_url
 
     @staticmethod
-    def finish_connection(url):
-        # parse url
-        params = parse_qs(urlparse(url).query)
-        params = {k:v[0] for k,v in params.items()}
-
-        # get access_token
+    def finish_connection(authorization_code):
+        flow = dropbox.client.DropboxOAuth2Flow(DBOX_APP_KEY, DBOX_APP_SECRET)
         with DropboxProvider.exception_handler(None):
-            access_token, _,_ = dropbox.client.DropboxOAuth2Flow(DBOX_APP_KEY, DBOX_APP_SECRET, "http://localhost:%s"%str(port), {}, "dropbox-auth-csrf-token").finish(params)
+            access_token, _ = flow.finish(authorization_code)
+            CredentialManager.update_credentials(DropboxProvider, access_token)
 
-            # store access_token
-            CredentialManager.update_credentials(DropboxProvider,access_token)
-
-        # flow = dropbox.client.DropboxOAuth2Flow(DBOX_APP_KEY, DBOX_APP_SECRET)
-        # with DropboxProvider.exception_handler(None):
-        #     access_token,_ = flow.finish(authorization_code)
-        #     # TODO credential management
-        #     return DropboxProvider(access_token=access_token)
-        
+            return DropboxProvider(access_token=access_token)
 
     def connect(self):
         with DropboxProvider.exception_handler(self):
