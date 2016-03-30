@@ -95,3 +95,41 @@ def test_different_ks():
     # should still be able to recover the files
     # even though 3rd provider went down after initializing
     assert SB.get("test") == "data"
+
+
+def test_add_provider():
+    SB = SecretBox.provision(providers[0:4], 3, 3)
+    SB.put("test", "data")
+
+    SB.add_provider(providers[4])
+
+    assert SB.get("test") == "data"
+
+    # check that we can bootstrap
+    SB = SecretBox.load(providers)
+    assert SB.get("test") == "data"
+
+    # check that k has been changed
+    providers[0].wipe()
+    providers[1].wipe()
+
+    with pytest.raises(exceptions.FatalOperationFailure):
+        SB.get("test")
+
+
+def test_remove_provider():
+    SB = SecretBox.provision(providers, 4, 4)
+    SB.put("test", "data")
+
+    SB.remove_provider(providers[4])
+
+    assert SB.get("test") == "data"
+
+    # check that we can bootstrap
+    SB = SecretBox.load(providers[0:4])
+    assert SB.get("test") == "data"
+
+    # check that k has been changed
+    providers[0].wipe()
+
+    assert SB.get("test") == "data"

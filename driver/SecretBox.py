@@ -93,24 +93,61 @@ class SecretBox:
             bootstrap_reconstruction_threshold < len(providers) and \
             file_reconstruction_threshold < len(providers)
 
-    # change the master key
     def update_master_key(self):
+        """
+        Cycle the master key, and rebootstrap
+        """
         # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
-    # public methods
+
+    def _reset(self):
+        """
+        Reprovision the system
+        To be called after a core parameter change (change in provider or threshold)
+        """
+        self.file_manager.reset()
+        self.update_master_key()
 
     # add a new provider
-    # TODO we get annoying edge cases if the user adds a provider, and then tries to add another before we update providers to reflect the first add
     def add_provider(self, provider):
-        # TODO: use Doron's storage equation to determine if adding a new provider is worthwhile
-            # will need to make calls to know the capacity of each provider
         """
-        self.providers.append(provider)
-        self.bootstrap_manager.distribute_new_key(master_key)
-        # TODO: also need to update the file manager with the new master key
-        # or make a new file manager
-        self.file_manager.refresh()
+        Add the provider to the list of providers
+        Increases the internal reconstruction thresholds by 1
         """
+        providers = self.file_manager.providers
+        providers.append(provider)
+
+        file_reconstruction_threshold = self.file_manager.file_reconstruction_threshold + 1
+        bootstrap_reconstruction_threshold = self.bootstrap_manager.bootstrap_reconstruction_threshold + 1
+
+        self.change_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
+
+    def remove_provider(self, provider):
+        """
+        Remove the provider from the internal list of providers
+        Decreases the internal reconstruction thresholds by 1
+        """
+        providers = self.file_manager.providers
+        if provider not in providers:
+            return
+        providers.remove(provider)
+
+        file_reconstruction_threshold = self.file_manager.file_reconstruction_threshold - 1
+        bootstrap_reconstruction_threshold = self.bootstrap_manager.bootstrap_reconstruction_threshold - 1
+
+        self.change_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
+
+    def change_params(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
+        """
+        Update the thresholds and providers for the system
+        """
+        self.file_manager.providers = providers
+        self.bootstrap_manager.providers = providers
+        self.resilience_manager.providers = providers
+
+        self.bootstrap_manager.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
+        self.file_manager.file_reconstruction_threshold = file_reconstruction_threshold
+        self._reset()
 
     def _load_manifest(self):
         """

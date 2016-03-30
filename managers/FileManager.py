@@ -50,11 +50,48 @@ class FileManager:
         self.distribute_manifest()
         # TODO make sure this doesnt go to infinite loop on repeated distributes
 
-    def refresh(self):
-        pass
-        # for every file, perform a self.get() and self.put()
-        # to fetch it, re-encode it with the new list of providers, and put it
-        # used most often for reprovisioning new or broken provider
+    def reset(self):
+        """
+        Refresh all files on the filesystem
+        To be called after changing either providers or file_reconstruction_threshold
+        Constructs a new FileDistributor object with the new parameters
+        NB: during the operation, the amount of space used on each provider doubles
+        """
+        errors = []
+        old_files = []
+        new_distributor = FileDistributor(self.providers, self.file_reconstruction_threshold)
+
+        for file_node in self.manifest.generate_files_under(""):
+            filename = file_node.name
+            old_codename = file_node.code_name
+            old_key = file_node.key
+            size = file_node.size
+
+            try:
+                data = self.distributor.get(old_codename, old_key)
+            except exceptions.OperationFailure as e:
+                data = e.data
+                errors.append(e)
+            old_files.append(old_codename)
+
+            codename = generate_filename()
+            key = new_distributor.put(codename, data)
+            self.manifest.update_file(filename, codename, size, key)
+
+        old_distributor = self.distributor
+        self.distributor = new_distributor
+        self.distribute_manifest()
+
+        # TODO doing this step at the end means that we double in size
+        # garbage collect
+        for codename in old_files:
+            try:
+                old_distributor.delete(codename)
+            except exceptions.OperationFailure as e:
+                errors.append(e)
+
+        if len(errors) > 0:
+            raise exceptions.OperationFailure(errors)
 
     def ls(self, path):
         """

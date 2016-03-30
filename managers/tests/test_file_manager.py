@@ -159,12 +159,9 @@ def test_corrupt_recover():
     with pytest.raises(exceptions.OperationFailure):
         FM.load_manifest()
 
-    try:
-        FM.get("test")
-        assert False
-    except exceptions.OperationFailure as e:
-        assert e.result == "data"
-        assert len(e.failures) == 2
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        FM.load_manifest()
+    assert len(excinfo.value.failures) == 2
 
 
 def test_corrupt_fail():
@@ -176,10 +173,72 @@ def test_corrupt_fail():
     providers[1].wipe()
     providers[2].wipe()
 
-    try:
-        FM = FileManager(providers, 3, master_key, manifest_name)
+    with pytest.raises(exceptions.FatalOperationFailure) as excinfo:
         FM.load_manifest()
-        FM.ls("")
-        assert False
-    except exceptions.FatalOperationFailure as e:
-        assert len(e.failures) == 3
+    assert len(excinfo.value.failures) == 3
+
+
+def test_change_k():
+    FM = FileManager(providers, 4, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.put("test", "data")
+    FM.put("test2", "data2")
+
+    FM.file_reconstruction_threshold = 3
+    FM.reset()
+
+    FM.load_manifest()
+    assert FM.get("test") == "data"
+    assert FM.get("test2") == "data2"
+
+    # check that we are using new k
+    providers[0].wipe()
+    providers[1].wipe()
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        FM.get("test")
+    assert excinfo.value.result == "data"
+
+
+def test_add_provider():
+    FM = FileManager(providers[0:4], 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.put("test", "data")
+    FM.put("test2", "data2")
+
+    FM.providers.append(providers[-1])
+    FM.reset()
+
+    FM.load_manifest()
+    assert FM.get("test") == "data"
+    assert FM.get("test2") == "data2"
+
+    # check that we are resilient
+    providers[0].wipe()
+    providers[1].wipe()
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        FM.get("test")
+    assert excinfo.value.result == "data"
+
+
+def test_remove_provider_and_decrement_k():
+    FM = FileManager(providers, 4, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.put("test", "data")
+    FM.put("test2", "data2")
+
+    FM.file_reconstruction_threshold = 3
+    FM.providers.remove(providers[0])
+    FM.reset()
+
+    FM.load_manifest()
+    assert FM.get("test") == "data"
+    assert FM.get("test2") == "data2"
+
+    # check that we are using new k
+    providers[0].wipe()
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        FM.get("test")
+    assert excinfo.value.result == "data"

@@ -6,8 +6,14 @@ import itertools
 
 
 class FileDistributor:
+    """
+    A system for distributing files for a specific set of providers and threshold
+    If a different set of providers and threshold is needed, a new FileDistributor
+    object should be constructed
+    """
     def __init__(self, providers, file_reconstruction_threshold):
-        self.providers = providers
+        # make a copy of the provider list
+        self.providers = [provider for provider in providers]
         self.num_providers = len(providers)
         self.file_reconstruction_threshold = file_reconstruction_threshold
 
