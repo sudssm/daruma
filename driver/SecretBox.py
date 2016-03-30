@@ -35,7 +35,8 @@ class SecretBox:
         Returns a constructed SecretBox object
         Raises FatalOperationFailure or ProviderFailure
         """
-
+        # make a copy of providers
+        providers = [provider for provider in providers]
         for provider in providers:
             # raises on failure
             provider.wipe()
@@ -108,7 +109,6 @@ class SecretBox:
         self.file_manager.reset()
         self.update_master_key()
 
-    # add a new provider
     def add_provider(self, provider):
         """
         Add the provider to the list of providers

@@ -1,7 +1,7 @@
 """
 super ugly hacked together thing to play with secretbox
 usage:
-    python sb_ui.py init n k_key k_file tmp_dir
+    python sb_ui.py init n tmp_dir
     python sb_ui.py start n tmp_dir
 
 arg 1 is init if you want to start a new secretbox from scratch
@@ -39,14 +39,9 @@ colorama.init()
 try:
     cmd = sys.argv[1]
     n = int(sys.argv[2])
+    tmp_dir = sys.argv[3]
 
-    if cmd == "init":
-        k_key = int(sys.argv[3])
-        k_file = int(sys.argv[4])
-        tmp_dir = sys.argv[5]
-    elif cmd == "start":
-        tmp_dir = sys.argv[3]
-    else:
+    if cmd not in ["init", "start"]:
         raise Exception
 except:
     print __doc__
@@ -55,14 +50,14 @@ except:
 
 providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
 if cmd == "init":
-    SB = SecretBox.provision(providers, k_key, k_file)
+    SB = SecretBox.provision(providers, n-1, n-1)
 else:
     SB = SecretBox.load(providers)
 
 while True:
     print "\n"
     print "SB commands: ls, mv, mkdir, get, put, del, exit"
-    print "provider commands: set, wipe, status"
+    print "provider commands: add, remove, set, wipe, status"
 
     with exception_handler():
         cmd = shlex.split(raw_input("> "))
@@ -184,6 +179,16 @@ while True:
             print "Invalid input"
             print "Usage: wipe <provider #>"
         providers[n].wipe()
+
+    if cmd[0] == "add":
+        with exception_handler():
+            providers.append(TestProvider(tmp_dir + "/" + str(len(providers))))
+            SB.add_provider(providers[-1])
+
+    if cmd[0] == "remove":
+        with exception_handler():
+            provider = providers.pop(-1)
+            SB.remove_provider(provider)
 
     if cmd[0] == "exit":
         break
