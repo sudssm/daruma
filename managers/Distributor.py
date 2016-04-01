@@ -13,7 +13,7 @@ class FileDistributor:
     """
     def __init__(self, providers, file_reconstruction_threshold):
         # make a copy of the provider list
-        self.providers = [provider for provider in providers]
+        self.providers = providers[:]
         self.num_providers = len(providers)
         self.file_reconstruction_threshold = file_reconstruction_threshold
 

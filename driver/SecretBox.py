@@ -35,8 +35,8 @@ class SecretBox:
         Returns a constructed SecretBox object
         Raises FatalOperationFailure or ProviderFailure
         """
-        # make a copy of providers
-        providers = [provider for provider in providers]
+        # make a copy of providers so that changes to the external list doesn't affect this one
+        providers = providers[:]
         for provider in providers:
             # raises on failure
             provider.wipe()
@@ -96,7 +96,7 @@ class SecretBox:
 
     def update_master_key(self):
         """
-        Cycle the master key, and rebootstrap
+        Cycle the master key and rebootstrap
         """
         # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
@@ -124,7 +124,7 @@ class SecretBox:
 
     def remove_provider(self, provider):
         """
-        Remove the provider from the internal list of providers
+        Remove the provider from the internal list of providers, if it exists
         Decreases the internal reconstruction thresholds by 1
         """
         providers = self.file_manager.providers

@@ -52,7 +52,7 @@ class FileManager:
 
     def reset(self):
         """
-        Refresh all files on the filesystem
+        Refresh all files on the filesystem by re-encrypting, sharing, and distributing all files and manifest
         To be called after changing either providers or file_reconstruction_threshold
         Constructs a new FileDistributor object with the new parameters
         NB: during the operation, the amount of space used on each provider doubles
@@ -76,6 +76,8 @@ class FileManager:
 
             codename = generate_filename()
             key = new_distributor.put(codename, data)
+            # TODO this changes the manifest without being sure that distributor changes will work
+            # change this when implementing manifest caching
             self.manifest.update_file(filename, codename, size, key)
 
         old_distributor = self.distributor
