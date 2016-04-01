@@ -1,4 +1,4 @@
-from providers.TestServerProvider import TestServerProvider
+from demo_provider.client.TestServerProvider import TestServerProvider
 from providers.BaseProvider import BaseProvider
 from custom_exceptions import exceptions
 from demo_server.server import app
