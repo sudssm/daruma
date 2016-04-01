@@ -1,7 +1,7 @@
 from demo_provider.client.TestServerProvider import TestServerProvider
 from providers.BaseProvider import BaseProvider
 from custom_exceptions import exceptions
-from demo_server.server import app
+from demo_provider.server import app
 from threading import Thread
 import pytest
 
