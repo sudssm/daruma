@@ -10,7 +10,7 @@ setup(
         "uuid==1.30",
         "robustsecretsharing==0.1",
         "requests==2.9.0",
-        "Flask==0.10.1"
+        "Flask==0.10.1",
         "bson==0.4.2",
         "colorama==0.2.5"
     ],
