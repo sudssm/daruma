@@ -85,8 +85,9 @@ def test_corrupt_share():
 
 
 def modify_bootstrap_k(provider, new_k):
-    _, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
-    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, str(new_k) + "," + provider_id)
+    _, n, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
+    string = ",".join([str(new_k), n, provider_id])
+    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, string)
 
 
 def test_corrupt_k_recover():
@@ -137,7 +138,7 @@ def test_corrupt_k_but_not_fail():
     BM.distribute_bootstrap(bootstrap)
 
     for provider in providers[0:4]:
-            modify_bootstrap_k(provider, 4)
+        modify_bootstrap_k(provider, 4)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
             BM.recover_bootstrap()
