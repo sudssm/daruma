@@ -93,3 +93,5 @@ target/
 sftp-config.json
 
 tmp/
+
+demo_provider/files

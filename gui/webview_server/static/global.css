@@ -21,6 +21,100 @@ h2 {
     box-shadow: inset 0 1px 1.5px #A0A0A0;
     background-color: #E2E2E2;
     padding: 20px;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
     display: flex;
-    align-items: center;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+        -ms-flex-align: center;
+            align-items: center;
+}
+
+#click-blocker {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: none;
+}
+
+.modal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    -webkit-transition: top 500ms ease-in;
+    transition: top 500ms ease-in;
+    margin: 0 auto;
+    width: 480px;
+    min-height: 280px;
+    max-height: 60%;
+    height: 100%;
+    overflow:hidden;
+    box-shadow: 0 0 8px #A0A0A0;
+    border-style: solid;
+    border-color: #C2C2C2;
+    border-width: 1px;
+    border-top-width: 0;
+    background-color: #ECECEC;
+    padding: 0 20px 10px 20px;
+    pointer-events: auto;
+}
+
+.modal.hidden {
+    top: -500px;
+}
+
+.modal .nav-button-container {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.nav-button-container > .cancel-button {
+    float: left;
+}
+
+.nav-button-container > .previous-button {
+    float: right;
+}
+
+.slider-window {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.slide-container {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    margin-left: 0;
+    padding: 0;
+    -webkit-transition: margin-left 500ms;
+    transition: margin-left 500ms;
+    white-space: nowrap;
+}
+
+.slide-container > .slide {
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: -ms-inline-flexbox;
+    display: inline-flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-align: start;
+    -webkit-align-items: flex-start;
+        -ms-flex-align: start;
+            align-items: flex-start;
+    height: 100%;
+    width: 100%;
+    vertical-align: top;
+    white-space: initial;
 }

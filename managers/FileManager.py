@@ -31,17 +31,17 @@ class FileManager:
         self.manifest = None
         try:
             manifest_str = self.distributor.get(self.manifest_name, self.master_key)
-            self.manifest = Manifest(content=manifest_str)
+            self.manifest = Manifest.deserialize(manifest_str)
         except exceptions.OperationFailure as e:
             # set manifest to recovered value and pass along failures
-            self.manifest = Manifest(content=e.result)
+            self.manifest = Manifest.deserialize(e.result)
             raise exceptions.OperationFailure(e.failures, None)
 
     def distribute_manifest(self):
         """
         Raises FatalOperationFailure if any provider fails
         """
-        content = str(self.manifest)
+        content = self.manifest.serialize()
         self.distributor.put(self.manifest_name, content, self.master_key)
 
     def update_key_and_name(self, master_key, manifest_name):
@@ -56,41 +56,102 @@ class FileManager:
         # to fetch it, re-encode it with the new list of providers, and put it
         # used most often for reprovisioning new or broken provider
 
-    def ls(self):
-        return self.manifest.ls()
+    def ls(self, path):
+        """
+        Lists information about the entries at the given path.  If the given
+        path points to a file, lists just the information about that file.
+
+        Node information is represented by a dictionary with the following keys:
+            - name
+            - is_directory
+            - size (only available if not is_directory)
+
+        Args:
+            path: A string corresponding to the path of the directory to list.
+                  (the empty string will query the root directory)
+
+        Returns: A list of dictionaries corresponding to the names of files and
+                 and directories in the specified directory.
+
+        Raises:
+            InvalidPath (from manifest.list_directory_entries) if the path does
+            not exist.
+        """
+        def external_attributes_from_node(node):
+            external_attributes = {
+                "name": node.name,
+                "is_directory": False,
+            }
+
+            try:
+                external_attributes["size"] = node.size
+            except AttributeError:
+                # The node is a directory
+                external_attributes["is_directory"] = True
+
+            return external_attributes
+        target_node = self.manifest.get(path)
+        try:
+            ls_nodes = target_node.get_children()
+        except AttributeError:
+            # We assumed target_node was a Directory, but it's actually a file.
+            ls_nodes = [target_node]
+
+        return [external_attributes_from_node(node) for node in ls_nodes]
 
     def put(self, name, data):
         """
-        Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exceptions
+        Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exception
         """
         codename = generate_random_name()
         key = self.distributor.put(codename, data)
 
-        old_codename = self.manifest.update_manifest(name, codename, len(data), key)
+        old_node = self.manifest.update_file(name, codename, len(data), key)
 
         # update the manifest
         self.distribute_manifest()
 
         # we are performing a replacement
-        if old_codename is not None:
+        if old_node is not None:
             try:
-                self.distributor.delete(old_codename)
+                self.distributor.delete(old_node.code_name)
             except exceptions.FatalOperationFailure as e:
                 # this isn't actually fatal - we just have some extra garbage floating around
                 raise exceptions.OperationFailure(e.failures, None)
+
+    def mk_dir(self, path):
+        """
+        Creates a directory with the specified path, creating intermediate directories along the way
+        Does nothing if the directory already exists
+        Raises InvalidPath (from manifest.create_directory) if the path is invalid for a directory
+        Raises FatalOperationFailure (from distributor.put) if any provider operation throws an exception
+        """
+        self.manifest.create_directory(path)
+        self.distribute_manifest()
+
+    def move(self, old_path, new_path):
+        """
+        Move a file or folder from old_path to new_path
+        Raises InvalidPath (from manifest.move) if either path is invalid, or if new_path exists
+        """
+        self.manifest.move(old_path, new_path)
+        self.distribute_manifest()
 
     def get(self, name):
         """
         attempt to get a file
         Returns file contents
-        Raises FileNotFound if file does not exist (from manifest.get_line)
+        Raises FileNotFound if file does not exist
         Raises OperationFailure with errors and file contents if recoverable (from distributor.get)
         Raises FatalOperationFailure if unrecoverable (from distributor.get)
         """
-        entry = self.manifest.get_line(name)
+        try:
+            node = self.manifest.get(name)
+        except exceptions.InvalidPath:
+            raise exceptions.FileNotFound
 
-        codename = entry["code_name"]
-        key = entry["aes_key"]
+        codename = node.code_name
+        key = node.key
 
         return self.distributor.get(codename, key)
 
@@ -101,7 +162,7 @@ class FileManager:
         Raises OperationFailure with errors and file contents if recoverable (from distributor.delete)
             Raises FatalOperationFailure if unrecoverable (from distribute_manifest)
         """
-        entry = self.manifest.remove_line(name)
+        node = self.manifest.remove(name)
 
         try:
             self.distribute_manifest()
@@ -112,7 +173,7 @@ class FileManager:
             raise
 
         try:
-            self.distributor.delete(entry["code_name"])
+            self.distributor.delete(node.code_name)
         except exceptions.FatalOperationFailure as e:
             # some provider deletes failed, but it wasn't fatal
             raise exceptions.OperationFailure(e.failures, None)
