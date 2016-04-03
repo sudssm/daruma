@@ -170,6 +170,12 @@ def _node_from_attributes(attributes):
 
 
 class Manifest:
+    """
+    An abstract representation of a filesystem and its associated metadata.
+    Note that the current interface does not support symlinks or circular
+    references.
+    """
+
     ROOT_DIRECTORY_NAME = ""
 
     def __init__(self):
@@ -392,3 +398,17 @@ class Manifest:
 
         new_parent_directory = self.create_directory(new_parent)
         new_parent_directory._add_child(_Node(moved_node_attributes))
+
+    def generate_files_under(self, path):
+        """
+        Returns a generator for all File nodes in the manifest under the given
+        path.
+        """
+        frontier = [self.get(path)]
+        while len(frontier) > 0:
+            target_node = frontier.pop(0)
+            for child in target_node.get_children():
+                if type(child) is File:
+                    yield child
+                else:
+                    frontier.append(child)
