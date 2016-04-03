@@ -22,7 +22,7 @@ class SecretBox:
         self.file_manager = file_manager
         self.resilience_manager = resilience_manager
         # load the manifest here
-        # ensures that we fail immediately with FatalOperationError if we recovered the wrong reconstruction threshold
+        # ensures that we fail immediately with FatalOperationFailure if we recovered the wrong reconstruction threshold
         self._load_manifest()
 
     @staticmethod
@@ -105,14 +105,28 @@ class SecretBox:
         """
         Reprovision the system
         To be called after a core parameter change (change in provider or threshold)
+        Raises FatalOperationFailure if there was an unrecoverable write error
         """
-        self.file_manager.reset()
-        self.update_master_key()
+        self._load_manifest()
+        try:
+            self.file_manager.reset()
+            self.update_master_key()
+            self.resilience_manager.log_success()
+        except exceptions.OperationFailure as e:
+            # don't try to repair - if we are here, all files got successfully refreshed
+            self.resilience_manager.diagnose(e.failures)
+        except exceptions.FatalOperationFailure as e:
+            can_retry = self.resilience_manager.diagnose(e.failures)
+            if can_retry:
+                return self._reset()
+            raise
 
     def add_provider(self, provider):
         """
         Add the provider to the list of providers
         Increases the internal reconstruction thresholds by 1
+        (Assumes that (n-k) should stay constant, which makes sense in the context of the working assumption
+        that k=n-1)
         """
         providers = self.file_manager.providers
         providers.append(provider)
