@@ -3,8 +3,9 @@ import tools.shamir_secret_sharing
 from tools.encryption import KEY_SIZE
 from tools.utils import FILENAME_SIZE, generate_random_name
 from collections import defaultdict
-import struct
 from custom_exceptions import exceptions
+from itertools import product
+import struct
 
 
 class Bootstrap:
@@ -119,18 +120,39 @@ class BootstrapManager:
             failures, a list of exceptions from failing providers
         Returns the recovered secret, and a list of exceptions from bad providers
         """
-        # reconstruct shares
-        shares = shares_map.values()
-        failures = []
+        # build a list of lists of shares with same id
+        shares_lists = [[(provider_id, shares_map[provider]) for provider in providers if provider in shares_map]
+                        for (provider_id, providers) in provider_id_map.items()]
+        # select one share for each provider_id; build all such selections
+        share_sets = product(*shares_lists)
 
-        # attempt to recover key
-        # TODO find cheaters - just pass in the entire map
-        try:
-            string = tools.shamir_secret_sharing.reconstruct(shares, Bootstrap.SIZE, len(self.providers))
-        except exceptions.LibraryException:  # TODO: update when RSS is introduced
-            raise exceptions.FatalOperationFailure(failures)
+        # only one of share_sets will work
+        for share_set in share_sets:
+            """
+            to be filled in during integration
+            try:
+                robustrecover(...., share_set)
+                # we found the working subset!
+                # take the successful set, and mark all providers with overlapping ids as bad
+                # also mark all providers in the bad set as bad
+                # cycle in shares that are not elements of good or bad set to test one by one; mark bad ones bad
+                # return stuff
+            except Problem:
+                continue
+            """
+            # TODO change when integrating rss
+            shares = [share for (_, share) in share_set]
+            failures = []
 
-        return string, failures
+            try:
+                string = tools.shamir_secret_sharing.reconstruct(shares, Bootstrap.SIZE, len(self.providers))
+            except exceptions.LibraryException:
+                raise exceptions.FatalOperationFailure(failures)
+
+            return string, failures
+
+        # none of them worked
+        return None, []
 
     def recover_bootstrap(self):
         """
@@ -142,6 +164,9 @@ class BootstrapManager:
 
         secret, shamir_failures = self._reconstruct_shares(provider_id_map, shares_map)
         failures += shamir_failures
+
+        if secret is None:
+            raise exceptions.FatalOperationFailure(failures)
 
         bootstrap = Bootstrap.parse(secret)
 
