@@ -140,6 +140,8 @@ class SecretBox:
         """
         Remove the provider from the internal list of providers, if it exists
         Decreases the internal reconstruction thresholds by 1
+        (Assumes that (n-k) should stay constant, which makes sense in the context of the working assumption
+        that k=n-1)
         """
         providers = self.file_manager.providers
         if provider not in providers:
