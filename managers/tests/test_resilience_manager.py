@@ -1,11 +1,19 @@
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
+from managers.CredentialManager import CredentialManager
 from providers.TestProvider import TestProvider, TestProviderState
 from providers.BaseProvider import ProviderStatus
 import pytest
 
 
-providers = [TestProvider("tmp/" + str(i)) for i in xrange(5)]
+cm = CredentialManager()
+cm.load()
+
+providers = [TestProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
+
+def teardown_function(function):
+    cm.clear_user_credentials()
 
 
 def setup_function(function):

@@ -9,16 +9,29 @@ DIRECTORY_MODE = 0o700  # RW only for current user
 
 
 class LocalFilesystemProvider(BaseProvider):
-    def __init__(self, provider_path=""):
+    @staticmethod
+    def load_cached_providers(credential_manager):
+        credentials = credential_manager.get_user_credentials(__name__)
+        providers = []
+        failed_paths = []
+        for provider_path in credentials.keys():
+            try:
+                providers.append(LocalFilesystemProvider(credential_manager, provider_path))
+            except:
+                failed_paths.append(provider_path)
+        return providers, failed_paths
+
+    def __init__(self, credential_manager, provider_path=""):
         """
         Initialize a non-networked provider backed by the local filesystem.
 
         Args:
+            credential_manager, a credential_manager to store user credentials
             provider_path: an optional string holding the relative or
                 absolute base path for the backing directory on the filesystem.
                 Defaults to the current directory.
         """
-        super(LocalFilesystemProvider, self).__init__()
+        super(LocalFilesystemProvider, self).__init__(credential_manager)
         self.ROOT_DIR = APP_NAME
         self.provider_path = provider_path
         self._connect()
@@ -33,6 +46,7 @@ class LocalFilesystemProvider(BaseProvider):
         except (IOError, OSError) as error:
             if error.errno is not errno.EEXIST:
                 raise exceptions.ConnectionFailure(self)
+        self.credential_manager.set_user_credentials(__name__, self.provider_path, None)
 
     def get(self, filename):
         translated_filepath = self._get_translated_filepath(filename)
@@ -64,3 +78,7 @@ class LocalFilesystemProvider(BaseProvider):
             os.makedirs(translated_root_dir, DIRECTORY_MODE)
         except (IOError, OSError):
             raise exceptions.ProviderOperationFailure(self)
+
+    @property
+    def expose_to_client(self):
+        return True

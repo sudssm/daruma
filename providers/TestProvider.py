@@ -11,8 +11,8 @@ class TestProviderState:
 
 
 class TestProvider(LocalFilesystemProvider):
-    def __init__(self, provider_path=""):
-        super(TestProvider, self).__init__(provider_path)
+    def __init__(self, credential_manager, provider_path=""):
+        super(TestProvider, self).__init__(credential_manager, provider_path)
         self.state = TestProviderState.ACTIVE
         self.state_timer = 0
 

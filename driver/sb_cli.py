@@ -18,7 +18,7 @@ from custom_exceptions import exceptions
 from providers.TestProvider import TestProvider, TestProviderState
 from providers.DropboxProvider import DropboxProvider
 from providers.BaseProvider import ProviderStatus
-from providers.CredentialManager import CredentialManager
+from managers.CredentialManager import CredentialManager
 from contextlib import contextmanager
 import sys
 import colorama

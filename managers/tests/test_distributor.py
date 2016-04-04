@@ -1,10 +1,18 @@
 from managers.Distributor import FileDistributor
+from managers.CredentialManager import CredentialManager
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
 import pytest
 
-providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
+cm = CredentialManager()
+cm.load()
+
+providers = [LocalFilesystemProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
+
+def teardown_function(function):
+    cm.clear_user_credentials()
 
 
 def setup_function(function):
