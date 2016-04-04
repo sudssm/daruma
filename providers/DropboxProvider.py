@@ -100,7 +100,7 @@ class DropboxProvider(BaseProvider):
 
     def get(self, filename):
         with self.exception_handler():
-            with client.get_file(filename) as f:
+            with self.client.get_file(filename) as f:
                 return f.read()
 
     def put(self, filename, data):
