@@ -20,9 +20,10 @@ class BaseProvider(object):
     ROOT_DIR = "secretbox"
 
     def __init__(self):
-        # this function will not be overridden
-        # but rather called by other constructors that take parameters
-
+        """
+        Set up the provider
+        To be called by all implementing classes
+        """
         # metadata for diagnosis
         # TODO maybe factor this out into a provider manager?
         # TODO maybe get this score from a cached file if available?
@@ -35,28 +36,39 @@ class BaseProvider(object):
         # TODO
         self.recomend_removal = False
 
-        self.connect()
-
-    # can throw ConnectionFailure, AuthFailure
-    def connect(self):
-        # connect to the cloud provider and make sure it is alive
-        # throw an exception if it isn't
-        pass
-
-    # the rest of these should only throw ProviderOperationFailure
     def get(self, filename):
-        pass
+        """
+        Gets a file from the provider
+        Args: filename, the file to retrieve
+        Raises: ProviderOperationFailure if unable to retrieve file
+        """
+        raise NotImplementedError
 
     def put(self, filename, data):
-        pass
+        """
+        Puts a file on the provider
+        Args: filename, the file to put
+              data, the content of the file
+        Raises: ProviderOperationFailure if unable to put file
+        """
+        raise NotImplementedError
 
     def delete(self, filename):
-        pass
+        """
+        Deletes a file from the provider
+        Args: filename, the file to delete
+        Raises: ProviderOperationFailure if unable to delete file
+        """
+        raise NotImplementedError
 
     def wipe(self):
         """
         Delete all files on the provider
+        Raises ProviderOperationFailure if unable to wipe
         """
+        raise NotImplementedError
+
+    # TODO ls?
 
     def log_error(self, exception):
         """

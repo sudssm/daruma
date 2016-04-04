@@ -18,13 +18,11 @@ from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from providers.DropboxProvider import DropboxProvider
-from providers.ProviderManager import ProviderManager
 from providers.CredentialManager import CredentialManager
 import sys
 
-cm = CredentialManager()
-cm.load()
-pm = ProviderManager(cm)
+credential_manager = CredentialManager()
+credential_manager.load()
 
 try:
     cmd = sys.argv[1]
@@ -45,14 +43,18 @@ except:
 
 providers = [LocalFilesystemProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
 
-# attempt to load an authenticated dropbox provider
-dropbox_provider = pm.load_dropbox_provider()
-if dropbox_provider is None:
+# attempt to load authenticated dropbox providers
+dropbox_providers = DropboxProvider.load(credential_manager)
+if len(dropbox_providers) == 0:
     # start a dropbox provider
-    print "Visit", pm.start_dropbox_connection(), "to sign in to Dropbox"
+    dropbox_provider = DropboxProvider(credential_manager)
+    print "Visit", dropbox_provider.start_connection(), "to sign in to Dropbox"
     localhost_url = raw_input("Enter resulting url (starts with localhost): ")
-    dropbox_provider = pm.finish_dropbox_connection(localhost_url)
-providers.append(dropbox_provider)
+    dropbox_provider.finish_connection(localhost_url)
+    providers.append(dropbox_provider)
+else:
+    print "Loaded Dropbox user ids:", [dbp.user_id for dbp in dropbox_providers]
+    providers += dropbox_providers
 
 if cmd == "init":
     SB = SecretBox.provision(providers, k_key, k_file)
