@@ -5,6 +5,7 @@ from tools.utils import APP_NAME
 from appdirs import user_config_dir
 from collections import defaultdict
 from pkg_resources import resource_stream
+from copy import deepcopy
 
 
 class CredentialManager:
@@ -75,7 +76,7 @@ class CredentialManager:
             The credentials for the specified provider, or [] if unavailable
             credentials is a dictionary of provider_identifier to credential values that have been stored in this manager
         """
-        return self.user_creds[provider_class]
+        return deepcopy(self.user_creds[provider_class])
 
     def get_app_credentials(self, provider_class):
         """
