@@ -94,7 +94,7 @@ class BootstrapManager:
 
         # we protect against (k-1) providers failing
         # so, a group of defectors larger than k are outside threat model
-        # just ensure that the largest group is size larger than k
+        # just ensure that the largest group is size at least k
         if winning_vote is None or largest_group_size < threshold:
             raise exceptions.FatalOperationFailure(failures)
 
@@ -183,9 +183,11 @@ class BootstrapManager:
             # we are initializing the system (we haven't loaded a bootstrap before)
             self.n = len(self.providers)
 
+        # TODO if self.n > len(self.providers), raise because we are in readonly?
+
         string = str(bootstrap)
 
-        provider_ids = [generate_random_name() for provider in self.providers]
+        provider_ids = xrange(len(self.providers))
 
         # TODO pass in provider_ids to robust when RSS done
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
@@ -195,7 +197,7 @@ class BootstrapManager:
         failures = []
         for provider, provider_id, share in zip(self.providers, provider_ids, shares):
             try:
-                bootstrap_plaintext = ",".join([str(self.bootstrap_reconstruction_threshold), str(self.n), provider_id])
+                bootstrap_plaintext = ",".join(map(str, [self.bootstrap_reconstruction_threshold, self.n, provider_id]))
                 provider.put(self.BOOTSTRAP_PLAINTEXT_FILE_NAME, bootstrap_plaintext)
                 provider.put(self.BOOTSTRAP_FILE_NAME, share)
             except exceptions.ProviderFailure as e:

@@ -74,7 +74,7 @@ class FileManager:
                 errors.append(e)
             old_files.append(old_codename)
 
-            codename = generate_filename()
+            codename = generate_random_name()
             key = new_distributor.put(codename, data)
             # TODO this changes the manifest without being sure that distributor changes will work
             # change this when implementing manifest caching
