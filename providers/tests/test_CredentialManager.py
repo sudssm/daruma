@@ -28,7 +28,7 @@ def test_get_not_exists():
     cm.load()
     cm.clear_user_credentials("db")
     assert cm.get_app_credentials("foo") is None
-    assert cm.get_user_credentials("db") == []
+    assert cm.get_user_credentials("db") == {}
 
 
 def test_roundtrip_user():
@@ -40,16 +40,16 @@ def test_roundtrip_user():
     cm.set_user_credentials("db", "bar", bar_creds)
 
     cm.load()
-    assert sorted(cm.get_user_credentials("db")) == sorted([foo_creds, bar_creds])
+    assert cm.get_user_credentials("db") == {"foo": foo_creds, "bar": bar_creds}
 
     cm.clear_user_credentials("db", "foo")
     cm.load()
-    assert cm.get_user_credentials("db") == [bar_creds]
+    assert cm.get_user_credentials("db") == {"bar": bar_creds}
 
     cm.clear_user_credentials("db", "bar")
 
     cm.load()
-    assert cm.get_user_credentials("db") == []
+    assert cm.get_user_credentials("db") == {}
 
 
 def test_clear_entire_provider():
@@ -60,7 +60,7 @@ def test_clear_entire_provider():
     cm.clear_user_credentials("db")
 
     cm.load()
-    assert cm.get_user_credentials("db") == []
+    assert cm.get_user_credentials("db") == {}
 
 
 def test_get_app_credentials():

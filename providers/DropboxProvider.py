@@ -9,21 +9,25 @@ from providers.CredentialManager import CredentialManager
 
 class DropboxProvider(BaseProvider):
     @staticmethod
-    def load(credential_manager):
+    def load_cached_providers(credential_manager):
         """
         Attempts to load all DropboxProviders that have user credential stored
-        Returns a list of valid DropboxProviders
+        Returns:
+            (db_providers, failed_emails)
+            db_providers: a list of functional DropboxProviders
+            failed_emails: a list of dropbox accounts that failed to load
         """
         credentials = credential_manager.get_user_credentials(DropboxProvider.__module__)
         db_providers = []
-        for auth_token in credentials:
+        failed_emails = []
+        for email, auth_token in credentials.items():
             db_provider = DropboxProvider(credential_manager)
             try:
                 db_provider._connect(auth_token)
                 db_providers.append(db_provider)
             except:
-                continue
-        return db_providers
+                failed_emails.append(email)
+        return db_providers, failed_emails
 
     def __init__(self, credential_manager):
         """
@@ -95,8 +99,8 @@ class DropboxProvider(BaseProvider):
     def _connect(self, auth_token):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
-            self.user_id = self.client.account_info()['uid']
-        self.credential_manager.set_user_credentials(DropboxProvider.__module__, self.user_id, auth_token)
+            self.email = self.client.account_info()['email']
+        self.credential_manager.set_user_credentials(DropboxProvider.__module__, self.email, auth_token)
 
     def get(self, filename):
         with self.exception_handler():

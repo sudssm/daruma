@@ -73,9 +73,9 @@ class CredentialManager:
             provider_class: a string representing the provider's class
         Returns:
             The credentials for the specified provider, or [] if unavailable
-            credentials is a list of credential values that have been stored in this manager
+            credentials is a dictionary of provider_identifier to credential values that have been stored in this manager
         """
-        return self.user_creds[provider_class].values()
+        return self.user_creds[provider_class]
 
     def get_app_credentials(self, provider_class):
         """

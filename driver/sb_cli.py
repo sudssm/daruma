@@ -55,7 +55,11 @@ except:
 
 providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
 # attempt to load authenticated dropbox providers
-dropbox_providers = DropboxProvider.load(credential_manager)
+dropbox_providers, failed_emails = DropboxProvider.load_cached_providers(credential_manager)
+
+if len(failed_emails) > 0:
+    print "Failed to load DropboxProviders:", failed_emails
+
 if len(dropbox_providers) == 0:
     # start a dropbox provider
     dropbox_provider = DropboxProvider(credential_manager)
@@ -64,7 +68,7 @@ if len(dropbox_providers) == 0:
     dropbox_provider.finish_connection(localhost_url)
     providers.append(dropbox_provider)
 else:
-    print "Loaded Dropbox user ids:", [dbp.user_id for dbp in dropbox_providers]
+    print "Loaded Dropbox accounts:", [dbp.email for dbp in dropbox_providers]
     providers += dropbox_providers
 
 if cmd == "init":
