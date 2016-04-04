@@ -16,7 +16,9 @@ import traceback
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
 from providers.TestProvider import TestProvider, TestProviderState
+from providers.DropboxProvider import DropboxProvider
 from providers.BaseProvider import ProviderStatus
+from providers.CredentialManager import CredentialManager
 from contextlib import contextmanager
 import sys
 import colorama
@@ -35,7 +37,10 @@ def exception_handler():
     except Exception as e:
         print traceback.format_exc()
 
+credential_manager = CredentialManager()
+credential_manager.load()
 colorama.init()
+
 try:
     cmd = sys.argv[1]
     n = int(sys.argv[2])
@@ -49,6 +54,23 @@ except:
 
 
 providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
+# attempt to load authenticated dropbox providers
+dropbox_providers, failed_emails = DropboxProvider.load_cached_providers(credential_manager)
+
+if len(failed_emails) > 0:
+    print "Failed to load DropboxProviders:", failed_emails
+
+if len(dropbox_providers) == 0:
+    # start a dropbox provider
+    dropbox_provider = DropboxProvider(credential_manager)
+    print "Visit", dropbox_provider.start_connection(), "to sign in to Dropbox"
+    localhost_url = raw_input("Enter resulting url (starts with localhost): ")
+    dropbox_provider.finish_connection(localhost_url)
+    providers.append(dropbox_provider)
+else:
+    print "Loaded Dropbox accounts:", [dbp.email for dbp in dropbox_providers]
+    providers += dropbox_providers
+
 if cmd == "init":
     SB = SecretBox.provision(providers, n-1, n-1)
 else:

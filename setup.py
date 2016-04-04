@@ -12,7 +12,9 @@ setup(
         "requests==2.9.0",
         "Flask==0.10.1",
         "bson==0.4.2",
-        "colorama==0.2.5"
+        "colorama==0.2.5",
+        "dropbox==4.0",
+        "appdirs==1.4.0"
     ],
     dependency_links=[
         "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@sss#egg=robustsecretsharing-0.1"

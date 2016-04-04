@@ -1,6 +1,7 @@
 import errno
 import os
 import shutil
+from tools.utils import APP_NAME
 from custom_exceptions import exceptions
 from providers.BaseProvider import BaseProvider
 
@@ -17,13 +18,15 @@ class LocalFilesystemProvider(BaseProvider):
                 absolute base path for the backing directory on the filesystem.
                 Defaults to the current directory.
         """
-        self.provider_path = provider_path
         super(LocalFilesystemProvider, self).__init__()
+        self.ROOT_DIR = APP_NAME
+        self.provider_path = provider_path
+        self._connect()
 
     def _get_translated_filepath(self, relative_filename):
         return os.path.join(self.provider_path, self.ROOT_DIR, relative_filename)
 
-    def connect(self):
+    def _connect(self):
         try:
             translated_root_dir = self._get_translated_filepath("")
             os.makedirs(translated_root_dir, DIRECTORY_MODE)

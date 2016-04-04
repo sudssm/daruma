@@ -12,9 +12,9 @@ class TestProviderState:
 
 class TestProvider(LocalFilesystemProvider):
     def __init__(self, provider_path=""):
+        super(TestProvider, self).__init__(provider_path)
         self.state = TestProviderState.ACTIVE
         self.state_timer = 0
-        super(TestProvider, self).__init__(provider_path)
 
     def set_state(self, state, requests=-1):
         """
