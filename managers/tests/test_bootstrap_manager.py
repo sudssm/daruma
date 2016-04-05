@@ -159,7 +159,7 @@ def test_corrupt_k_but_not_fail():
     assert BM.bootstrap_reconstruction_threshold == 4
 
 
-def test_invalid_id():
+def test_impossible_id():
     BM = BootstrapManager(providers, 3)
     BM.distribute_bootstrap(bootstrap)
 
@@ -171,3 +171,31 @@ def test_invalid_id():
     assert len(excinfo.value.failures) == 1
     assert excinfo.value.failures[0].provider == providers[0]
     assert BM.bootstrap_reconstruction_threshold == 3
+
+
+def test_invalid_id():
+    # TODO note that this algo doesn't catch providers that _just_ changed its name to someone else's
+    BM = BootstrapManager(providers, 3)
+    BM.distribute_bootstrap(bootstrap)
+
+    modify_bootstrap_plaintext(providers[0], new_id=3)
+
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        BM.recover_bootstrap()
+    assert excinfo.value.result == bootstrap
+    assert len(excinfo.value.failures) == 1
+    assert excinfo.value.failures[0].provider == providers[0]
+    assert BM.bootstrap_reconstruction_threshold == 3
+
+
+def test_corrupt_bootstrap():
+    BM = BootstrapManager(providers, 3)
+    BM.distribute_bootstrap(bootstrap)
+
+    providers[0].put(BootstrapManager.BOOTSTRAP_FILE_NAME, "foo")
+
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        BM.recover_bootstrap()
+    assert excinfo.value.result == bootstrap
+    assert len(excinfo.value.failures) == 1
+    assert excinfo.value.failures[0].provider == providers[0]
