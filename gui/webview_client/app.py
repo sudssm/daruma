@@ -59,11 +59,12 @@ class MainAppMenu(wx.TaskBarIcon):
         """
         menu = wx.Menu()
 
-        setup_item = menu.Append(wx.ID_ANY, "Continue setup")
-        menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup"), setup_item)
-
-        providers_item = menu.Append(wx.ID_ANY, "Providers")
-        menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers"), providers_item)
+        if self.setup_complete:
+            providers_item = menu.Append(wx.ID_ANY, "Providers")
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers"), providers_item)
+        else:
+            setup_item = menu.Append(wx.ID_ANY, "Continue setup")
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup"), setup_item)
 
         menu.AppendSeparator()
 
@@ -103,25 +104,26 @@ class MainAppMenu(wx.TaskBarIcon):
 
 
 class SBApp(wx.App):
-    def __init__(self, host):
+    def __init__(self, host, setup_complete=False):
         """
+        To begin using the app, call this object's MainLoop() method.
+
         Args:
             host: The (hostname, port) tuple for the UI server.
+            setup_complete: Whether the menu should expose the provider
+                dashboard or should instead prompt the user to finish setup.
+                Defaults to False.
         """
         self.host = host
+        self.setup_complete = setup_complete
         super(SBApp, self).__init__(redirect=False)
 
     def OnInit(self):
+        """
+        A standard wxPython method.  Do not call directly.
+        """
         frame = wx.Frame(parent=None)
         self.SetTopWindow(frame)
-        MainAppMenu(frame, self.host)
+        menu = MainAppMenu(frame, self.host)
+        menu.setup_complete = self.setup_complete
         return True
-
-
-def run_app(host):
-    """
-    Args:
-        host: The (hostname, port) tuple for the UI server.
-    """
-    app = SBApp(host)
-    app.MainLoop()

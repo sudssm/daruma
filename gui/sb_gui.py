@@ -1,7 +1,7 @@
 import sys
 import threading
 from gui.webview_server.server import start_ui_server, WEBVIEW_SERVER_HOST, WEBVIEW_SERVER_PORT
-from gui.webview_client.app import run_app
+from gui.webview_client.app import SBApp
 
 
 def platform_specific_setup():
@@ -26,4 +26,5 @@ if __name__ == "__main__":
     ui_server_thread.start()
 
     # Start main UI
-    run_app((WEBVIEW_SERVER_HOST, WEBVIEW_SERVER_PORT))
+    app = SBApp((WEBVIEW_SERVER_HOST, WEBVIEW_SERVER_PORT), setup_complete=True)
+    app.MainLoop()
