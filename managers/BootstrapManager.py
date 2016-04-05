@@ -48,9 +48,9 @@ class BootstrapManager:
 
     def _download_and_vote(self):
         """
-        Recovers n, threshold and shares from providers if there is a consensus
+        Recovers n, bootstrap threshold and shares from providers if there is a consensus
         Returns:
-            threshold, the voted threshold
+            threshold, the voted bootstrap threshold
             n, the voted n
             provider_id_map, a map from id to list of providers with that id
             shares_map, a map from provider to its share
@@ -72,7 +72,7 @@ class BootstrapManager:
 
                 # track provider votes for bootstrap threshold and n values
                 vote_map[(int(threshold_vote), int(n_vote))].append(provider)
-                provider_id_map[provider_id].append(provider)
+                provider_id_map[int(provider_id)].append(provider)
 
                 shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
             except exceptions.ProviderFailure as e:
@@ -103,6 +103,13 @@ class BootstrapManager:
             if vote != winning_vote:
                 failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
 
+        # add all providers with id larger than n to failures
+        for provider_id, providers in provider_id_map.items():
+            print provider_id, n, providers
+            print type(provider_id), type(n)
+            if provider_id >= n:
+                failures = failures + [exceptions.InvalidShareFailure(provider) for provider in providers]
+
         # ensure that we have at least threshold shares
         if len(shares_map.values()) < threshold:
             raise exceptions.FatalOperationFailure(failures)
@@ -120,13 +127,13 @@ class BootstrapManager:
             failures, a list of exceptions from failing providers
         Returns the recovered secret, and a list of exceptions from bad providers
         """
-        # build a list of lists of shares with same id
+        # build a list of lists of (id, share) such that all shares with the same id are in the same list
         shares_lists = [[(provider_id, shares_map[provider]) for provider in providers if provider in shares_map]
                         for (provider_id, providers) in provider_id_map.items()]
         # select one share for each provider_id; build all such selections
         share_sets = product(*shares_lists)
 
-        # only one of share_sets will work
+        # find the first of share_sets that work
         for share_set in share_sets:
             """
             to be filled in during integration

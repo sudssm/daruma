@@ -84,9 +84,12 @@ def test_corrupt_share():
         BM.recover_bootstrap()
 
 
-def modify_bootstrap_k(provider, new_k):
-    _, n, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
-    string = ",".join([str(new_k), n, provider_id])
+def modify_bootstrap_plaintext(provider, new_k=None, new_n=None, new_id=None):
+    k, n, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
+    new_k = k if new_k is None else new_k
+    new_n = n if new_n is None else new_n
+    new_id = provider_id if new_id is None else new_id
+    string = ",".join(map(str, [new_k, new_n, new_id]))
     provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, string)
 
 
@@ -96,7 +99,7 @@ def test_corrupt_k_recover():
     BM.distribute_bootstrap(bootstrap)
 
     for provider in providers[0:2]:
-        modify_bootstrap_k(provider, 2)
+        modify_bootstrap_plaintext(provider, new_k=2)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
@@ -111,10 +114,10 @@ def test_corrupt_k_2_recover():
     BM.distribute_bootstrap(bootstrap)
 
     for provider in providers[0:2]:
-        modify_bootstrap_k(provider, 4)
+        modify_bootstrap_plaintext(provider, new_k=4)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
-            BM.recover_bootstrap()
+        BM.recover_bootstrap()
     assert excinfo.value.result == bootstrap
     assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
     assert BM.bootstrap_reconstruction_threshold == threshold
@@ -126,7 +129,7 @@ def test_corrupt_k_fail():
     BM.distribute_bootstrap(bootstrap)
 
     for provider in providers[0:3]:
-            modify_bootstrap_k(provider, 4)
+        modify_bootstrap_plaintext(provider, new_k=4)
 
     with pytest.raises(exceptions.FatalOperationFailure):
         BM.recover_bootstrap()
@@ -138,11 +141,25 @@ def test_corrupt_k_but_not_fail():
     BM.distribute_bootstrap(bootstrap)
 
     for provider in providers[0:4]:
-        modify_bootstrap_k(provider, 4)
+        modify_bootstrap_plaintext(provider, new_k=4)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
-            BM.recover_bootstrap()
+        BM.recover_bootstrap()
     assert excinfo.value.result == bootstrap
     assert len(excinfo.value.failures) == 1
     assert excinfo.value.failures[0].provider == providers[4]
     assert BM.bootstrap_reconstruction_threshold == 4
+
+
+def test_invalid_id():
+    BM = BootstrapManager(providers, 3)
+    BM.distribute_bootstrap(bootstrap)
+
+    modify_bootstrap_plaintext(providers[0], new_id=5)
+
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        BM.recover_bootstrap()
+    assert excinfo.value.result == bootstrap
+    assert len(excinfo.value.failures) == 1
+    assert excinfo.value.failures[0].provider == providers[0]
+    assert BM.bootstrap_reconstruction_threshold == 3
