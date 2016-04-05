@@ -4,7 +4,6 @@ from urlparse import urlparse, parse_qs
 from contextlib import contextmanager
 from custom_exceptions import exceptions
 from providers.BaseProvider import BaseProvider
-from providers.CredentialManager import CredentialManager
 
 
 class DropboxProvider(BaseProvider):
