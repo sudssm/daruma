@@ -110,9 +110,8 @@ class SBApp(wx.App):
 
         Args:
             host: The (hostname, port) tuple for the UI server.
-            setup_complete: Whether the menu should expose the provider
-                dashboard or should instead prompt the user to finish setup.
-                Defaults to False.
+            setup_complete: See mark_setup_complete().  Defaults to False in
+                this method.
         """
         self.host = host
         self.setup_complete = setup_complete
@@ -124,6 +123,13 @@ class SBApp(wx.App):
         """
         frame = wx.Frame(parent=None)
         self.SetTopWindow(frame)
-        menu = MainAppMenu(frame, self.host)
-        menu.setup_complete = self.setup_complete
+        self.menu = MainAppMenu(frame, self.host)
+        self.menu.setup_complete = self.setup_complete
         return True
+
+    def mark_setup_complete(self, is_complete=True):
+        """
+        Whether the menu should expose the provider dashboard or should instead
+        prompt the user to finish setup.  Defaults to True.
+        """
+        self.menu.setup_complete = is_complete
