@@ -30,9 +30,7 @@ body {
 }
 
 #added-providers-area {
-	margin-top: 8%;
-	display: inline-block;
-    text-align: initial;
+	margin-top: 15%;
 }
 
 #added-providers-area > h2 {
@@ -41,7 +39,9 @@ body {
 
 #added-providers-area > ul {
 	padding: 0 10px;
+	display: inline-block;
     list-style-type: none;
+	text-align: initial;
 }
 
 .added-provider-name {
