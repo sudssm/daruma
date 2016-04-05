@@ -1,6 +1,6 @@
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 from managers.BootstrapManager import Bootstrap
 from providers.BaseProvider import ProviderStatus
 
@@ -116,7 +116,7 @@ class ResilienceManager:
             return
 
         master_key = generate_key()
-        manifest_name = generate_filename()
+        manifest_name = generate_random_name()
         bootstrap = Bootstrap(master_key, manifest_name, self.file_manager.file_reconstruction_threshold)
 
         try:

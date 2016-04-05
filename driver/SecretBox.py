@@ -8,7 +8,7 @@ from managers.BootstrapManager import BootstrapManager, Bootstrap
 from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 
 
 class SecretBox:
@@ -42,7 +42,7 @@ class SecretBox:
             provider.wipe()
 
         master_key = generate_key()
-        manifest_name = generate_filename()
+        manifest_name = generate_random_name()
         bootstrap = Bootstrap(master_key, manifest_name, file_reconstruction_threshold)
 
         # the bootstrap manager uses SSSS

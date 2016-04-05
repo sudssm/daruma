@@ -11,3 +11,5 @@ See instructions in `driver/sb_ui.py`
 
 ## Testing
 `py.test` will automatically run all available test cases.
+
+Note that on OSX, a system message may pop up saying "Python quit unexpectedly".  As long as the tests run to completion, this is expected and an indication of successful behavior.

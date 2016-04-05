@@ -3,7 +3,7 @@ from managers.CredentialManager import CredentialManager
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 import os
 import pytest
 
@@ -13,7 +13,7 @@ cm.load()
 providers = [LocalFilesystemProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
 
 master_key = generate_key()
-manifest_name = generate_filename()
+manifest_name = generate_random_name()
 
 
 def teardown_function(function):
@@ -136,7 +136,7 @@ def test_wrong_manifest_name():
     FM.load_manifest()
 
     FileManager(providers, 3, master_key, manifest_name, setup=True)
-    FM = FileManager(providers, 3, master_key, generate_filename())
+    FM = FileManager(providers, 3, master_key, generate_random_name())
     with pytest.raises(exceptions.FatalOperationFailure):
         FM.load_manifest()
 
