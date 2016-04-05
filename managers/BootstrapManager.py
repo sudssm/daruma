@@ -105,8 +105,6 @@ class BootstrapManager:
 
         # add all providers with id larger than n to failures
         for provider_id, providers in provider_id_map.items():
-            print provider_id, n, providers
-            print type(provider_id), type(n)
             if provider_id >= n:
                 failures = failures + [exceptions.InvalidShareFailure(provider) for provider in providers]
 
