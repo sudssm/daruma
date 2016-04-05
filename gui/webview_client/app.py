@@ -59,8 +59,11 @@ class MainAppMenu(wx.TaskBarIcon):
         """
         menu = wx.Menu()
 
+        setup_item = menu.Append(wx.ID_ANY, "Continue setup")
+        menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup"), setup_item)
+
         providers_item = menu.Append(wx.ID_ANY, "Providers")
-        menu.Bind(wx.EVT_MENU, self.on_open_providers, providers_item)
+        menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers"), providers_item)
 
         menu.AppendSeparator()
 
@@ -69,23 +72,26 @@ class MainAppMenu(wx.TaskBarIcon):
 
         return menu
 
-    def on_open_providers(self, event):
-        """
-        Opens the provider dashboard webview.
-        """
-        def on_close_providers(event):
-            provider_window = self.window_manager.windows.pop("providers")
-            provider_window.Destroy()
-        provider_window = self.window_manager.windows.get("providers")
-        if provider_window is None:
-            provider_window = webview.WebviewWindow(get_url_for_host(self.host, "providers"))
-            self.window_manager.windows["providers"] = provider_window
-            provider_window.Bind(wx.EVT_CLOSE, on_close_providers)
-            provider_window.CenterOnScreen()
-            provider_window.Show()
-        else:
-            # TODO: bring app to foreground
-            provider_window.Raise()
+    def generate_webview_handler(self, endpoint):
+        def on_open_webview(event):
+            """
+            Opens the specified webview.
+            """
+            def on_close_webview(event):
+                window = self.window_manager.windows.pop(endpoint)
+                window.Destroy()
+            window = self.window_manager.windows.get(endpoint)
+            if window is None:
+                print "getting url:", get_url_for_host(self.host, endpoint)
+                window = webview.WebviewWindow(get_url_for_host(self.host, endpoint))
+                self.window_manager.windows[endpoint] = window
+                window.Bind(wx.EVT_CLOSE, on_close_webview)
+                window.CenterOnScreen()
+                window.Show()
+            else:
+                # TODO: bring app to foreground
+                window.Raise()
+        return on_open_webview
 
     def on_exit(self, event):
         """

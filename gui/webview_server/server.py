@@ -5,6 +5,11 @@ WEBVIEW_SERVER_HOST = "localhost"
 WEBVIEW_SERVER_PORT = 28962  # This should be a free port
 
 
+@app.route('/setup')
+def show_setup_page():
+    return render_template('setup.html', providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
+
+
 @app.route('/providers')
 def show_provider_status():
     return render_template('providers.html', providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])

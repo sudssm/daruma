@@ -1,0 +1,82 @@
+body {
+	text-align: center;
+}
+
+#instructions {
+	width: 60%;
+	margin: auto;
+	text-align: initial;
+}
+
+.big-button {
+	margin: auto;
+	margin-top: 10%;
+	display: inline-block;
+	font-size: 24pt;
+	padding: 15px;
+	border-radius: 20px;
+}
+
+#add-provider-button {
+	background-color: #90ee90;
+}
+
+#add-provider-button:hover {
+	background-color: #65e765;
+}
+
+#done-adding-providers-button {
+	margin-left: 10px;
+}
+
+#added-providers-area {
+	margin-top: 8%;
+	display: inline-block;
+    text-align: initial;
+}
+
+#added-providers-area > h2 {
+	font-size: 12pt;
+}
+
+#added-providers-area > ul {
+	padding: 0 10px;
+    list-style-type: none;
+}
+
+.added-provider-name {
+	font-weight: bold;
+}
+
+.added-username {
+	color: #555555;
+}
+
+.tooltip {
+    position: relative;
+}
+
+.tooltip .tooltiptext {
+	font-size: 12pt;
+    width: 100%;
+    background-color: silver;
+    color: #7F7F7F;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    margin-left: -50%;
+    box-shadow: 1px 1px 2px #888888;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent silver transparent;
+}
