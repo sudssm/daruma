@@ -1,4 +1,4 @@
-from providers.CredentialManager import CredentialManager
+from managers.CredentialManager import CredentialManager
 import os
 import pytest
 

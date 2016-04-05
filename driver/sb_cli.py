@@ -18,7 +18,7 @@ from custom_exceptions import exceptions
 from providers.TestProvider import TestProvider, TestProviderState
 from providers.DropboxProvider import DropboxProvider
 from providers.BaseProvider import ProviderStatus
-from providers.CredentialManager import CredentialManager
+from managers.CredentialManager import CredentialManager
 from contextlib import contextmanager
 import sys
 import colorama
@@ -34,7 +34,7 @@ def exception_handler():
         print "Error: no such file or directory"
     except exceptions.FatalOperationFailure:
         print "Operation Failed! check status"
-    except Exception as e:
+    except:
         print traceback.format_exc()
 
 credential_manager = CredentialManager()
@@ -53,7 +53,7 @@ except:
     sys.exit()
 
 
-providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
+providers = [TestProvider(credential_manager, tmp_dir + "/" + str(i)) for i in xrange(n)]
 # attempt to load authenticated dropbox providers
 dropbox_providers, failed_emails = DropboxProvider.load_cached_providers(credential_manager)
 

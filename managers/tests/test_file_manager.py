@@ -1,14 +1,23 @@
-import os
 from managers.FileManager import FileManager
+from managers.CredentialManager import CredentialManager
 from custom_exceptions import exceptions
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from tools.encryption import generate_key
 from tools.utils import generate_random_name
+import os
 import pytest
 
-providers = [LocalFilesystemProvider("tmp/" + str(i)) for i in xrange(5)]
+cm = CredentialManager()
+cm.load()
+
+providers = [LocalFilesystemProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
 master_key = generate_key()
 manifest_name = generate_random_name()
+
+
+def teardown_function(function):
+    cm.clear_user_credentials()
 
 
 def setup_function(function):
