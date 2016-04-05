@@ -2,19 +2,25 @@ body {
 	text-align: center;
 }
 
+#app-logo {
+	height: 200px;
+	width: 200px;
+	margin-top: 20px;
+}
+
 .instructions {
-	width: 60%;
+	width: 85%;
 	margin: auto;
 	text-align: initial;
 }
 
 .big-button {
 	margin: auto;
-	margin-top: 10%;
+	margin-top: 5%;
 	display: inline-block;
-	font-size: 24pt;
-	padding: 15px;
-	border-radius: 20px;
+	font-size: 20pt;
+	padding: 10px;
+	border-radius: 15px;
 }
 
 #add-provider-button {
@@ -30,7 +36,7 @@ body {
 }
 
 #added-providers-area {
-	margin-top: 15%;
+	margin-top: 5%;
 }
 
 #added-providers-area > h2 {
@@ -39,6 +45,7 @@ body {
 
 #added-providers-area > ul {
 	padding: 0 10px;
+	margin: 0;
 	display: inline-block;
     list-style-type: none;
 	text-align: initial;
@@ -58,25 +65,25 @@ body {
 
 .tooltip .tooltiptext {
 	font-size: 12pt;
-    width: 100%;
+    width: 80%;
     background-color: silver;
     color: #7F7F7F;
     border-radius: 6px;
     padding: 5px 0;
     position: absolute;
-    top: 110%;
-    left: 50%;
-    margin-left: -50%;
+    left: 105%;
+    bottom: 0;
+    margin-top: -50%;
     box-shadow: 1px 1px 2px #888888;
 }
 
 .tooltip .tooltiptext::after {
     content: "";
     position: absolute;
-    bottom: 100%;
-    left: 50%;
+    top: 50%;
+    right: 100%;
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: transparent transparent silver transparent;
+    border-color: transparent silver transparent transparent;
 }

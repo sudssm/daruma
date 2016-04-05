@@ -1,8 +1,18 @@
-from flask import Flask, render_template
+import os
+from flask import Flask, render_template, send_file
+import pkg_resources
+import gui
+
 app = Flask(__name__)
 
 WEBVIEW_SERVER_HOST = "localhost"
 WEBVIEW_SERVER_PORT = 28962  # This should be a free port
+
+
+@app.route('/app_logo.png')
+def download_logo():
+    icon_path = os.path.join("icons", "large.png")
+    return send_file(pkg_resources.resource_filename(gui.__name__, icon_path))
 
 
 @app.route('/setup')

@@ -16,6 +16,8 @@
             {% include 'add_provider_modal.html' %}
         </div>
 
+        <img id="app-logo" src="app_logo.png">
+
         <h1>Welcome to Secretbox.</h1>
 
         <div id="instructions-no-config" class="instructions" style="display: none;">
@@ -35,13 +37,13 @@
         <div id="added-providers-area">
             <h2>Added Providers:</h2>
             <ul>
-            {% for provider in providers %}
+                {% for provider in providers %}
                 <li>
                     &#9989
                     <span class="added-provider-name">{{ provider }}</span>
                     <span class="added-username">user@gmail.com</span>
                 </li>
-            {% endfor %}
+                {% endfor %}
             </ul>
         </div>
     </body>
