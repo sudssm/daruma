@@ -6,6 +6,7 @@ from collections import defaultdict
 from custom_exceptions import exceptions
 from itertools import product
 import struct
+import zlib
 
 
 class Bootstrap:
@@ -74,11 +75,11 @@ class BootstrapManager:
                 vote_map[(int(threshold_vote), int(n_vote))].append(provider)
                 provider_id_map[provider_id].append(provider)
 
-                shares_map[provider] = provider.get(self.BOOTSTRAP_FILE_NAME)
+                shares_map[provider] = zlib.decompress(provider.get(self.BOOTSTRAP_FILE_NAME))
             except exceptions.ProviderFailure as e:
                 failures.append(e)
-            except ValueError:
-                # if the cast to int or unpacking failed
+            except (zlib.error, ValueError):
+                # if the cast to int, decompressing or unpacking failed
                 failures.append(exceptions.InvalidShareFailure(provider))
 
         # vote on threshold
@@ -229,6 +230,12 @@ class BootstrapManager:
 
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
         shares_map = shamir_secret_sharing.share(string, provider_ids, self.bootstrap_reconstruction_threshold)
+
+        try:
+            for key, share in shares_map.items():
+                shares_map[key] = zlib.compress(share)
+        except zlib.error:
+            raise exceptions.LibraryException
 
         # write shares to providers
         failures = []
