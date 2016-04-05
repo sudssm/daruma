@@ -105,8 +105,11 @@ class BootstrapManager:
 
         # add all providers with id larger than n to failures
         for provider_id, providers in provider_id_map.items():
-            if provider_id >= n:
-                failures = failures + [exceptions.InvalidShareFailure(provider) for provider in providers]
+            if provider_id >= n or provider_id < 0:
+                for provider in providers:
+                    failures.append(exceptions.InvalidShareFailure(provider))
+                    # remove the provider's share from shares_map
+                    del shares_map[provider]
 
         # ensure that we have at least threshold shares
         if len(shares_map.values()) < threshold:
@@ -128,6 +131,9 @@ class BootstrapManager:
         # build a list of lists of (id, share) such that all shares with the same id are in the same list
         shares_lists = [[(provider_id, shares_map[provider]) for provider in providers if provider in shares_map]
                         for (provider_id, providers) in provider_id_map.items()]
+
+        shares_lists = filter(lambda l: len(l) > 0, shares_lists)
+
         # select one share for each provider_id; build all such selections
         share_sets = product(*shares_lists)
 
