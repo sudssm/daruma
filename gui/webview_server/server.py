@@ -15,8 +15,11 @@ def show_provider_status():
     return render_template('providers.html', providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
 
 
-def start_ui_server():
+def start_ui_server(native_app):
     """
     Begins running the UI webserver.
+
+    Args:
+        native_app: A reference to the menubar app.
     """
     app.run(host=WEBVIEW_SERVER_HOST, port=WEBVIEW_SERVER_PORT)
