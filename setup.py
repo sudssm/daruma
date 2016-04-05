@@ -17,7 +17,7 @@ setup(
         "appdirs==1.4.0"
     ],
     dependency_links=[
-        "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@sss#egg=robustsecretsharing-0.1"
+        "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@rss#egg=robustsecretsharing-0.1"
     ],
     extras_require={
         "gui": [
