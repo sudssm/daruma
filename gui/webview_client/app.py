@@ -1,6 +1,7 @@
 import os
 import pkg_resources
 import wx
+import gui
 import gui.webview_client.webview as webview
 
 ICON_NAME = os.path.join("icons", "menubar.png")
@@ -46,7 +47,7 @@ class MainAppMenu(wx.TaskBarIcon):
         self.app_frame = app_frame
         self.host = host
 
-        icon_path = pkg_resources.resource_filename(__name__, ICON_NAME)
+        icon_path = pkg_resources.resource_filename(gui.__name__, ICON_NAME)
         icon = wx.IconFromBitmap(wx.Bitmap(icon_path))
         self.SetIcon(icon, ICON_HOVERTEXT)
 
