@@ -68,4 +68,4 @@ def test_get_app_credentials():
     cm = CredentialManager()
     # Assume that the packaging includes an app credential file with at least "Dropbox"
     cm.load()
-    assert cm.get_app_credentials(DropboxProvider.type()) is not None
+    assert cm.get_app_credentials(DropboxProvider.provider_name()) is not None

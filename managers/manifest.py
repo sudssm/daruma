@@ -216,6 +216,7 @@ class Manifest:
             data = bson.loads(string)
             parsed_root = _node_from_attributes(data['tree'])
             parsed_providers = data['providers']
+            parsed_providers = map(tuple, parsed_providers)
         except Exception:
             raise exceptions.ParseException
 
@@ -426,7 +427,7 @@ class Manifest:
         Updates the manifest provider list
         Args: A list of provider objects
         """
-        self.providers = [provider.uuid for provider in providers]
+        self.providers = map(lambda provider: provider.uuid, providers)
 
     def get_provider_strings(self):
-        return self.providers
+        return self.providers[:]

@@ -5,7 +5,7 @@ import requests
 
 class TestServerProvider(BaseProvider):
     @staticmethod
-    def type():
+    def provider_name():
         return "Demo Server"
 
     @staticmethod
@@ -54,7 +54,7 @@ class TestServerProvider(BaseProvider):
         self.credential_manager.set_user_credentials(__name__, self.host, None)
 
     @property
-    def id(self):
+    def uid(self):
         return self.host
 
     def get(self, filename):

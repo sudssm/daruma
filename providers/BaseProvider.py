@@ -112,14 +112,14 @@ class BaseProvider(object):
         return False
 
     @staticmethod
-    def type():
+    def provider_name():
         """
         Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
         """
         raise NotImplementedError
 
     @property
-    def id(self):
+    def uid(self):
         """
         Returns an identifier for this provider. Must be unique across all providers of this type.
         """
@@ -131,7 +131,7 @@ class BaseProvider(object):
         Returns a globally unique identifier for the provider.
         Of the form (provider type, provider id)
         """
-        return (self.type(), self.id)
+        return (self.provider_name(), self.uid)
 
     def __str__(self):
-        return "<" + self.type() + "@" + self.id + "-" + str(self.score) + ">"
+        return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"

@@ -8,12 +8,12 @@ from providers.BaseProvider import BaseProvider
 
 class DropboxProvider(BaseProvider):
     @staticmethod
-    def type():
+    def provider_name():
         return "Dropbox"
 
     @staticmethod
     def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(DropboxProvider.type())
+        credentials = credential_manager.get_user_credentials(DropboxProvider.provider_name())
         providers = []
         failed_ids = []
         for provider_id, auth_token in credentials.items():
@@ -65,7 +65,7 @@ class DropboxProvider(BaseProvider):
                 ProviderOperationFailure if there was a problem starting flow
         """
         try:
-            credentials = self.credential_manager.get_app_credentials(self.type())
+            credentials = self.credential_manager.get_app_credentials(self.provider_name())
             app_key, app_secret = credentials["app_key"], credentials["app_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -95,10 +95,10 @@ class DropboxProvider(BaseProvider):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
             self.email = self.client.account_info()['email']
-        self.credential_manager.set_user_credentials(self.type(), self.id, auth_token)
+        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, auth_token)
 
     @property
-    def id(self):
+    def uid(self):
         return self.email
 
     def get(self, filename):
