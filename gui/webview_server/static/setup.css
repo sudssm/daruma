@@ -2,7 +2,7 @@ body {
 	text-align: center;
 }
 
-#instructions {
+.instructions {
 	width: 60%;
 	margin: auto;
 	text-align: initial;

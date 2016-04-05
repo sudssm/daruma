@@ -18,9 +18,15 @@
 
         <h1>Welcome to Secretbox.</h1>
 
-        <div id="instructions">
+        <div id="instructions-no-config" class="instructions" style="display: none;">
             To get started from scratch, add at least 3 providers.<br><br>
             To load an existing installation, just add all the providers it used.  We'll automatically load everything as you left it.
+        </div>
+
+        <div id="instructions-existing-config" class="instructions">
+            We found an existing configuration on your providers but did not have enough of them to properly reconstruct.
+            <br><br>
+            Either add more providers that the previous installation used or click "Start Fresh" below to delete the installation and just use the logins you have now.
         </div>
 
         <button id="add-provider-button" class="big-button" type="button" onclick="onAddProviderButtonClick()">Add a Provider</button>
