@@ -8,18 +8,22 @@ from providers.BaseProvider import BaseProvider
 
 class DropboxProvider(BaseProvider):
     @staticmethod
+    def type():
+        return "Dropbox"
+
+    @staticmethod
     def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(__name__)
+        credentials = credential_manager.get_user_credentials(DropboxProvider.type())
         providers = []
-        failed_emails = []
-        for email, auth_token in credentials.items():
+        failed_ids = []
+        for provider_id, auth_token in credentials.items():
             db_provider = DropboxProvider(credential_manager)
             try:
                 db_provider._connect(auth_token)
                 providers.append(db_provider)
             except:
-                failed_emails.append(email)
-        return providers, failed_emails
+                failed_ids.append(provider_id)
+        return providers, failed_ids
 
     def __init__(self, credential_manager):
         """
@@ -61,7 +65,7 @@ class DropboxProvider(BaseProvider):
                 ProviderOperationFailure if there was a problem starting flow
         """
         try:
-            credentials = self.credential_manager.get_app_credentials(__name__)
+            credentials = self.credential_manager.get_app_credentials(self.type())
             app_key, app_secret = credentials["app_key"], credentials["app_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -91,7 +95,11 @@ class DropboxProvider(BaseProvider):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
             self.email = self.client.account_info()['email']
-        self.credential_manager.set_user_credentials(__name__, self.email, auth_token)
+        self.credential_manager.set_user_credentials(self.type(), self.id, auth_token)
+
+    @property
+    def id(self):
+        return self.email
 
     def get(self, filename):
         with self.exception_handler():

@@ -5,6 +5,10 @@ import requests
 
 class TestServerProvider(BaseProvider):
     @staticmethod
+    def type():
+        return "Demo Server"
+
+    @staticmethod
     def load_cached_providers(credential_manager):
         credentials = credential_manager.get_user_credentials(__name__)
         print credentials
@@ -48,6 +52,10 @@ class TestServerProvider(BaseProvider):
             raise exceptions.ProviderOperationFailure(self)
 
         self.credential_manager.set_user_credentials(__name__, self.host, None)
+
+    @property
+    def id(self):
+        return self.host
 
     def get(self, filename):
         try:

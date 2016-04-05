@@ -10,8 +10,12 @@ DIRECTORY_MODE = 0o700  # RW only for current user
 
 class LocalFilesystemProvider(BaseProvider):
     @staticmethod
+    def type():
+        return "Local"
+
+    @staticmethod
     def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(__name__)
+        credentials = credential_manager.get_user_credentials(LocalFilesystemProvider.type())
         providers = []
         failed_paths = []
         for provider_path in credentials.keys():
@@ -46,7 +50,11 @@ class LocalFilesystemProvider(BaseProvider):
         except (IOError, OSError) as error:
             if error.errno is not errno.EEXIST:
                 raise exceptions.ConnectionFailure(self)
-        self.credential_manager.set_user_credentials(__name__, self.provider_path, None)
+        self.credential_manager.set_user_credentials(self.type(), self.id, None)
+
+    @property
+    def id(self):
+        return self.provider_path
 
     def get(self, filename):
         translated_filepath = self._get_translated_filepath(filename)

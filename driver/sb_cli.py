@@ -34,6 +34,8 @@ def exception_handler():
         print "Error: no such file or directory"
     except exceptions.FatalOperationFailure:
         print "Operation Failed! check status"
+    except EOFError:
+        sys.exit()
     except:
         print traceback.format_exc()
 
@@ -68,7 +70,7 @@ if len(dropbox_providers) == 0:
     dropbox_provider.finish_connection(localhost_url)
     providers.append(dropbox_provider)
 else:
-    print "Loaded Dropbox accounts:", [dbp.email for dbp in dropbox_providers]
+    print "Loaded Dropbox accounts:", [dbp.id for dbp in dropbox_providers]
     providers += dropbox_providers
 
 if cmd == "init":
