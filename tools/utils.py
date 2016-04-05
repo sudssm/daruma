@@ -2,6 +2,7 @@ from multiprocessing import Process, Pipe
 from uuid import uuid4
 from custom_exceptions.exceptions import SandboxProcessFailure
 
+APP_NAME = "daruma"
 FILENAME_SIZE = 32
 
 

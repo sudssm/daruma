@@ -11,7 +11,7 @@ def test_wipe():
     FS.put("file2", "def")
     FS.wipe()
 
-    assert len(os.listdir("tmp/" + BaseProvider.ROOT_DIR)) == 0
+    assert len(os.listdir("tmp/" + FS.ROOT_DIR)) == 0
 
 
 def test_roundtrip():
