@@ -1,7 +1,3 @@
-# stub for a provider
-# interface that allows cloud and local providers
-
-
 class ProviderStatus:
     """
     Status codes to report to the UI
@@ -14,6 +10,9 @@ class ProviderStatus:
 
 
 class BaseProvider(object):
+    """
+    Stub for a provider
+    """
     RED_THRESHOLD = .1
     YELLOW_THRESHOLD = .95
 
@@ -111,3 +110,28 @@ class BaseProvider(object):
         Whether this provider should be exposed in user interfaces
         """
         return False
+
+    @staticmethod
+    def provider_name():
+        """
+        Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
+        """
+        raise NotImplementedError
+
+    @property
+    def uid(self):
+        """
+        Returns an identifier for this provider. Must be unique across all providers of this type.
+        """
+        raise NotImplementedError
+
+    @property
+    def uuid(self):
+        """
+        Returns a globally unique identifier for the provider.
+        Of the form (provider type, provider id)
+        """
+        return (self.provider_name(), self.uid)
+
+    def __str__(self):
+        return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"

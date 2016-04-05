@@ -1,4 +1,5 @@
 from managers.CredentialManager import CredentialManager
+from providers.DropboxProvider import DropboxProvider
 import os
 import pytest
 
@@ -65,6 +66,6 @@ def test_clear_entire_provider():
 
 def test_get_app_credentials():
     cm = CredentialManager()
-    # Assume that the packaging includes an app credential file with at least "providers.DropboxProvider"
+    # Assume that the packaging includes an app credential file with at least "Dropbox"
     cm.load()
-    assert cm.get_app_credentials("providers.DropboxProvider") is not None
+    assert cm.get_app_credentials(DropboxProvider.provider_name()) is not None

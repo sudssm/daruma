@@ -75,3 +75,7 @@ class TestProvider(LocalFilesystemProvider):
 
     def __str__(self):
         return "<TestProvider@" + self.provider_path + "-" + self.state + "-" + self.status + "-" + str(self.score) + ">"
+
+    @property
+    def expose_to_client(self):
+        return False

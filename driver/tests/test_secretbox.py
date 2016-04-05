@@ -141,3 +141,11 @@ def test_remove_provider():
     providers[0].wipe()
 
     assert SB.get("test") == "data"
+
+
+def test_not_enough_providers():
+    SecretBox.provision(providers, 3, 3)
+
+    # check that we can bootstrap
+    with pytest.raises(exceptions.FatalOperationFailure):
+        SecretBox.load(providers[0:2])
