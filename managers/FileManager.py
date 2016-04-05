@@ -3,7 +3,7 @@
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 # TODO cache the manifest intelligently
 
 
@@ -74,7 +74,7 @@ class FileManager:
                 errors.append(e)
             old_files.append(old_codename)
 
-            codename = generate_filename()
+            codename = generate_random_name()
             key = new_distributor.put(codename, data)
             # TODO this changes the manifest without being sure that distributor changes will work
             # change this when implementing manifest caching
@@ -142,7 +142,7 @@ class FileManager:
         """
         Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exception
         """
-        codename = generate_filename()
+        codename = generate_random_name()
         key = self.distributor.put(codename, data)
 
         old_node = self.manifest.update_file(name, codename, len(data), key)
