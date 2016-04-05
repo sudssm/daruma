@@ -214,7 +214,7 @@ class Manifest:
         """
         try:
             data = bson.loads(string)
-            parsed_root = _node_from_attributes(data['attributes'])
+            parsed_root = _node_from_attributes(data['tree'])
             parsed_providers = data['providers']
         except Exception:
             raise exceptions.ParseException

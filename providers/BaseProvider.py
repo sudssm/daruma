@@ -112,7 +112,6 @@ class BaseProvider(object):
         return False
 
     @staticmethod
-    @property
     def type():
         """
         Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
@@ -133,3 +132,6 @@ class BaseProvider(object):
         Of the form (provider type, provider id)
         """
         return (self.type(), self.id)
+
+    def __str__(self):
+        return "<" + self.type() + "@" + self.id + "-" + str(self.score) + ">"

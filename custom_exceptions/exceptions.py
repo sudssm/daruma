@@ -121,3 +121,6 @@ class FatalOperationFailure(Exception):
     """
     def __init__(self, failures):
         self.failures = failures
+
+    def __str__(self):
+        return str(map(str, self.failures))
