@@ -11,7 +11,6 @@ class TestServerProvider(BaseProvider):
     @staticmethod
     def load_cached_providers(credential_manager):
         credentials = credential_manager.get_user_credentials(__name__)
-        print credentials
         providers = []
         failed_hosts = []
         for host in credentials.keys():
