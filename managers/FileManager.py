@@ -9,15 +9,21 @@ from tools.utils import generate_random_name
 
 class FileManager:
     # set setup to True in order to create a new system
-    def __init__(self, providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
+    def __init__(self, providers, num_providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
+        """
+        Create a FileManager
+        Args:
+            providers: a list of providers to use
+            num_providers: the total number of providers that have been configured with this system before
+        """
         self.providers = providers
         self.file_reconstruction_threshold = file_reconstruction_threshold
         self.master_key = master_key
         self.manifest_name = manifest_name
-        self.distributor = FileDistributor(providers, file_reconstruction_threshold)
+        self.distributor = FileDistributor(providers, num_providers, file_reconstruction_threshold)
 
         if setup:
-            self.manifest = Manifest()
+            self.manifest = Manifest(self.providers)
             self.distribute_manifest()
         # else:
         # self.load_manifest()
@@ -36,6 +42,34 @@ class FileManager:
             # set manifest to recovered value and pass along failures
             self.manifest = Manifest.deserialize(e.result)
             raise exceptions.OperationFailure(e.failures, None)
+
+    def missing_providers(self):
+        """
+        Returns a list of unique identifier tuples for providers that are expected but missing
+        If the resulting list is nonempty, the system is in readonly mode
+        """
+        providers = set(map(lambda provider: provider.uuid, self.providers))
+        expected_providers = set(self.manifest.get_provider_strings())
+        return list(expected_providers - providers)
+
+    def add_missing_providers(self, missing_providers):
+        """
+        Add all missing provider to this file manager
+        Args:
+            missing_providers: a list of providers containing exactly those providers returned by missing_providers
+        Returns:
+            True if the provided missing_providers successfully completes the internal set of providers
+            False otherwise
+        """
+        if set(self.missing_providers()) != set(map(lambda provider: provider.uuid, missing_providers)):
+            return False
+        old_providers = self.providers
+
+        providers = old_providers + missing_providers
+        self.providers = providers
+        self.distributor.providers = providers[:]
+
+        return True
 
     def distribute_manifest(self):
         """
@@ -59,7 +93,9 @@ class FileManager:
         """
         errors = []
         old_files = []
-        new_distributor = FileDistributor(self.providers, self.file_reconstruction_threshold)
+
+        # we use num_providers = len(providers) here, because we want to reprovision with all current providers
+        new_distributor = FileDistributor(self.providers, len(self.providers), self.file_reconstruction_threshold)
 
         for file_node in self.manifest.generate_files_under(""):
             filename = file_node.name
@@ -82,6 +118,8 @@ class FileManager:
 
         old_distributor = self.distributor
         self.distributor = new_distributor
+
+        self.manifest.set_providers(self.providers)
         self.distribute_manifest()
 
         # TODO doing this step at the end means that we double in size

@@ -24,7 +24,7 @@ def test_get_nonexisting():
     for provider in providers:
         provider.wipe()
 
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     try:
         FD.get("test", "dummy")
         assert False
@@ -33,7 +33,7 @@ def test_get_nonexisting():
 
 
 def test_roundtrip():
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     key = FD.put("test", "data")
     key2 = FD.put("another", "data2")
     assert FD.get("test", key) == "data"
@@ -42,13 +42,13 @@ def test_roundtrip():
 
 def test_roundtrip_with_key():
     key = generate_key()
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     FD.put("test", "data", key)
     assert FD.get("test", key) == "data"
 
 
 def test_delete():
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     key = FD.put("test", "data")
     FD.delete("test")
     try:
@@ -59,14 +59,14 @@ def test_delete():
 
 
 def test_update():
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     key = FD.put("test", "data")
     key = FD.put("test", "other")
     assert FD.get("test", key) == "other"
 
 
 def test_corrupt_recover():
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     key = FD.put("test", "data")
     providers[0].wipe()
     providers[2].wipe()
@@ -79,7 +79,7 @@ def test_corrupt_recover():
 
 
 def test_corrupt_fail():
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     key = FD.put("test", "data")
     providers[0].wipe()
     providers[1].wipe()
@@ -98,7 +98,7 @@ def test_mutate_recover():
     for share, provider in zip(shares, providers):
         provider.put("test", share)
 
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         FD.get("test", key)
@@ -113,7 +113,7 @@ def test_mutate_small_k_recover():
     shares = ['\x00\x00\x00\x00\x16\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x01\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe5D`\xc7(\x90]Aq\x880\xb5\xdd\x1c\x0c2\x8a-\x7fZ\x1dp', '\x01\x00\x00\x00\x16\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x01\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00v $SAJ\xcc\x1c)\xbci\x08\x16Hj\x10 \xea\xb5%\xd8\xa1', '\x00\x00\x00\x00\x13\x00\xd0\x00\x00\x00\x00\x00,\x00\xe2\x00R\x00\x00\x00\x01\x00\x00\x00\xdd\x00\x00\x00\x00\x00\x00\x00\x87\x00\x00\x00\x00\x00\x00\x00[\x00\x00\x00\x00\x00\x00\x00\x00\x00(\x00\x00\x00\x06\x00\x00\x01\x96\x00^\x0c\x0b\x02\x01\x01\xa5\x00\xb2\x00A\x00\x10\x00\xa8\x00\x00\x00\xf9\x00\x1dP\xf8\xc10\x00=\xdc>)\x7f\xb7c\x00\xb3\x03', '\x03\x00\x00\x00\x16\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x01\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf2\xb8\x0f\x0fT\x07\xc5\x9cf\x9a\x81\xadr\x8b\xae\xcb\xc5Y9#\xdb^', '\x04\x00\x00\x00\x16\x00\x00\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x01\x00\xcc^\x0c\x0b\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc3\x8d\xe3\xff\xf14\x7f\xfa\xc1\xe0\x89\xdfK\xb5\xc0v\xd5\xb2\xeb\xa5\x9c\xc3']
     key = "%\xae\xbc\x15\t)\xb7\x19\x89\xe4^\xdd\xda>[J\xb1\xaag\x8f\x94\x9b\xe3\xad\xd8*{D\xf8.\xb4\xdf"
 
-    FD = FileDistributor(providers, 2)
+    FD = FileDistributor(providers, len(providers), 2)
     data, bad_shares = FD._recover(shares, key)
 
     assert data == "data"
@@ -127,7 +127,7 @@ def test_mutate_two_recover():
     for share, provider in zip(shares, providers):
         provider.put("test", share)
 
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         FD.get("test", key)
@@ -142,7 +142,7 @@ def test_mutate_fail():
     for share, provider in zip(shares, providers):
         provider.put("test", share)
 
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
 
     with pytest.raises(exceptions.FatalOperationFailure):
         FD.get("test", key)
@@ -150,14 +150,21 @@ def test_mutate_fail():
 
 def test_wrong_key():
     wrong_key = generate_key()
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     FD.put("test", "data")
     with pytest.raises(exceptions.FatalOperationFailure):
         FD.get("test", wrong_key)
 
 
 def test_multiple_sessions():
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
     key = FD.put("test", "data")
-    FD = FileDistributor(providers, 3)
+    FD = FileDistributor(providers, len(providers), 3)
+    assert FD.get("test", key) == "data"
+
+
+def test_missing_providers():
+    FD = FileDistributor(providers, len(providers), 3)
+    key = FD.put("test", "data")
+    FD = FileDistributor(providers[0:3], len(providers), 3)
     assert FD.get("test", key) == "data"

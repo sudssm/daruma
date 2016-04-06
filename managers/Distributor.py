@@ -11,10 +11,10 @@ class FileDistributor:
     If a different set of providers and threshold is needed, a new FileDistributor
     object should be constructed
     """
-    def __init__(self, providers, file_reconstruction_threshold):
+    def __init__(self, providers, num_providers, file_reconstruction_threshold):
         # make a copy of the provider list
         self.providers = providers[:]
-        self.num_providers = len(providers)
+        self.num_providers = num_providers
         self.file_reconstruction_threshold = file_reconstruction_threshold
 
     def put(self, filename, data, key=None):

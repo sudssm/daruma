@@ -26,14 +26,14 @@ def setup_function(function):
 
 
 def test_init():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     assert len(FM.ls("")) == 0
 
 
 def test_roundtrip():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -42,7 +42,7 @@ def test_roundtrip():
 
 
 def test_ls_file():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -50,7 +50,7 @@ def test_ls_file():
 
 
 def test_ls_subdirectory():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     target_location = os.path.join("dir", "test")
@@ -59,7 +59,7 @@ def test_ls_subdirectory():
 
 
 def test_get_nonexistent():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     with pytest.raises(exceptions.FileNotFound):
@@ -67,7 +67,7 @@ def test_get_nonexistent():
 
 
 def test_delete():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -77,7 +77,7 @@ def test_delete():
 
 
 def test_mk_dir():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.mk_dir("foo/bar")
@@ -86,7 +86,7 @@ def test_mk_dir():
 
 
 def test_nested_file():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("foo/bar/hi", "data")
@@ -97,7 +97,7 @@ def test_nested_file():
 
 
 def test_update():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -106,7 +106,7 @@ def test_update():
 
 
 def test_update_deletes_old_file():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -122,34 +122,34 @@ def test_update_deletes_old_file():
 
 
 def test_wrong_master_key():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
-    FileManager(providers, 3, master_key, manifest_name, setup=True)
-    FM = FileManager(providers, 3, generate_key(), manifest_name)
+    FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, generate_key(), manifest_name)
     with pytest.raises(exceptions.FatalOperationFailure):
         FM.load_manifest()
 
 
 def test_wrong_manifest_name():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
-    FileManager(providers, 3, master_key, manifest_name, setup=True)
-    FM = FileManager(providers, 3, master_key, generate_random_name())
+    FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, generate_random_name())
     with pytest.raises(exceptions.FatalOperationFailure):
         FM.load_manifest()
 
 
 def test_multiple_sessions():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
     FM.put("test2", "moredata")
     assert sorted(FM.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
 
-    FM = FileManager(providers, 3, master_key, manifest_name)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name)
     FM.load_manifest()
     assert sorted(FM.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
     assert FM.get("test") == "data"
@@ -157,14 +157,14 @@ def test_multiple_sessions():
 
 
 def test_corrupt_recover():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
     providers[0].wipe()
     providers[2].wipe()
 
-    FM = FileManager(providers, 3, master_key, manifest_name)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name)
     with pytest.raises(exceptions.OperationFailure):
         FM.load_manifest()
 
@@ -174,7 +174,7 @@ def test_corrupt_recover():
 
 
 def test_corrupt_fail():
-    FM = FileManager(providers, 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -188,7 +188,7 @@ def test_corrupt_fail():
 
 
 def test_change_k():
-    FM = FileManager(providers, 4, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, len(providers), 4, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -210,7 +210,7 @@ def test_change_k():
 
 
 def test_add_provider():
-    FM = FileManager(providers[0:4], 3, master_key, manifest_name, setup=True)
+    FM = FileManager(providers[0:4], 4,  3, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
@@ -232,7 +232,7 @@ def test_add_provider():
 
 
 def test_remove_provider_and_decrement_k():
-    FM = FileManager(providers, 4, master_key, manifest_name, setup=True)
+    FM = FileManager(providers, 5, 4, master_key, manifest_name, setup=True)
     FM.load_manifest()
 
     FM.put("test", "data")
