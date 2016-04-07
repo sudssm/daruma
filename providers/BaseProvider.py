@@ -28,6 +28,9 @@ class BaseProvider(object):
     def delete(self, filename):
         pass
 
+    def get_capacity(self):
+        pass
+
     def wipe(self):
         """
         Delete all files on the provider

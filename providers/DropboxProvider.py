@@ -23,6 +23,7 @@ class DropboxProvider(BaseProvider):
 
         self.access_token = access_token
         self.client = dropbox.client.DropboxClient(self.access_token)
+        self.dropbox = dropbox.Dropbox(self.access_token)
         super(DropboxProvider, self).__init__()
 
     @staticmethod
@@ -66,7 +67,7 @@ class DropboxProvider(BaseProvider):
         # get access_token
         with DropboxProvider.exception_handler(None):
             access_token, _, _ = flow.finish(params)
-            
+
             # store access_token
             CredentialManager.update_credentials(DropboxProvider, access_token)
 
@@ -102,6 +103,13 @@ class DropboxProvider(BaseProvider):
     def delete(self, filename):
         with DropboxProvider.exception_handler(self):
             self.client.file_delete(filename)
+
+    def get_capacity(self):
+        space_usage = self.dropbox.users_get_space_usage()
+        used_space = space_usage.used
+        total_allocated_space = space_usage.allocation.get_individual().allocated
+
+        return used_space, total_allocated_space
 
     def wipe(self):
         with DropboxProvider.exception_handler(self):

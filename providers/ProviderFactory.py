@@ -11,7 +11,7 @@ class ProviderFactory(object):
     @staticmethod
     def create_provider_instance(provider):
         # Check credentials
-        credential = CredentialManager.getCredentials(provider)
+        credential = CredentialManager.get_credentials(provider)
         if credential:
             provider_instance = provider(credential)
             return provider_instance
