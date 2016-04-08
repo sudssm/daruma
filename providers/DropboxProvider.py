@@ -54,7 +54,7 @@ class DropboxProvider(BaseProvider):
             raise exceptions.ProviderOperationFailure(self)
 
         except Exception:
-            raise exceptions.LibraryException
+            raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
         """
@@ -123,7 +123,3 @@ class DropboxProvider(BaseProvider):
                 entries = delta['entries']
                 for e in entries:
                     self.delete(e[0])
-
-    @property
-    def expose_to_client(self):
-        return True

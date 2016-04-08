@@ -80,7 +80,3 @@ class TestServerProvider(BaseProvider):
             assert self._get_json("wipe")['success'] is True
         except (KeyError, AssertionError):
             raise exceptions.ProviderOperationFailure(self)
-
-    @property
-    def expose_to_client(self):
-        return True
