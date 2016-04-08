@@ -324,8 +324,15 @@ class MainLoop(cmd.Cmd):
         Set the properties of a Test Provider at the index
         Property can be one of "active, offline, authfail, corrupt"
         """
+        line = shlex.split(line.lower())
+        index = line[0]
+        prop = line[1]
+
+        if len(line) < 2:
+            print "Usage: set <index> <property>"
+            return
         try:
-            provider = providers[int(line)]
+            provider = providers[int(index)]
             assert provider.provider_name() == "Test"
         except AssertionError:
             print provider.uuid, "is not a Test Provider!"
@@ -339,7 +346,7 @@ class MainLoop(cmd.Cmd):
                  "authfail": TestProviderState.UNAUTHENTICATED,
                  "corrupt": TestProviderState.CORRUPTING}
         try:
-            provider.set_state(state[line.strip().lower()])
+            provider.set_state(state[prop])
         except KeyError:
             print "Invalid property"
 

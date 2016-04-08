@@ -23,4 +23,3 @@ def test_load_providers():
     cached_providers, errors = pm.load_all_providers_from_credentials()
 
     assert map(lambda provider: provider.uuid, cached_providers) == [fs.uuid]
-

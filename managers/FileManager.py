@@ -122,7 +122,7 @@ class FileManager:
             try:
                 data = self.distributor.get(old_codename, old_key)
             except exceptions.OperationFailure as e:
-                data = e.data
+                data = e.result
                 errors.append(e)
             old_files.append(old_codename)
 
