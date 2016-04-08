@@ -108,14 +108,11 @@ def test_different_ks():
 def test_add_provider():
     SB = SecretBox.provision(providers[0:4], 3, 3)
     SB.put("test", "data")
-
-    SB.add_provider(providers[4])
+    SB.reprovision(providers, 4, 4)
 
     assert SB.get("test") == "data"
-
     # check that we can bootstrap
     SB = SecretBox.load(providers)
-    assert SB.get("test") == "data"
 
     # check that k has been changed
     providers[0].wipe()
@@ -129,7 +126,7 @@ def test_remove_provider():
     SB = SecretBox.provision(providers, 4, 4)
     SB.put("test", "data")
 
-    SB.remove_provider(providers[4])
+    SB.reprovision(providers[0:4], 3, 3)
 
     assert SB.get("test") == "data"
 
@@ -143,9 +140,86 @@ def test_remove_provider():
     assert SB.get("test") == "data"
 
 
-def test_not_enough_providers():
+def test_read_only_mode():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "file")
+
+    SB = SecretBox.load(providers[0:3])
+    with pytest.raises(exceptions.ReadOnlyMode):
+        SB.put("test", "something else")
+
+    assert SB.get_missing_providers() == map(lambda provider: provider.uuid, providers[3:])
+
+    # check that we can still read
+    assert SB.get("test") == "file"
+
+
+def test_read_only_mode_fix_by_adding():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("file", "data")
+
+    SB = SecretBox.load(providers[:3])
+
+    with pytest.raises(exceptions.ReadOnlyMode):
+        SB.put("test", "file")
+
+    missing_providers = providers[3:]
+    assert SB.get_missing_providers() == map(lambda provider: provider.uuid, missing_providers)
+
+    # try an invalid add_missing_provider call
+    assert SB.add_missing_provider(providers[0]) is False
+
+    # add one missing provider
+    assert SB.add_missing_provider(missing_providers.pop())
+    assert SB.get_missing_providers() == map(lambda provider: provider.uuid, missing_providers)
+
+    # make sure we can still get
+    assert SB.get("file") == "data"
+
+    # but that we can't read
+    with pytest.raises(exceptions.ReadOnlyMode):
+        SB.put("test", "file")
+
+    # add the other missing provider
+    assert SB.add_missing_provider(missing_providers.pop())
+    assert SB.get_missing_providers() == []
+
+    # check that we are out of read only mode
+    SB.put("test", "file")
+    assert SB.get("test") == "file"
+
+
+def test_read_only_mode_fix_by_removing():
     SecretBox.provision(providers, 3, 3)
 
-    # check that we can bootstrap
-    with pytest.raises(exceptions.FatalOperationFailure):
-        SecretBox.load(providers[0:2])
+    provider_subset = providers[0:3]
+
+    SB = SecretBox.load(provider_subset)
+
+    with pytest.raises(exceptions.ReadOnlyMode):
+        SB.put("test", "file")
+
+    SB.reprovision(provider_subset, 2, 2)
+
+    # check that we are out of read only mode
+    SB.put("test", "file")
+    assert SB.get("test") == "file"
+
+
+def test_reprovision_new_set():
+    SB = SecretBox.provision(providers[:3], 2, 2)
+    SB.put("test", "file")
+
+    SB.reprovision(providers[2:], 2, 2)
+    assert SB.get("test") == "file"
+
+
+def test_provision_bad_threshold():
+    with pytest.raises(ValueError):
+        SecretBox.provision(providers, 5, 5)
+
+
+def test_reprovision_bad_threshold():
+    SB = SecretBox.provision(providers[:3], 2, 2)
+    with pytest.raises(ValueError):
+        SB.reprovision(providers[3:], 2, 2)

@@ -323,7 +323,6 @@ def test_move_file():
     manifest.update_file("dir/file", codename1, 3, generate_key())
     node = manifest.get("dir/file")
     manifest.move("dir/file", "dir/new_file")
-    print manifest.root.attributes
 
     assert node == manifest.get("dir/new_file")
     with pytest.raises(exceptions.InvalidPath):

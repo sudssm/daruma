@@ -44,7 +44,7 @@ class BootstrapManager:
     def __init__(self, providers, bootstrap_reconstruction_threshold=None):
         self.providers = providers
         self.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
-        self.n = None
+        self.num_providers = None
 
     def _download_and_vote(self):
         """
@@ -167,10 +167,11 @@ class BootstrapManager:
 
     def recover_bootstrap(self):
         """
-        Returns a Bootstrap object, collected from self.Providers
-        Raises FatalOperationFailure or OperationFailure
+        Returns boostrap, num_providers:
+            a Bootstrap object, and an integer number of providers collected from self.providers
+        Raises FatalOperationFailure or OperationFailure with the same data
         """
-        self.bootstrap_reconstruction_threshold, self.n, \
+        self.bootstrap_reconstruction_threshold, self.num_providers, \
             provider_id_map, shares_map, failures = self._download_and_vote()
 
         secret, shamir_failures = self._reconstruct_shares(provider_id_map, shares_map)
@@ -182,19 +183,15 @@ class BootstrapManager:
         bootstrap = Bootstrap.parse(secret)
 
         if len(failures) > 0:
-            raise exceptions.OperationFailure(failures, bootstrap)
+            raise exceptions.OperationFailure(failures, (bootstrap, self.num_providers))
 
-        return bootstrap
+        return bootstrap, self.num_providers
 
     def distribute_bootstrap(self, bootstrap):
         """
         Secret-Share distribute a Bootstrap object to all providers
         """
-        if self.n is None:
-            # we are initializing the system (we haven't loaded a bootstrap before)
-            self.n = len(self.providers)
-
-        # TODO if self.n > len(self.providers), raise because we are in readonly?
+        self.num_providers = len(self.providers)
 
         string = str(bootstrap)
 
@@ -208,7 +205,7 @@ class BootstrapManager:
         failures = []
         for provider, provider_id, share in zip(self.providers, provider_ids, shares):
             try:
-                bootstrap_plaintext = ",".join(map(str, [self.bootstrap_reconstruction_threshold, self.n, provider_id]))
+                bootstrap_plaintext = ",".join(map(str, [self.bootstrap_reconstruction_threshold, self.num_providers, provider_id]))
                 provider.put(self.BOOTSTRAP_PLAINTEXT_FILE_NAME, bootstrap_plaintext)
                 provider.put(self.BOOTSTRAP_FILE_NAME, share)
             except exceptions.ProviderFailure as e:

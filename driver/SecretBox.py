@@ -26,20 +26,40 @@ class SecretBox:
         self._load_manifest()
 
     @staticmethod
+    def _assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
+        """
+        makes sure the reconstruction thresholds are within a suitable range (1 through len(providers)-1, inclusive)
+        """
+        if bootstrap_reconstruction_threshold < 1 or bootstrap_reconstruction_threshold >= len(providers) or \
+           file_reconstruction_threshold < 1 or file_reconstruction_threshold >= len(providers):
+            raise ValueError("Invalid threshold!")
+
+    @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
         """
-        Create a new SecretBox
-        Providers: a list of providers
-        bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key
-        file_reconstruction_threshold: the number of providers that need to be up to read files, given the key
+        Create a new SecretBox.
+        Warning: Deletes all files on all providers! Even if a FatalOperationFailure is thrown, files on all providers will be unstable or deleted.
+        Args:
+            providers: a list of providers
+            bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key. Between 1 and len(providers)-1, inclusive
+            file_reconstruction_threshold: the number of providers that need to be up to read files, given the key. Between 1 and len(providers)-1, inclusive
         Returns a constructed SecretBox object
-        Raises FatalOperationFailure or ProviderFailure
+        Raises:
+            ValueError if arguments are invalid
+            FatalOperationFailure if provisioning failed
         """
+        SecretBox._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         # make a copy of providers so that changes to the external list doesn't affect this one
         providers = providers[:]
+
+        failures = []
         for provider in providers:
-            # raises on failure
-            provider.wipe()
+            try:
+                provider.wipe()
+            except exceptions.ProviderFailure as e:
+                failures.append(e)
+        if len(failures) > 0:
+            raise exceptions.FatalOperationFailure(failures)
 
         master_key = generate_key()
         manifest_name = generate_random_name()
@@ -54,7 +74,7 @@ class SecretBox:
             # TODO check for network error
             raise
 
-        file_manager = FileManager(providers, file_reconstruction_threshold, master_key, manifest_name, setup=True)
+        file_manager = FileManager(providers, len(providers), file_reconstruction_threshold, master_key, manifest_name, setup=True)
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
         return SecretBox(bootstrap_manager, file_manager, resilience_manager)
 
@@ -69,15 +89,15 @@ class SecretBox:
         bootstrap_manager = BootstrapManager(providers)
         failures = []
         try:
-            bootstrap = bootstrap_manager.recover_bootstrap()
+            bootstrap, num_providers = bootstrap_manager.recover_bootstrap()
         except exceptions.OperationFailure as e:
-            bootstrap = e.result
+            bootstrap, num_providers = e.result
             failures += e.failures
         except exceptions.FatalOperationFailure:
             # TODO check for network error
             raise
 
-        file_manager = FileManager(providers, bootstrap.file_reconstruction_threshold, bootstrap.key, bootstrap.manifest_name)
+        file_manager = FileManager(providers, num_providers, bootstrap.file_reconstruction_threshold, bootstrap.key, bootstrap.manifest_name)
         # TODO this may load some cached state from disk
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
 
@@ -101,6 +121,22 @@ class SecretBox:
         # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
 
+    def add_missing_provider(self, missing_provider):
+        """
+        Add a missing provider to the system. Used to get out of read only mode
+        Does nothing if the provider is not one of the missing providers.
+        Args:
+            missing_provider: a provider object that is one of the provider uuids returned by get_missing_providers
+        Returns:
+            True if the supplied missing_provider is one of the the missing providers, False otherwise
+        """
+        if not self.file_manager.add_missing_provider(missing_provider):
+            return False
+        # this was a correct missing provider; we can add it to the bootstrap_manager
+        self.bootstrap_manager.providers = self.file_manager.providers
+
+        return True
+
     def _reset(self):
         """
         Reprovision the system
@@ -121,48 +157,32 @@ class SecretBox:
                 return self._reset()
             raise
 
-    def add_provider(self, provider):
-        """
-        Add the provider to the list of providers
-        Increases the internal reconstruction thresholds by 1
-        (Assumes that (n-k) should stay constant, which makes sense in the context of the working assumption
-        that k=n-1)
-        """
-        providers = self.file_manager.providers
-        providers.append(provider)
-
-        file_reconstruction_threshold = self.file_manager.file_reconstruction_threshold + 1
-        bootstrap_reconstruction_threshold = self.bootstrap_manager.bootstrap_reconstruction_threshold + 1
-
-        self.change_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
-
-    def remove_provider(self, provider):
-        """
-        Remove the provider from the internal list of providers, if it exists
-        Decreases the internal reconstruction thresholds by 1
-        (Assumes that (n-k) should stay constant, which makes sense in the context of the working assumption
-        that k=n-1)
-        """
-        providers = self.file_manager.providers
-        if provider not in providers:
-            return
-        providers.remove(provider)
-
-        file_reconstruction_threshold = self.file_manager.file_reconstruction_threshold - 1
-        bootstrap_reconstruction_threshold = self.bootstrap_manager.bootstrap_reconstruction_threshold - 1
-
-        self.change_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
-
-    def change_params(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
+    def reprovision(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
         """
         Update the thresholds and providers for the system
+        Will redistribute every file across the new provider list
+        Args:
+            providers: a list of provider objects across which to distribute
+            bootstrap_reconstruction_threshold: the new bootstrap threshold. Between 1 and len(providers)-1, inclusive
+            file_reconstruction_threshold: the new file threshold. Between 1 and len(providers)-1, inclusive
+        Raises:
+            ValueError if arguments are invalid
         """
+        SecretBox._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
+
+        # do nothing if params are the same
+        if providers == self.file_manager.providers and \
+           bootstrap_reconstruction_threshold == self.bootstrap_manager.bootstrap_reconstruction_threshold and \
+           file_reconstruction_threshold == self.file_manager.file_reconstruction_threshold:
+                return
+
         self.file_manager.providers = providers
         self.bootstrap_manager.providers = providers
         self.resilience_manager.providers = providers
 
         self.bootstrap_manager.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
         self.file_manager.file_reconstruction_threshold = file_reconstruction_threshold
+
         self._reset()
 
     def _load_manifest(self):
@@ -182,6 +202,14 @@ class SecretBox:
             if can_retry:
                 return self._load_manifest()
             raise
+
+    def get_missing_providers(self):
+        """
+        Gets a list of the providers needed to be added before the system can be writable
+        Is empty if and only if the system is not in read only mode
+        To get out of read only mode, either call add_missing_providers or reprovision
+        """
+        return self.file_manager.get_missing_providers()
 
     def ls(self, path):
         """
@@ -204,6 +232,7 @@ class SecretBox:
         """
         Create a directory
         Raises InvalidPath or FatalOperationFailure if unsuccessful
+        Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
         self.file_manager.mk_dir(path)
@@ -212,6 +241,7 @@ class SecretBox:
         """
         Move a file or folder
         Raises InvalidPath if either path is invalid or if new_path exists
+        Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
         self.file_manager.move(old_path, new_path)
@@ -245,6 +275,7 @@ class SecretBox:
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
         Raises FatalOperationFailure if unsuccessful
+        Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
 
@@ -265,6 +296,7 @@ class SecretBox:
         Upon return either all providers are stable or at least one provider is RED
         Raises FileNotFound if path is invalid
         Raises FatalOperationFailure if unsuccessful
+        Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
 

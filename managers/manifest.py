@@ -178,13 +178,14 @@ class Manifest:
 
     ROOT_DIRECTORY_NAME = ""
 
-    def __init__(self):
+    def __init__(self, providers=None):
         """
         Creates an empty Manifest.
+        Args: providers, a list of providers that will be using this Manifest, or None
         """
         self.root = Directory.from_values(Manifest.ROOT_DIRECTORY_NAME)
-        # a list of tuples that uniquely identify providers
-        self.providers = []
+        # self.providers becomes a list of tuples that uniquely identify providers
+        self.set_providers(providers)
 
     def __cmp__(self, other):
         """
@@ -427,7 +428,13 @@ class Manifest:
         Updates the manifest provider list
         Args: A list of provider objects
         """
-        self.providers = map(lambda provider: provider.uuid, providers)
+        if providers is None:
+            self.providers = []
+        else:
+            self.providers = map(lambda provider: provider.uuid, providers)
 
     def get_provider_strings(self):
+        """
+        Returns a set of unique identifiers for providers contained in this manifest
+        """
         return self.providers[:]
