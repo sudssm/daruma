@@ -205,7 +205,6 @@ class SecretBox:
         Is empty if and only if the system is not in read only mode
         To get out of read only mode, either call add_missing_providers or reprovision
         """
-        self._load_manifest()
         return self.file_manager.get_missing_providers()
 
     def ls(self, path):
