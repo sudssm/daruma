@@ -147,6 +147,7 @@ class ConfigureLoop(cmd.Cmd):
         except exceptions.FatalOperationFailure:
             print "Looks like there's no existing installation with these providers."
             print "If this is correct, type 'provision' to start a new instance. If not, type 'add' to add more providers."
+        return False
 
     def do_provision(self, line=None):
         """
