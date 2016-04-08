@@ -86,7 +86,3 @@ class LocalFilesystemProvider(BaseProvider):
             os.makedirs(translated_root_dir, DIRECTORY_MODE)
         except (IOError, OSError):
             raise exceptions.ProviderOperationFailure(self)
-
-    @property
-    def expose_to_client(self):
-        return True

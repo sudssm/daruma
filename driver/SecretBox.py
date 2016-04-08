@@ -28,11 +28,12 @@ class SecretBox:
     @staticmethod
     def _assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
         """
-        makes sure the reconstruction thresholds are within a suitable range (1 through len(providers)-1, inclusive)
+        makes sure the reconstruction thresholds are within a suitable range (1 through len(providers)-1, inclusive) and that we have at least 3 providers
         """
         if bootstrap_reconstruction_threshold < 1 or bootstrap_reconstruction_threshold >= len(providers) or \
-           file_reconstruction_threshold < 1 or file_reconstruction_threshold >= len(providers):
-            raise ValueError("Invalid threshold!")
+           file_reconstruction_threshold < 1 or file_reconstruction_threshold >= len(providers) or \
+           len(providers) < 3:
+            raise ValueError("Invalid parameters!")
 
     @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):

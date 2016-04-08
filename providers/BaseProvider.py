@@ -104,13 +104,6 @@ class BaseProvider(object):
             return ProviderStatus.YELLOW
         return ProviderStatus.GREEN
 
-    @property
-    def expose_to_client(self):
-        """
-        Whether this provider should be exposed in user interfaces
-        """
-        return False
-
     @staticmethod
     def provider_name():
         """

@@ -11,6 +11,22 @@ class TestProviderState:
 
 
 class TestProvider(LocalFilesystemProvider):
+    @staticmethod
+    def provider_name():
+        return "Test"
+
+    @staticmethod
+    def load_cached_providers(credential_manager):
+        credentials = credential_manager.get_user_credentials(TestProvider.provider_name())
+        providers = []
+        failed_paths = []
+        for provider_path in credentials.keys():
+            try:
+                providers.append(TestProvider(credential_manager, provider_path))
+            except:
+                failed_paths.append(provider_path)
+        return providers, failed_paths
+
     def __init__(self, credential_manager, provider_path=""):
         super(TestProvider, self).__init__(credential_manager, provider_path)
         self.state = TestProviderState.ACTIVE
@@ -75,7 +91,3 @@ class TestProvider(LocalFilesystemProvider):
 
     def __str__(self):
         return "<TestProvider@" + self.provider_path + "-" + self.state + "-" + self.status + "-" + str(self.score) + ">"
-
-    @property
-    def expose_to_client(self):
-        return False
