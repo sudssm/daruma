@@ -47,41 +47,17 @@ class BootstrapManager:
         self.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
         self.n = None
 
-    def _download_and_vote(self):
-        """
-        Recovers n, bootstrap threshold and shares from providers if there is a consensus
+    def _determine_parameters(self, vote_map, failures):
+        '''
+        Determines the values for n and threshold, adding exceptions for providers who misvoted to the failures list
+        Args:
+            vote_map, maps (threshold, n) vote to providers that voted
+            failures, a growing list of exceptions for failed providers
         Returns:
-            threshold, the voted bootstrap threshold
-            n, the voted n
-            provider_id_map, a map from id to list of providers with that id
-            shares_map, a map from provider to its share
-            failures, a list of failures from failing providers
-        Raises FatalOperationFailure if unable to reach consensus
-        """
-        # maps self-proclaimed provider_id to providers with that id
-        # (there could be multiple providers that report the same one)
-        provider_id_map = defaultdict(list)
-        # maps provider to bootstrap share
-        shares_map = {}
-        # maps (threshold, n) vote to providers that voted
-        vote_map = defaultdict(list)
-
-        failures = []
-        for provider in self.providers:
-            try:
-                threshold_vote, n_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",", 3)
-
-                # track provider votes for bootstrap threshold and n values
-                vote_map[(int(threshold_vote), int(n_vote))].append(provider)
-                provider_id_map[provider_id].append(provider)
-
-                shares_map[provider] = zlib.decompress(provider.get(self.BOOTSTRAP_FILE_NAME))
-            except exceptions.ProviderFailure as e:
-                failures.append(e)
-            except (zlib.error, ValueError):
-                # if the cast to int, decompressing or unpacking failed
-                failures.append(exceptions.InvalidShareFailure(provider))
-
+            (threshold, n)
+            threshold: the voted bootstrap threshold
+            n: the voted n
+        '''
         # vote on threshold
         largest_group_size = 0
         winning_vote = None
@@ -104,12 +80,49 @@ class BootstrapManager:
             if vote != winning_vote:
                 failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
 
+        return threshold, n
+
+    def _download_and_vote(self):
+        """
+        Recovers n, bootstrap threshold and shares from providers if there is a consensus
+        Returns:
+            threshold, the voted bootstrap threshold
+            n, the voted n
+            provider_id_map, a map from id to list of providers who claim to have that id
+            shares_map, a map from provider to its share
+            failures, a list of failures from failing providers
+        Raises FatalOperationFailure if unable to reach consensus
+        """
+        # maps self-proclaimed provider_id to providers with that id
+        # (there could be multiple providers that report the same one)
+        provider_id_map = defaultdict(list)
+        shares_map = {}  # maps provider to bootstrap share
+        vote_map = defaultdict(list)  # maps (threshold, n) vote to providers that voted
+
+        failures = []
+        for provider in self.providers:
+            try:
+                threshold_vote, n_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",", 3)
+
+                # track provider votes for bootstrap threshold and n values
+                vote_map[(int(threshold_vote), int(n_vote))].append(provider)
+                provider_id_map[provider_id].append(provider)
+
+                shares_map[provider] = zlib.decompress(provider.get(self.BOOTSTRAP_FILE_NAME))
+            except exceptions.ProviderFailure as e:
+                failures.append(e)
+            except (zlib.error, ValueError):
+                # if the cast to int, decompressing or unpacking failed
+                failures.append(exceptions.InvalidShareFailure(provider))
+
+        threshold, n = self._determine_parameters(vote_map, failures)
+
         # add all providers with invalid id to failures
         for provider_id, providers in provider_id_map.items():
-            provider_id = int(provider_id)
             try:
+                provider_id = int(provider_id)
                 assert provider_id < n and provider_id >= 0
-            except AssertionError:
+            except (AssertionError, ValueError):
                 for provider in providers:
                     failures.append(exceptions.InvalidShareFailure(provider))
                     # remove the provider's share from shares_map
@@ -125,13 +138,13 @@ class BootstrapManager:
         """
         Apply RSS to a share_map
         Args:
-            provider_id_map, a map from provider id to list of providers with that id
+            provider_id_map, a map from provider id to list of providers who claim to hold that id
             shares_map, a map from provider to its share
         Returns:
             secret, the recovered secret
             failures, a list of exceptions from failing providers
-        Returns the recovered secret, and a list of exceptions from bad providers
-        Raises FatalOperationFailure if unable to reconstruct
+        Raises:
+            FatalOperationFailure if unable to reconstruct
         """
         # build a list of lists of (id, share) such that all shares with the same id are in the same list
         shares_lists = [[(provider_id, shares_map[provider]) for provider in providers if provider in shares_map]
@@ -162,8 +175,6 @@ class BootstrapManager:
         # handle all shares with an id that appeared in good_ids
         for good_id in good_ids:
             for provider in provider_id_map[good_id]:
-                if shares_map[provider] != share_set_map[good_id]:
-                    bad_providers.append(provider)
                 # there is no uncertainty about this share; don't test again
                 del shares_map[provider]
 
@@ -177,7 +188,7 @@ class BootstrapManager:
 
                     break
 
-        # try all remaining shares one at a time
+        # try all remaining shares in this group one at a time
         good_share_map = {provider_id: share_set_map[provider_id] for provider_id in good_ids}
         test_shares = [(provider_id, provider, shares_map[provider]) for (provider_id, providers) in provider_id_map.items()
                        for provider in providers if provider in shares_map]
@@ -203,7 +214,8 @@ class BootstrapManager:
         try:
             secret, shamir_failures = self._reconstruct_shares(provider_id_map, shares_map)
         except exceptions.FatalOperationFailure as e:
-            raise exceptions.FatalOperationFailure(failures + e)
+            failures.append(e)
+            raise exceptions.FatalOperationFailure(failures)
 
         failures += shamir_failures
 
