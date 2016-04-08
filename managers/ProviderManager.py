@@ -20,7 +20,7 @@ class ProviderManager():
     def load_all_providers_from_credentials(self):
         """
         Get all providers of exposed types that can be loaded from the underlying credential_manager
-        Returns [[cached_providers], [failed_ids]]
+        Returns (cached_providers, failed_ids)
             cached_providers: a list of loaded provider objects
             failed_ids: the uuids of providers that failed to load
         """
@@ -29,7 +29,7 @@ class ProviderManager():
 
         providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), self.provider_classes)
 
-        return map(flatten, zip(*providers_and_errors))
+        return tuple(map(flatten, zip(*providers_and_errors)))
 
     def start_dropbox_connection(self):
         """
