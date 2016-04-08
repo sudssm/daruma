@@ -34,6 +34,7 @@ class ProviderManager():
     def start_dropbox_connection(self):
         """
         Returns the login url for Dropbox
+        Calling this additional times invalidates any previous unfinished flows
         """
         self.temp_dropbox = DropboxProvider(self.credential_manager)
         return self.temp_dropbox.start_connection()
