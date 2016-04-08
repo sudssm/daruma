@@ -8,17 +8,33 @@ body {
 	margin-top: 20px;
 }
 
-.instructions {
+#instructions-box {
 	width: 85%;
 	margin: auto;
 	text-align: initial;
+}
+
+#instructions-box > div {
+	display: none;
+}
+
+#instructions-box > div:first-child {
+	display: block;
+}
+
+#button-container > button {
+	display: none;
+}
+
+#button-container > .big-button:first-child {
+	display: inline-block;
 }
 
 .big-button {
 	margin: auto;
 	margin-top: 5%;
 	display: inline-block;
-	font-size: 20pt;
+	font-size: 18pt;
 	padding: 10px;
 	border-radius: 15px;
 }
@@ -36,6 +52,7 @@ body {
 }
 
 #added-providers-area {
+	display: none;
 	margin-top: 5%;
 }
 
@@ -47,6 +64,7 @@ body {
 	padding: 0 10px;
 	margin: 0;
 	display: inline-block;
+	overflow: scroll;
     list-style-type: none;
 	text-align: initial;
 }
