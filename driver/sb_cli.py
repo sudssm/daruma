@@ -168,7 +168,7 @@ class ConfigureLoop(cmd.Cmd):
 
 class MainLoop(cmd.Cmd):
     """
-    Configure settings and providers
+    Main loop to interact with SecretBox
     """
     prompt = "\nDaruma> "
 
