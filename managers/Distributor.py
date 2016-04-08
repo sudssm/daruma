@@ -12,6 +12,13 @@ class FileDistributor:
     object should be constructed
     """
     def __init__(self, providers, num_providers, file_reconstruction_threshold):
+        """
+        Create a FileDistributor
+        Args:
+            providers: a list of providers to use
+            num_providers: the total number of providers that have been configured with this system before
+            file_reconstruction_threshold: the threshold for file file_reconstruction_threshold
+        """
         # make a copy of the provider list
         self.providers = providers[:]
         self.num_providers = num_providers

@@ -27,6 +27,9 @@ class SecretBox:
 
     @staticmethod
     def _assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
+        """
+        makes sure the reconstruction thresholds are within a suitable range (1 through len(providers)-1, inclusive)
+        """
         if bootstrap_reconstruction_threshold < 1 or bootstrap_reconstruction_threshold >= len(providers) or \
            file_reconstruction_threshold < 1 or file_reconstruction_threshold >= len(providers):
             raise ValueError("Invalid threshold!")
@@ -36,9 +39,10 @@ class SecretBox:
         """
         Create a new SecretBox.
         Warning: Deletes all files on all providers! Even if a FatalOperationFailure is thrown, files on all providers will be unstable or deleted.
-        Providers: a list of providers
-        bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key. Between 1 and len(providers)-1, inclusive
-        file_reconstruction_threshold: the number of providers that need to be up to read files, given the key. Between 1 and len(providers)-1, inclusive
+        Args:
+            providers: a list of providers
+            bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key. Between 1 and len(providers)-1, inclusive
+            file_reconstruction_threshold: the number of providers that need to be up to read files, given the key. Between 1 and len(providers)-1, inclusive
         Returns a constructed SecretBox object
         Raises:
             ValueError if arguments are invalid
