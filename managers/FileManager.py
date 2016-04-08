@@ -52,22 +52,20 @@ class FileManager:
         expected_providers = set(self.manifest.get_provider_strings())
         return list(expected_providers - providers)
 
-    def add_missing_providers(self, missing_providers):
+    def add_missing_provider(self, missing_provider):
         """
-        Add all missing provider to this file manager
+        Add a missing provider to this file manager
         Args:
-            missing_providers: a list of providers containing exactly those providers returned by missing_providers
+            missing_provider: a missing provider, with a uuid in the result of calling missing_providers()
         Returns:
-            True if the provided missing_providers successfully completes the internal set of providers
+            True if the provided missing_provider is one of the missing_providers
             False otherwise
         """
-        if set(self.missing_providers()) != set(map(lambda provider: provider.uuid, missing_providers)):
+        if missing_provider.uuid not in self.missing_providers():
             return False
-        old_providers = self.providers
 
-        providers = old_providers + missing_providers
-        self.providers = providers
-        self.distributor.providers = providers[:]
+        self.providers.append(missing_provider)
+        self.distributor.providers.append(missing_provider)
 
         return True
 

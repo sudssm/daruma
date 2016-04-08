@@ -155,7 +155,8 @@ def test_read_only_mode():
 
 
 def test_read_only_mode_fix_by_adding():
-    SecretBox.provision(providers, 3, 3)
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("file", "data")
 
     SB = SecretBox.load(providers[:3])
 
@@ -165,10 +166,23 @@ def test_read_only_mode_fix_by_adding():
     missing_providers = providers[3:]
     assert SB.get_missing_providers() == map(lambda provider: provider.uuid, missing_providers)
 
-    # try an invalid add_missing_providers call
-    assert SB.add_missing_providers(missing_providers[:1]) is False
+    # try an invalid add_missing_provider call
+    assert SB.add_missing_provider(providers[0]) is False
 
-    assert SB.add_missing_providers(missing_providers)
+    # add one missing provider
+    assert SB.add_missing_provider(missing_providers.pop())
+    assert SB.get_missing_providers() == map(lambda provider: provider.uuid, missing_providers)
+
+    # make sure we can still get
+    assert SB.get("file") == "data"
+
+    # but that we can't read
+    with pytest.raises(exceptions.ReadOnlyMode):
+        SB.put("test", "file")
+
+    # add the other missing provider
+    assert SB.add_missing_provider(missing_providers.pop())
+    assert SB.get_missing_providers() == []
 
     # check that we are out of read only mode
     SB.put("test", "file")

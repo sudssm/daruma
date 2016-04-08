@@ -111,18 +111,21 @@ class SecretBox:
         # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
 
-    def add_missing_providers(self, missing_providers):
+    def add_missing_provider(self, missing_provider):
         """
-        Add missing providers to the system. Used to get out of read only mode
+        Add a missing provider to the system. Used to get out of read only mode
         Args:
-            missing_providers: a list of provider objects that exactly correspond to the provider uuids returned by get_missing_providers
+            missing_provider: a provider object that is one of the provider uuids returned by get_missing_providers
         Returns:
-            True if the supplied missing_providers match the missing providers, False otherwise
+            True if the supplied missing_provider is one of the the missing providers, False otherwise
         """
-        if not self.file_manager.add_missing_providers(missing_providers):
+        if not self.file_manager.add_missing_provider(missing_provider):
             return False
-        # these are the correct missing providers
+        # this was a correct missing provider; we can add it to the bootstrap_manager
         self.bootstrap_manager.providers = self.file_manager.providers
+
+        # reload the manifest, and update our local information about missing providers
+        self._load_manifest()
         return True
 
     def _reset(self):
