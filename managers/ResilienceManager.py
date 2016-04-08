@@ -94,6 +94,9 @@ class ResilienceManager:
             if can_retry:
                 return self.diagnose_and_repair_file(e.failures, filename, data)
             self.diagnose(e.failures)
+        except exceptions.ReadOnlyMode:
+            # can't repair in ReadOnlyMode
+            return
 
     def diagnose_and_repair_bootstrap(self, failures):
         """
@@ -114,6 +117,9 @@ class ResilienceManager:
                 return self.diagnose_and_repair_bootstrap(e.failures)
             self.diagnose(e.failures)
             return
+        except exceptions.ReadOnlyMode:
+            # can't repair in ReadOnlyMode
+            return
 
         master_key = generate_key()
         manifest_name = generate_random_name()
@@ -132,6 +138,9 @@ class ResilienceManager:
             if can_retry:
                 return self.diagnose_and_repair_bootstrap(e.failures)
             self.diagnose(e.failures)
+        except exceptions.ReadOnlyMode:
+            # can't repair in ReadOnlyMode
+            return
 
     def garbage_collect(self):
         # TODO

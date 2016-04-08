@@ -34,22 +34,28 @@ class SecretBox:
     @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
         """
-        Create a new SecretBox
+        Create a new SecretBox.
+        Warning: Deletes all files on all providers! Even if a FatalOperationFailure is thrown, files on all providers will be unstable or deleted.
         Providers: a list of providers
         bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key. Between 1 and len(providers)-1, inclusive
         file_reconstruction_threshold: the number of providers that need to be up to read files, given the key. Between 1 and len(providers)-1, inclusive
         Returns a constructed SecretBox object
         Raises:
             ValueError if arguments are invalid
-            ProviderFailure if a single provider failed before provisioning
             FatalOperationFailure if provisioning failed
         """
         SecretBox._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         # make a copy of providers so that changes to the external list doesn't affect this one
         providers = providers[:]
+
+        failures = []
         for provider in providers:
-            # raises on failure
-            provider.wipe()
+            try:
+                provider.wipe()
+            except exceptions.ProviderFailure as e:
+                failures.append(e)
+        if len(failures) > 0:
+            raise exceptions.FatalOperationFailure(failures)
 
         master_key = generate_key()
         manifest_name = generate_random_name()
@@ -114,6 +120,7 @@ class SecretBox:
     def add_missing_provider(self, missing_provider):
         """
         Add a missing provider to the system. Used to get out of read only mode
+        Does nothing if the provider is not one of the missing providers.
         Args:
             missing_provider: a provider object that is one of the provider uuids returned by get_missing_providers
         Returns:
@@ -124,8 +131,6 @@ class SecretBox:
         # this was a correct missing provider; we can add it to the bootstrap_manager
         self.bootstrap_manager.providers = self.file_manager.providers
 
-        # reload the manifest, and update our local information about missing providers
-        self._load_manifest()
         return True
 
     def _reset(self):
@@ -176,15 +181,6 @@ class SecretBox:
 
         self._reset()
 
-    def _check_read_only(self):
-        """
-        Check to see if the system is in read only mode by checking self.missing_providers
-        To be called after _load_manifest
-        Raises ReadOnlyMode if in ready only mode
-        """
-        if len(self.missing_providers) > 0:
-            raise exceptions.ReadOnlyMode
-
     def _load_manifest(self):
         """
         Load the manifest into the file manager
@@ -203,16 +199,14 @@ class SecretBox:
                 return self._load_manifest()
             raise
 
-        # get the missing providers according to the new manifest
-        self.missing_providers = self.file_manager.missing_providers()
-
     def get_missing_providers(self):
         """
         Gets a list of the providers needed to be added before the system can be writable
         Is empty if and only if the system is not in read only mode
         To get out of read only mode, either call add_missing_providers or reprovision
         """
-        return self.missing_providers[:]
+        self._load_manifest()
+        return self.file_manager.get_missing_providers()
 
     def ls(self, path):
         """
@@ -238,7 +232,6 @@ class SecretBox:
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
-        self._check_read_only()
         self.file_manager.mk_dir(path)
 
     def move(self, old_path, new_path):
@@ -248,7 +241,6 @@ class SecretBox:
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
-        self._check_read_only()
         self.file_manager.move(old_path, new_path)
 
     def get(self, path):
@@ -283,7 +275,6 @@ class SecretBox:
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
-        self._check_read_only()
 
         try:
             result = self.file_manager.put(path, data)
@@ -305,7 +296,6 @@ class SecretBox:
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
-        self._check_read_only()
 
         try:
             self.file_manager.delete(path)
