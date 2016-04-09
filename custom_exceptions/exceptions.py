@@ -80,6 +80,12 @@ class DecodeError(Exception):
     """
 
 
+class ReconstructionError(Exception):
+    """
+    Exception for errors in reconstructing Shamir-Shared secrets
+    """
+
+
 # manifest exceptions
 class ParseException(Exception):
     """

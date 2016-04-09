@@ -1,0 +1,45 @@
+#add-provider-modal > h2 {
+    font-weight: normal;
+    font-size: 1.2em;
+}
+
+#provider-chooser-box {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+        -ms-flex: 1;
+            flex: 1;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
+    overflow: scroll;
+    list-style-type: none;
+    text-align: center;
+}
+
+.provider-icon-wide {
+    height: 50px;
+}
+
+#provider-chooser-box > li {
+    padding: 10px 0;
+    margin: 0 5%;
+}
+
+#provider-chooser-box > li:hover {
+    background-image: -webkit-linear-gradient(left, rgba(255,255,255,0), #E7E7E7, rgba(255,255,255,0));
+    background-image: linear-gradient(to right, rgba(255,255,255,0), #E7E7E7, rgba(255,255,255,0));
+}
+
+#provider-chooser-box > li+li {
+    border-top: 1px solid #D2D2D2
+}
+
+#provider-login-frame {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+        -ms-flex: 1;
+            flex: 1;
+    width: 100%;
+    border-style: none;
+}
