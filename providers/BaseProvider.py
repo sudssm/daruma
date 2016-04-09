@@ -1,7 +1,3 @@
-# stub for a provider
-# interface that allows cloud and local providers
-
-
 class ProviderStatus:
     """
     Status codes to report to the UI
@@ -14,15 +10,30 @@ class ProviderStatus:
 
 
 class BaseProvider(object):
+    """
+    Stub for a provider
+    """
     RED_THRESHOLD = .1
     YELLOW_THRESHOLD = .95
-    # the path to our files on the cloud provider
-    ROOT_DIR = "secretbox"
 
-    def __init__(self):
-        # this function will not be overridden
-        # but rather called by other constructors that take parameters
+    @staticmethod
+    def load_cached_providers(credential_manager):
+        """
+        Attempts to load all Providers of this type that have user credential stored
+        Returns:
+            (providers, failed_identifiers)
+            providers: a list of functional Providers
+            failed_identifiers: a list of identifiers for the accounts that failed to load
+        """
+        raise NotImplementedError
 
+    def __init__(self, credential_manager):
+        """
+        Set up the provider
+        To be called by all implementing classes
+        Args: credential_manager, a credential_manager to store user credentials
+        """
+        self.credential_manager = credential_manager
         # metadata for diagnosis
         # TODO maybe factor this out into a provider manager?
         # TODO maybe get this score from a cached file if available?
@@ -35,28 +46,39 @@ class BaseProvider(object):
         # TODO
         self.recomend_removal = False
 
-        self.connect()
-
-    # can throw ConnectionFailure, AuthFailure
-    def connect(self):
-        # connect to the cloud provider and make sure it is alive
-        # throw an exception if it isn't
-        pass
-
-    # the rest of these should only throw ProviderOperationFailure
     def get(self, filename):
-        pass
+        """
+        Gets a file from the provider
+        Args: filename, the file to retrieve
+        Raises: ProviderOperationFailure if unable to retrieve file
+        """
+        raise NotImplementedError
 
     def put(self, filename, data):
-        pass
+        """
+        Puts a file on the provider
+        Args: filename, the file to put
+              data, the content of the file
+        Raises: ProviderOperationFailure if unable to put file
+        """
+        raise NotImplementedError
 
     def delete(self, filename):
-        pass
+        """
+        Deletes a file from the provider
+        Args: filename, the file to delete
+        Raises: ProviderOperationFailure if unable to delete file
+        """
+        raise NotImplementedError
 
     def wipe(self):
         """
         Delete all files on the provider
+        Raises ProviderOperationFailure if unable to wipe
         """
+        raise NotImplementedError
+
+    # TODO ls?
 
     def log_error(self, exception):
         """
@@ -81,3 +103,28 @@ class BaseProvider(object):
         if self.score < self.YELLOW_THRESHOLD:
             return ProviderStatus.YELLOW
         return ProviderStatus.GREEN
+
+    @staticmethod
+    def provider_name():
+        """
+        Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
+        """
+        raise NotImplementedError
+
+    @property
+    def uid(self):
+        """
+        Returns an identifier for this provider. Must be unique across all providers of this type.
+        """
+        raise NotImplementedError
+
+    @property
+    def uuid(self):
+        """
+        Returns a globally unique identifier for the provider.
+        Of the form (provider type, provider id)
+        """
+        return (self.provider_name(), self.uid)
+
+    def __str__(self):
+        return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"

@@ -2,11 +2,12 @@ from multiprocessing import Process, Pipe
 from uuid import uuid4
 from custom_exceptions.exceptions import SandboxProcessFailure
 
+APP_NAME = "daruma"
 FILENAME_SIZE = 32
 
 
 # create a length-32 string of random uppercase letters and numbers
-def generate_filename():
+def generate_random_name():
     return str(uuid4()).replace('-', '').upper()
 
 

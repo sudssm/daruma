@@ -32,7 +32,11 @@ def test_malicious_ciphertext():
     ciphertext = tools.encryption.encrypt(plaintext, key)
 
     # Then corrupt ciphertext
-    malicious_ciphertext = ciphertext[0:5] + 'C' + ciphertext[6:]
+    if ciphertext[5] == 'C':
+        corruption = 'M'
+    else:
+        corruption = 'C'
+    malicious_ciphertext = ciphertext[:5] + corruption + ciphertext[6:]
 
     # Then attempt to decrypt
     with pytest.raises(exceptions.DecryptError):

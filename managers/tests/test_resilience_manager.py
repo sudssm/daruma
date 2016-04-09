@@ -1,11 +1,19 @@
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
+from managers.CredentialManager import CredentialManager
 from providers.TestProvider import TestProvider, TestProviderState
 from providers.BaseProvider import ProviderStatus
 import pytest
 
 
-providers = [TestProvider("tmp/" + str(i)) for i in xrange(5)]
+cm = CredentialManager()
+cm.load()
+
+providers = [TestProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
+
+def teardown_function(function):
+    cm.clear_user_credentials()
 
 
 def setup_function(function):
@@ -83,8 +91,11 @@ def test_temporary_offline_put():
 
 def test_offline_provision():
     providers[0].set_state(TestProviderState.FAILING, 4)
-    with pytest.raises(exceptions.ProviderFailure):
+    with pytest.raises(exceptions.FatalOperationFailure) as excinfo:
         SecretBox.provision(providers, 3, 3)
+    failures = excinfo.value.failures
+    assert len(failures) == 1
+    assert failures[0].provider == providers[0]
 
 
 def test_temporary_offline_load():
@@ -135,3 +146,14 @@ def test_corrupting():
     providers[0].set_state(TestProviderState.CORRUPTING)
     assert SB.get("test") == "data"
     assert providers[0].status == ProviderStatus.YELLOW
+
+
+def test_attempt_repair_in_read_only():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+
+    # load with only 4 providers, one of which is bad
+    providers[0].set_state(TestProviderState.OFFLINE)
+    SB = SecretBox.load(providers[:4])
+
+    assert SB.get("test") == "data"
