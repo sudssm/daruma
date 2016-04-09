@@ -91,6 +91,7 @@ class DropboxProvider(BaseProvider):
     def _connect(self, auth_token):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
+            self.dropbox = dropbox.Dropbox(auth_token)
             self.email = self.client.account_info()['email']
         self.credential_manager.set_user_credentials(self.provider_name(), self.uid, auth_token)
 
@@ -106,6 +107,14 @@ class DropboxProvider(BaseProvider):
     def put(self, filename, data):
         with self.exception_handler():
             self.client.put_file(filename, data, overwrite=True)
+
+    def get_capacity(self):
+        with self.exception_handler():
+            space_usage = self.dropbox.users_get_space_usage()
+            used_space = space_usage.used
+            total_allocated_space = space_usage.allocation.get_individual().allocated
+
+            return used_space, total_allocated_space
 
     def delete(self, filename):
         with self.exception_handler():

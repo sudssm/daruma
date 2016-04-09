@@ -63,6 +63,14 @@ class BaseProvider(object):
         """
         raise NotImplementedError
 
+    def get_capacity(self):
+        """
+        Get quota and capacity information
+        Raises
+        Returns
+        """
+        raise NotImplementedError
+
     def delete(self, filename):
         """
         Deletes a file from the provider

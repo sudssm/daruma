@@ -122,6 +122,16 @@ class GoogleDriveProvider(BaseProvider):
 
             self.service.files().create(body=metadata, media_body=media).execute()
 
+    def get_capacity(self):
+        with self.exception_handler():
+            about = gd.service.about().get(fields='storageQuota').execute()
+            storageInfo = about['storageQuota']
+
+            used_space = int(storageInfo['usage'])
+            total_allocated_space = int(storageInfo['limit'])
+
+            return used_space, total_allocated_space
+
     def delete(self, filename):
         with self.exception_handler():
             file_id = self._get_id(filename)
