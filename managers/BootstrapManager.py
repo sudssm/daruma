@@ -90,7 +90,7 @@ class BootstrapManager:
             # so, a group of defectors larger than k are outside threat model
             # just ensure that the largest group is size at least k
             if winning_vote is None or largest_group_size < threshold:
-                raise ValueError
+                raise exceptions.FatalOperationFailure([])
 
             failures = []  # add all providers who misvoted to failures
             for vote, sources in vote_map.items():
@@ -123,8 +123,8 @@ class BootstrapManager:
 
         try:
             threshold, n, voting_failures = vote_for_params(vote_map)
-        except ValueError:
-            raise exceptions.FatalOperationFailure(failures)
+        except exceptions.FatalOperationFailure as e:
+            raise exceptions.FatalOperationFailure(failures + e.failures)
 
         failures += voting_failures
 
