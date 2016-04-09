@@ -4,6 +4,8 @@ from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from managers.CredentialManager import CredentialManager
 from tools.encryption import generate_key
 from tools.utils import generate_random_name
+import zlib
+import json
 import pytest
 
 cm = CredentialManager()
@@ -79,20 +81,24 @@ def test_erase_fail():
         assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:3])
 
 
-# TODO - fix to account for RSS
 def test_corrupt_share():
-    # first share is corrupted
-    shares = ['1,183,14383506571137248858752746226568890411g\x0086185201\xfb\x007694740488V\x00125062113802f\x0016825707182662m\x0026\xdb\x0058854018710391183134421389524070/\x006114646214168265060555k\x008494100800704202007671\xa4\x00555308', '1,182,226267014304695315817131242195232439865531487981907935014461971554172871990460346867510934666164763232525862557386126902981162041783990791288578655246013942868725078574167846906935987', '1,183,3357163050023212588368815536361544826733003297006665064895180759814132847129670262705551618197666027830022214551307496988058445575234341192490279578525025275650912442261552259227804692', '1,183,4368762778635742506151151092050888947118091043632084490648152100885284185985093519107623674690171107856581436127584550363491099012657101346202889318359445143868979619811567566041705169', '1,182,561066200142285069164137909263264801020794727858166212273375994767626888556730116073727104143680003312203527286217287029279122354052271252426407874749273547522926611224213767348637418']
-    for share, provider in zip(shares, providers):
-        provider.put(BootstrapManager.BOOTSTRAP_FILE_NAME, "share")
-
     threshold = 3
+    BM = BootstrapManager(providers, threshold)
+    BM.distribute_bootstrap(bootstrap)
+
+    # corrupt first share
+    share = providers[0].get(BootstrapManager.BOOTSTRAP_FILE_NAME)
+    data = json.loads(zlib.decompress(share))
+    data["share"] += 1
+    share = zlib.compress(json.dumps(data))
+    providers[0].put(BootstrapManager.BOOTSTRAP_FILE_NAME, share)
+
     BM = BootstrapManager(providers, threshold)
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
     assert excinfo.value.result == bootstrap
-    assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
+    assert [failure.provider for failure in excinfo.value.failures] == providers[0:1]
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
