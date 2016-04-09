@@ -13,9 +13,15 @@ class ProviderManager():
         """
         Setup a provider manager with a new default CredentialManager
         """
-        self.provider_classes = [DropboxProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
         self.credential_manager = CredentialManager()
         self.credential_manager.load()
+
+    @staticmethod
+    def exposed_providers():
+        """
+        Returns a list of provider classes that can be exposed to the user
+        """
+        return [DropboxProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
 
     def load_all_providers_from_credentials(self):
         """
@@ -27,7 +33,8 @@ class ProviderManager():
         def flatten(list_of_lists):
             return [item for sublist in list_of_lists for item in sublist]
 
-        providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), self.provider_classes)
+        provider_classes = ProviderManager.exposed_providers()
+        providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), provider_classes)
 
         return tuple(map(flatten, zip(*providers_and_errors)))
 
