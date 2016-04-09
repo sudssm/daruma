@@ -1,6 +1,6 @@
 import dropbox
 import urllib3
-from urlparse import urlparse, parse_qs
+from tools.utils import parse_url
 from contextlib import contextmanager
 from custom_exceptions import exceptions
 from providers.BaseProvider import BaseProvider
@@ -59,7 +59,6 @@ class DropboxProvider(BaseProvider):
     def start_connection(self):
         """
         Initiate a new connection to Dropbox.
-        Args: app_key, app_secret - app identifiers, provided by Dropbox
         Returns: a url that allows the user to log in
         Raises: IOError if there was a problem reading app credentials
                 ProviderOperationFailure if there was a problem starting flow
@@ -81,9 +80,7 @@ class DropboxProvider(BaseProvider):
         Finalize the connection to Dropbox
         Args: url - a localhost url, resulting from a redirect after start_connection
         """
-        # parse url
-        params = parse_qs(urlparse(url).query)
-        params = {k: v[0] for k, v in params.items()}
+        params = parse_url(url)
 
         # get auth_token
         with self.exception_handler():

@@ -37,10 +37,17 @@ def exception_handler():
 
 
 def pp_providers():
+    """
+    convert providers into their uuids
+    """
     return map(lambda provider: provider.uuid, providers)
 
 
 def add_provider(line):
+    """
+    add <provider type>
+    provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
+    """
     line = line.strip().lower()
 
     if len(line) == 0:
@@ -59,6 +66,13 @@ def add_provider(line):
         localhost_url = raw_input("Enter resulting url (starts with localhost): ")
         with exception_handler():
             provider = provider_manager.finish_dropbox_connection(localhost_url)
+
+    elif provider_type == "google":
+        url = provider_manager.start_google_connection()
+        print "Visit", url, "to log in to Google"
+        localhost_url = raw_input("Enter resulting url (starts with localhost): ")
+        with exception_handler():
+            provider = provider_manager.finish_google_connection(localhost_url)
 
     elif provider_type == "local":
         if len(line) < 2:
@@ -170,7 +184,7 @@ class ConfigureLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -329,7 +343,7 @@ class MainLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
         """
         provider = add_provider(line)
         if provider is None:
