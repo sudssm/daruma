@@ -5,6 +5,9 @@ import pkg_resources
 import gui
 
 
+WEBVIEW_SERVER_HOST = "localhost"
+WEBVIEW_SERVER_PORT = 28962  # This should be a free port
+
 # Change the static and template folder locations depending on whether we're
 # running in an app and what the platform is.  Py2App sets the sys.frozen
 # attribute, so we're just testing for that now.  For compatibility with other
@@ -15,9 +18,7 @@ if getattr(sys, "frozen", None):
                 template_folder=os.path.join(os.getcwd(), "templates"))
 else:
     app = Flask(__name__)
-
-WEBVIEW_SERVER_HOST = "localhost"
-WEBVIEW_SERVER_PORT = 28962  # This should be a free port
+global_app_state = None
 
 
 @app.route('/app_logo.png')
@@ -36,11 +37,14 @@ def show_provider_status():
     return render_template('providers.html', providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
 
 
-def start_ui_server(native_app):
+def start_ui_server(native_app, app_state):
     """
     Begins running the UI webserver.
 
     Args:
         native_app: A reference to the menubar app.
+        app_state: An ApplicationState object
     """
+    global global_app_state
+    global_app_state = app_state
     app.run(host=WEBVIEW_SERVER_HOST, port=WEBVIEW_SERVER_PORT)
