@@ -91,8 +91,11 @@ def test_temporary_offline_put():
 
 def test_offline_provision():
     providers[0].set_state(TestProviderState.FAILING, 4)
-    with pytest.raises(exceptions.ProviderFailure):
+    with pytest.raises(exceptions.FatalOperationFailure) as excinfo:
         SecretBox.provision(providers, 3, 3)
+    failures = excinfo.value.failures
+    assert len(failures) == 1
+    assert failures[0].provider == providers[0]
 
 
 def test_temporary_offline_load():
@@ -143,3 +146,14 @@ def test_corrupting():
     providers[0].set_state(TestProviderState.CORRUPTING)
     assert SB.get("test") == "data"
     assert providers[0].status == ProviderStatus.YELLOW
+
+
+def test_attempt_repair_in_read_only():
+    SB = SecretBox.provision(providers, 3, 3)
+    SB.put("test", "data")
+
+    # load with only 4 providers, one of which is bad
+    providers[0].set_state(TestProviderState.OFFLINE)
+    SB = SecretBox.load(providers[:4])
+
+    assert SB.get("test") == "data"

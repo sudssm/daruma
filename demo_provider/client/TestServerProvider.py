@@ -5,9 +5,12 @@ import requests
 
 class TestServerProvider(BaseProvider):
     @staticmethod
+    def provider_name():
+        return "Demo Server"
+
+    @staticmethod
     def load_cached_providers(credential_manager):
         credentials = credential_manager.get_user_credentials(__name__)
-        print credentials
         providers = []
         failed_hosts = []
         for host in credentials.keys():
@@ -49,6 +52,10 @@ class TestServerProvider(BaseProvider):
 
         self.credential_manager.set_user_credentials(__name__, self.host, None)
 
+    @property
+    def uid(self):
+        return self.host
+
     def get(self, filename):
         try:
             return self._get_json("get/" + filename)['data']
@@ -73,7 +80,3 @@ class TestServerProvider(BaseProvider):
             assert self._get_json("wipe")['success'] is True
         except (KeyError, AssertionError):
             raise exceptions.ProviderOperationFailure(self)
-
-    @property
-    def expose_to_client(self):
-        return True

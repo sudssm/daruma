@@ -1,5 +1,7 @@
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
+from providers.LocalFilesystemProvider import LocalFilesystemProvider
+from managers.CredentialManager import CredentialManager
 from managers.manifest import *
 import pytest
 
@@ -321,7 +323,6 @@ def test_move_file():
     manifest.update_file("dir/file", codename1, 3, generate_key())
     node = manifest.get("dir/file")
     manifest.move("dir/file", "dir/new_file")
-    print manifest.root.attributes
 
     assert node == manifest.get("dir/new_file")
     with pytest.raises(exceptions.InvalidPath):
@@ -431,3 +432,17 @@ def test_generate_files_tree():
         manifest.update_file(path, codename1, 23, key1)
 
     assert sorted(manifest.generate_files_under("dir1")) == sorted(expected_files)
+
+
+def test_roundtrip_providers():
+    cm = CredentialManager()
+    cm.load()
+
+    providers = [LocalFilesystemProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
+    manifest = Manifest()
+    manifest.set_providers(providers)
+
+    provider_strings = map(lambda provider: provider.uuid, providers)
+
+    assert Manifest.deserialize(manifest.serialize()).get_provider_strings() == provider_strings
