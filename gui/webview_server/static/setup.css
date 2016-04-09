@@ -1,0 +1,107 @@
+body {
+	text-align: center;
+}
+
+#app-logo {
+	height: 200px;
+	width: 200px;
+	margin-top: 20px;
+}
+
+#instructions-box {
+	width: 85%;
+	margin: auto;
+	text-align: initial;
+}
+
+#instructions-box > div {
+	display: none;
+}
+
+#instructions-box > div:first-child {
+	display: block;
+}
+
+#button-container > button {
+	display: none;
+}
+
+#button-container > .big-button:first-child {
+	display: inline-block;
+}
+
+.big-button {
+	margin: auto;
+	margin-top: 5%;
+	display: inline-block;
+	font-size: 18pt;
+	padding: 10px;
+	border-radius: 15px;
+}
+
+#add-provider-button {
+	background-color: #90ee90;
+}
+
+#add-provider-button:hover {
+	background-color: #65e765;
+}
+
+#done-adding-providers-button {
+	margin-left: 10px;
+}
+
+#added-providers-area {
+	display: none;
+	margin-top: 5%;
+}
+
+#added-providers-area > h2 {
+	font-size: 12pt;
+}
+
+#added-providers-area > ul {
+	padding: 0 10px;
+	margin: 0;
+	display: inline-block;
+	overflow: scroll;
+    list-style-type: none;
+	text-align: initial;
+}
+
+.added-provider-name {
+	font-weight: bold;
+}
+
+.added-username {
+	color: #555555;
+}
+
+.tooltip {
+    position: relative;
+}
+
+.tooltip .tooltiptext {
+	font-size: 12pt;
+    width: 80%;
+    background-color: silver;
+    color: #7F7F7F;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    left: 105%;
+    bottom: 0;
+    margin-top: -50%;
+    box-shadow: 1px 1px 2px #888888;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent silver transparent transparent;
+}
