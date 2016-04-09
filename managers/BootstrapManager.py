@@ -73,7 +73,7 @@ class BootstrapManager:
                 n: the voted n
                 failures: a list of providers who did not vote for the winning vote if one was found
             Raises:
-                ValueError: no parameters were returned or there were too few providers in agreement to support the consensus threshold
+                FatalOperationFailure: no parameters were returned or there were too few providers in agreement to support the consensus threshold
             """
             # vote on threshold
             largest_group_size = 0
