@@ -9,7 +9,13 @@ import pytest
 cm = CredentialManager()
 cm.load()
 
-providers = [TestProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
+def make_local(cm, path):
+    provider = TestProvider(cm)
+    provider.connect(path)
+    return provider
+
+providers = [make_local(cm, "tmp/" + str(i)) for i in xrange(5)]
 
 
 def teardown_function(function):

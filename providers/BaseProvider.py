@@ -23,7 +23,7 @@ class BaseProvider(object):
         Returns:
             (providers, failed_identifiers)
             providers: a list of functional Providers
-            failed_identifiers: a list of identifiers for the accounts that failed to load
+            failed_identifiers: a list of uuids for the accounts that failed to load
         """
         raise NotImplementedError
 
@@ -104,8 +104,8 @@ class BaseProvider(object):
             return ProviderStatus.YELLOW
         return ProviderStatus.GREEN
 
-    @staticmethod
-    def provider_name():
+    @classmethod
+    def provider_name(cls):
         """
         Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
         """

@@ -3,47 +3,37 @@ import os
 import shutil
 from tools.utils import APP_NAME
 from custom_exceptions import exceptions
-from providers.BaseProvider import BaseProvider
+from providers.UnauthenticatedProvider import UnauthenticatedProvider
 
 DIRECTORY_MODE = 0o700  # RW only for current user
 
 
-class LocalFilesystemProvider(BaseProvider):
-    @staticmethod
-    def provider_name():
+class LocalFilesystemProvider(UnauthenticatedProvider):
+    @classmethod
+    def provider_name(cls):
         return "Local"
 
-    @staticmethod
-    def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(LocalFilesystemProvider.provider_name())
-        providers = []
-        failed_paths = []
-        for provider_path in credentials.keys():
-            try:
-                providers.append(LocalFilesystemProvider(credential_manager, provider_path))
-            except:
-                failed_paths.append(provider_path)
-        return providers, failed_paths
-
-    def __init__(self, credential_manager, provider_path=""):
+    def __init__(self, credential_manager):
         """
         Initialize a non-networked provider backed by the local filesystem.
 
         Args:
             credential_manager, a credential_manager to store user credentials
-            provider_path: an optional string holding the relative or
-                absolute base path for the backing directory on the filesystem.
-                Defaults to the current directory.
         """
         super(LocalFilesystemProvider, self).__init__(credential_manager)
         self.ROOT_DIR = APP_NAME
-        self.provider_path = provider_path
-        self._connect()
 
     def _get_translated_filepath(self, relative_filename):
         return os.path.join(self.provider_path, self.ROOT_DIR, relative_filename)
 
-    def _connect(self):
+    def connect(self, provider_path):
+        """
+        Connects to the provider
+        provider_path: an optional string holding the relative or
+            absolute base path for the backing directory on the filesystem.
+            Defaults to the current directory.
+        """
+        self.provider_path = provider_path
         try:
             translated_root_dir = self._get_translated_filepath("")
             os.makedirs(translated_root_dir, DIRECTORY_MODE)

@@ -11,24 +11,12 @@ class TestProviderState:
 
 
 class TestProvider(LocalFilesystemProvider):
-    @staticmethod
-    def provider_name():
+    @classmethod
+    def provider_name(cls):
         return "Test"
 
-    @staticmethod
-    def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(TestProvider.provider_name())
-        providers = []
-        failed_paths = []
-        for provider_path in credentials.keys():
-            try:
-                providers.append(TestProvider(credential_manager, provider_path))
-            except:
-                failed_paths.append(provider_path)
-        return providers, failed_paths
-
-    def __init__(self, credential_manager, provider_path=""):
-        super(TestProvider, self).__init__(credential_manager, provider_path)
+    def __init__(self, credential_manager):
+        super(TestProvider, self).__init__(credential_manager)
         self.state = TestProviderState.ACTIVE
         self.state_timer = 0
 
@@ -57,9 +45,9 @@ class TestProvider(LocalFilesystemProvider):
             raise exceptions.ProviderOperationFailure(self)
         yield
 
-    def connect(self):
+    def connect(self, provider_path):
         with self.exception_handler(check_failing=False):
-            super(TestProvider, self).connect()
+            super(TestProvider, self).connect(provider_path)
 
     def get(self, filename):
         with self.exception_handler():
@@ -90,4 +78,4 @@ class TestProvider(LocalFilesystemProvider):
             return super(TestProvider, self).wipe()
 
     def __str__(self):
-        return "<Test@" + self.provider_path + "-" + self.state + "-" + str(self.score) + ">"
+        return "<Test@" + self.uid + "-" + self.state + "-" + str(self.score) + ">"

@@ -1,38 +1,21 @@
 from custom_exceptions import exceptions
-from providers.BaseProvider import BaseProvider
+from providers.UnauthenticatedProvider import UnauthenticatedProvider
 import requests
 
 
-class TestServerProvider(BaseProvider):
-    @staticmethod
-    def provider_name():
+class TestServerProvider(UnauthenticatedProvider):
+    @classmethod
+    def provider_name(cls):
         return "Demo Server"
 
-    @staticmethod
-    def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(__name__)
-        providers = []
-        failed_hosts = []
-        for host in credentials.keys():
-            try:
-                [hostname, port] = host.lstrip("http://").split(":")
-                providers.append(TestServerProvider(credential_manager, hostname, port))
-            except:
-                failed_hosts.append(host)
-        return providers, failed_hosts
-
-    def __init__(self, credential_manager, server_hostname, server_port=80):
+    def __init__(self, credential_manager):
         """
         Initialize a connection to an existing demo server provider
 
         Args:
             credential_manager, a credential_manager to store user credentials
-            server_hostname: The url where the demo server is running
-            server_port: The port where the demo server is running
         """
         super(TestServerProvider, self).__init__(credential_manager)
-        self.host = "http://" + server_hostname + ":" + str(server_port)
-        self._connect()
 
     def _get_json(self, path):
         try:
@@ -44,13 +27,18 @@ class TestServerProvider(BaseProvider):
         except:
             raise exceptions.ProviderOperationFailure(self)
 
-    def _connect(self):
+    def connect(self, url):
+        """
+        Connect to the demo server at url
+        url: the fully defined url (http://hostname:port) where the server is running
+        """
+        self.host = url
         try:
             assert self._get_json("")['connected'] is True
         except KeyError:
             raise exceptions.ProviderOperationFailure(self)
 
-        self.credential_manager.set_user_credentials(__name__, self.host, None)
+        self.credential_manager.set_user_credentials(self.provider_name(), self.host, None)
 
     @property
     def uid(self):
