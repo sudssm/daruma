@@ -8,6 +8,10 @@ from providers.OAuthProvider import OAuthProvider
 
 class DropboxProvider(OAuthProvider):
     @classmethod
+    def provider_identifier(cls):
+        return "dropbox"
+
+    @classmethod
     def provider_name(cls):
         return "Dropbox"
 

@@ -105,16 +105,31 @@ class BaseProvider(object):
         return ProviderStatus.GREEN
 
     @classmethod
+    def provider_identifier(cls):
+        """
+        Returns a string for this provider. Must be unique across all provider
+        types.
+        This will not be displayed, but will be used in the following scenarios:
+            - The provider logo will be assumed to be called
+              <provider_identifier>.png
+            - The identifier may be used in various internal indexes and URLs.
+        """
+        return NotImplementedError
+
+    @classmethod
     def provider_name(cls):
         """
-        Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
+        Returns a pretty-printed identifier for this type of provider. Must be
+        unique across all provider types.
         """
         raise NotImplementedError
 
     @property
     def uid(self):
         """
-        Returns an identifier for this provider. Must be unique across all providers of this type.
+        Returns an identifier for this provider. Must be unique across all
+        providers of this type.  This identifier will be user-facing, so an
+        account username or file path would be a good candidate.
         """
         raise NotImplementedError
 

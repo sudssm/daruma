@@ -12,6 +12,10 @@ class TestProviderState:
 
 class TestProvider(LocalFilesystemProvider):
     @classmethod
+    def provider_identifier(cls):
+        return "test"
+
+    @classmethod
     def provider_name(cls):
         return "Test"
 

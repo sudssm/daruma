@@ -19,7 +19,7 @@ class ProviderManager():
         self.provider_classes = [LocalFilesystemProvider, TestProvider, DropboxProvider, GoogleDriveProvider, TestServerProvider]
         self.credential_manager = CredentialManager()
         self.credential_manager.load()
-        self.tmp_oauth_providers = {}
+        self.tmp_oauth_providers = {}  # Stores data for in-flight OAuth transactions
 
     def load_all_providers_from_credentials(self):
         """
@@ -39,11 +39,11 @@ class ProviderManager():
         """
         Get all available provider classes
         Returns a tuple (oauth_providers, unauth_providers)
-            oauth_providers: a map from provider name to provider class that follows the oauth flow
-            unauth_providers: a map from provider name to provider class that follows the unauth flow
+            oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
+            unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
         """
-        oauth_providers = {cls.provider_name(): cls for cls in self.provider_classes if issubclass(cls, OAuthProvider)}
-        unauth_providers = {cls.provider_name(): cls for cls in self.provider_classes if issubclass(cls, UnauthenticatedProvider)}
+        oauth_providers = {cls.provider_identifier(): cls for cls in self.provider_classes if issubclass(cls, OAuthProvider)}
+        unauth_providers = {cls.provider_identifier(): cls for cls in self.provider_classes if issubclass(cls, UnauthenticatedProvider)}
         return oauth_providers, unauth_providers
 
     def start_oauth_connection(self, provider_class):

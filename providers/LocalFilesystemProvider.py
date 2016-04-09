@@ -10,6 +10,10 @@ DIRECTORY_MODE = 0o700  # RW only for current user
 
 class LocalFilesystemProvider(UnauthenticatedProvider):
     @classmethod
+    def provider_identifier(cls):
+        return "local"
+
+    @classmethod
     def provider_name(cls):
         return "Local"
 

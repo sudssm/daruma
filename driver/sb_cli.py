@@ -15,8 +15,6 @@ import colorama
 
 provider_manager = ProviderManager()
 oauth_providers, unauth_providers = provider_manager.get_provider_classes()
-oauth_providers = {k.lower(): v for k, v in oauth_providers.items()}
-unauth_providers = {k.lower(): v for k, v in unauth_providers.items()}
 providers = []
 secret_box = None
 
@@ -49,7 +47,7 @@ def pp_providers():
 def add_provider(line):
     """
     add <provider type>
-    provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
+    provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "DemoServer"
     """
     line = line.strip().lower()
 
@@ -60,8 +58,6 @@ def add_provider(line):
     line = shlex.split(line)
 
     provider_type = line[0]
-    if provider_type == "google":
-        provider_type = "google drive"
 
     provider = None
 

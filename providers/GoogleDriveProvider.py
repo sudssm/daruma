@@ -14,6 +14,10 @@ class GoogleDriveProvider(OAuthProvider):
     SCOPE = 'https://www.googleapis.com/auth/drive.file'
 
     @classmethod
+    def provider_identifier(cls):
+        return "googledrive"
+
+    @classmethod
     def provider_name(cls):
         return "Google Drive"
 

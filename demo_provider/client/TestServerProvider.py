@@ -5,6 +5,10 @@ import requests
 
 class TestServerProvider(UnauthenticatedProvider):
     @classmethod
+    def provider_identifier(cls):
+        return "demoserver"
+
+    @classmethod
     def provider_name(cls):
         return "Demo Server"
 
