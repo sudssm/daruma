@@ -47,44 +47,14 @@ class BootstrapManager:
         self.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
         self.num_providers = None
 
-    def _determine_parameters(self, vote_map, failures):
-        '''
-        Determines the values for n and threshold, adding exceptions for providers who misvoted to the failures list
-        Args:
-            vote_map, maps (threshold, n) vote to providers that voted
-            failures, a growing list of exceptions for failed providers
-        Returns:
-            (threshold, n)
-            threshold: the voted bootstrap threshold
-            n: the voted n
-        '''
-        # vote on threshold
-        largest_group_size = 0
-        winning_vote = None
-        for vote, sources in vote_map.items():
-            if len(sources) > largest_group_size:
-                winning_vote = vote
-                largest_group_size = len(sources)
-
-        if winning_vote is not None:
-            threshold, n = winning_vote
-
-        # we protect against (k-1) providers failing
-        # so, a group of defectors larger than k are outside threat model
-        # just ensure that the largest group is size at least k
-        if winning_vote is None or largest_group_size < threshold:
-            raise exceptions.FatalOperationFailure(failures)
-
-        # add all providers who misvoted to failures
-        for vote, sources in vote_map.items():
-            if vote != winning_vote:
-                failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
-
-        return threshold, n
-
     def _download_and_vote(self):
         """
-        Recovers n, bootstrap threshold and shares from providers if there is a consensus
+        Recovers n, bootstrap threshold, shares, and failures from providers if there is a consensus
+        A provider may be considered failing when one of the following cases is met:
+            a provider experiences some error that prevents a returned share
+            a provider gives a share with structoral errors (wrong type, cannot decompress or unpack, etc)
+            the provider does not vote for the consensus n, bootstrap threshold
+            a provider id is of the wrong type or out of the predetermined range
         Returns:
             threshold, the voted bootstrap threshold
             n, the voted n
@@ -93,6 +63,40 @@ class BootstrapManager:
             failures, a list of failures from failing providers
         Raises FatalOperationFailure if unable to reach consensus
         """
+        def _vote_for_params(vote_map):
+            """
+            Args:
+                vote_map: maps tuple of (threshold, n) votes to providers that voted
+            Returns:
+                (threshold, n), failures
+                threshold: the voted bootstrap threshold
+                n: the voted n
+                failures: a list of providers who did not vote for the winning vote if one was found
+            """
+            # vote on threshold
+            largest_group_size = 0
+            winning_vote = None
+            for vote, sources in vote_map.items():
+                if len(sources) > largest_group_size:
+                    winning_vote = vote
+                    largest_group_size = len(sources)
+
+            if winning_vote is not None:
+                threshold, n = winning_vote
+
+            # we protect against (k-1) providers failing
+            # so, a group of defectors larger than k are outside threat model
+            # just ensure that the largest group is size at least k
+            if winning_vote is None or largest_group_size < threshold:
+                raise exceptions.FatalOperationFailure([])
+
+            failures = []  # add all providers who misvoted to failures
+            for vote, sources in vote_map.items():
+                if vote != winning_vote:
+                    failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
+
+            return threshold, n, failures
+
         # maps self-proclaimed provider_id to providers with that id
         # (there could be multiple providers that report the same one)
         provider_id_map = defaultdict(list)
@@ -115,7 +119,12 @@ class BootstrapManager:
                 # if the cast to int, decompressing or unpacking failed
                 failures.append(exceptions.InvalidShareFailure(provider))
 
-        threshold, n = self._determine_parameters(vote_map, failures)
+        try:
+            threshold, n, voting_failures = _vote_for_params(vote_map)
+        except exceptions.FatalOperationFailure:
+            raise exceptions.FatalOperationFailure(failures)
+
+        failures += voting_failures
 
         # add all providers with invalid id to failures
         for provider_id, providers in provider_id_map.items():
