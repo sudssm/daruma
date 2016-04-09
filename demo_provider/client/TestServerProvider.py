@@ -4,16 +4,35 @@ import requests
 
 
 class TestServerProvider(BaseProvider):
-    def __init__(self, server_hostname, server_port=80):
+    @staticmethod
+    def provider_name():
+        return "Demo Server"
+
+    @staticmethod
+    def load_cached_providers(credential_manager):
+        credentials = credential_manager.get_user_credentials(__name__)
+        providers = []
+        failed_hosts = []
+        for host in credentials.keys():
+            try:
+                [hostname, port] = host.lstrip("http://").split(":")
+                providers.append(TestServerProvider(credential_manager, hostname, port))
+            except:
+                failed_hosts.append(host)
+        return providers, failed_hosts
+
+    def __init__(self, credential_manager, server_hostname, server_port=80):
         """
         Initialize a connection to an existing demo server provider
 
         Args:
+            credential_manager, a credential_manager to store user credentials
             server_hostname: The url where the demo server is running
             server_port: The port where the demo server is running
         """
+        super(TestServerProvider, self).__init__(credential_manager)
         self.host = "http://" + server_hostname + ":" + str(server_port)
-        super(TestServerProvider, self).__init__()
+        self._connect()
 
     def _get_json(self, path):
         try:
@@ -25,11 +44,17 @@ class TestServerProvider(BaseProvider):
         except:
             raise exceptions.ProviderOperationFailure(self)
 
-    def connect(self):
+    def _connect(self):
         try:
             assert self._get_json("")['connected'] is True
         except KeyError:
             raise exceptions.ProviderOperationFailure(self)
+
+        self.credential_manager.set_user_credentials(__name__, self.host, None)
+
+    @property
+    def uid(self):
+        return self.host
 
     def get(self, filename):
         try:

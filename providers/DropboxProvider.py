@@ -4,30 +4,26 @@ from urlparse import urlparse, parse_qs
 from contextlib import contextmanager
 from custom_exceptions import exceptions
 from providers.BaseProvider import BaseProvider
-from providers.CredentialManager import CredentialManager
 
 
 class DropboxProvider(BaseProvider):
     @staticmethod
+    def provider_name():
+        return "Dropbox"
+
+    @staticmethod
     def load_cached_providers(credential_manager):
-        """
-        Attempts to load all DropboxProviders that have user credential stored
-        Returns:
-            (db_providers, failed_emails)
-            db_providers: a list of functional DropboxProviders
-            failed_emails: a list of dropbox accounts that failed to load
-        """
-        credentials = credential_manager.get_user_credentials(DropboxProvider.__module__)
-        db_providers = []
-        failed_emails = []
-        for email, auth_token in credentials.items():
+        credentials = credential_manager.get_user_credentials(DropboxProvider.provider_name())
+        providers = []
+        failed_ids = []
+        for provider_id, auth_token in credentials.items():
             db_provider = DropboxProvider(credential_manager)
             try:
                 db_provider._connect(auth_token)
-                db_providers.append(db_provider)
+                providers.append(db_provider)
             except:
-                failed_emails.append(email)
-        return db_providers, failed_emails
+                failed_ids.append(provider_id)
+        return providers, failed_ids
 
     def __init__(self, credential_manager):
         """
@@ -35,8 +31,7 @@ class DropboxProvider(BaseProvider):
         Not functional until start_connection and finish_connection are called.
         Args: credential_manager, a credential_manager with information about DropboxProviders
         """
-        super(DropboxProvider, self).__init__()
-        self.credential_manager = credential_manager
+        super(DropboxProvider, self).__init__(credential_manager)
 
     @contextmanager
     def exception_handler(self):
@@ -59,7 +54,7 @@ class DropboxProvider(BaseProvider):
             raise exceptions.ProviderOperationFailure(self)
 
         except Exception:
-            raise exceptions.LibraryException
+            raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
         """
@@ -70,7 +65,7 @@ class DropboxProvider(BaseProvider):
                 ProviderOperationFailure if there was a problem starting flow
         """
         try:
-            credentials = self.credential_manager.get_app_credentials(DropboxProvider.__module__)
+            credentials = self.credential_manager.get_app_credentials(self.provider_name())
             app_key, app_secret = credentials["app_key"], credentials["app_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -100,7 +95,11 @@ class DropboxProvider(BaseProvider):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
             self.email = self.client.account_info()['email']
-        self.credential_manager.set_user_credentials(DropboxProvider.__module__, self.email, auth_token)
+        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, auth_token)
+
+    @property
+    def uid(self):
+        return self.email
 
     def get(self, filename):
         with self.exception_handler():

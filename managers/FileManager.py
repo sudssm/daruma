@@ -3,39 +3,89 @@
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
-from tools.utils import generate_filename
+from tools.utils import generate_random_name
 # TODO cache the manifest intelligently
 
 
 class FileManager:
-    # set setup to True in order to create a new system
-    def __init__(self, providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
+    """
+    A distributed filesystem. Wraps Distributor and Manifest to encrypt and distribute files across multiple providers.
+    Detects errors in providers, and raises them as OperationFailure or FatalOperationFailure. Also detects missing providers.
+    Does not attempt to do any recovery or repair of broken providers.
+    """
+    def __init__(self, providers, num_providers, file_reconstruction_threshold, master_key, manifest_name, setup=False):
+        """
+        Create a FileManager
+        Args:
+            providers: a list of providers to use
+            num_providers: the total number of providers that have been configured with this system before
+            file_reconstruction_threshold: the threshold for file file_reconstruction_threshold
+            master_key: the master key used to decrypt files
+            manifest_name: the name of the manifest file on the providers
+            setup: whether this FileManager should setup a new system (True) or load an existing one (False)
+        """
         self.providers = providers
         self.file_reconstruction_threshold = file_reconstruction_threshold
         self.master_key = master_key
         self.manifest_name = manifest_name
-        self.distributor = FileDistributor(providers, file_reconstruction_threshold)
+        self.distributor = FileDistributor(providers, num_providers, file_reconstruction_threshold)
 
         if setup:
-            self.manifest = Manifest()
+            self.manifest = Manifest(self.providers)
             self.distribute_manifest()
         # else:
         # self.load_manifest()
 
     def load_manifest(self):
         """
+        Loads the manifest into memory
+        Also compiles a list of missing providers for later use
         Raises:
             OperationFailure with None result if any provider fails
             FatalOperationFailure if we couldn't load
         """
         self.manifest = None
+        failures = None
         try:
             manifest_str = self.distributor.get(self.manifest_name, self.master_key)
-            self.manifest = Manifest.deserialize(manifest_str)
         except exceptions.OperationFailure as e:
-            # set manifest to recovered value and pass along failures
-            self.manifest = Manifest.deserialize(e.result)
-            raise exceptions.OperationFailure(e.failures, None)
+            manifest_str = e.result
+            failures = e.failures
+
+        self.manifest = Manifest.deserialize(manifest_str)
+        providers_uuids = set(map(lambda provider: provider.uuid, self.providers))
+        expected_providers = set(self.manifest.get_provider_strings())
+        self.missing_providers = list(expected_providers - providers_uuids)
+
+        if failures is not None:
+            raise exceptions.OperationFailure(failures, None)
+
+    def get_missing_providers(self):
+        """
+        Returns a list of unique identifier tuples for providers that are expected but missing
+        If the resulting list is nonempty, the system is in readonly mode
+        """
+        return self.missing_providers[:]
+
+    def add_missing_provider(self, missing_provider):
+        """
+        Add a missing provider to this file manager
+        Args:
+            missing_provider: a missing provider, with a uuid in the result of calling missing_providers()
+        Returns:
+            True if the provided missing_provider is one of the missing_providers
+            False otherwise
+        """
+        try:
+            self.missing_providers.remove(missing_provider.uuid)
+        except ValueError:
+            # the provided missing_provider was not in the list of missing_providers
+            return False
+
+        self.providers.append(missing_provider)
+        self.distributor.providers.append(missing_provider)
+
+        return True
 
     def distribute_manifest(self):
         """
@@ -59,7 +109,9 @@ class FileManager:
         """
         errors = []
         old_files = []
-        new_distributor = FileDistributor(self.providers, self.file_reconstruction_threshold)
+
+        # we use num_providers = len(providers) here, because we want to reprovision with all current providers
+        new_distributor = FileDistributor(self.providers, len(self.providers), self.file_reconstruction_threshold)
 
         for file_node in self.manifest.generate_files_under(""):
             filename = file_node.name
@@ -70,11 +122,11 @@ class FileManager:
             try:
                 data = self.distributor.get(old_codename, old_key)
             except exceptions.OperationFailure as e:
-                data = e.data
+                data = e.result
                 errors.append(e)
             old_files.append(old_codename)
 
-            codename = generate_filename()
+            codename = generate_random_name()
             key = new_distributor.put(codename, data)
             # TODO this changes the manifest without being sure that distributor changes will work
             # change this when implementing manifest caching
@@ -82,6 +134,8 @@ class FileManager:
 
         old_distributor = self.distributor
         self.distributor = new_distributor
+
+        self.manifest.set_providers(self.providers)
         self.distribute_manifest()
 
         # TODO doing this step at the end means that we double in size
@@ -138,11 +192,23 @@ class FileManager:
 
         return [external_attributes_from_node(node) for node in ls_nodes]
 
+    def _check_read_only(self):
+        """
+        Check to see if the system is in read only mode by checking self.missing_providers
+        To be called after loading manifest
+        Raises ReadOnlyMode if in ready only mode
+        """
+        if len(self.missing_providers) > 0:
+            raise exceptions.ReadOnlyMode
+
     def put(self, name, data):
         """
+        Raises ReadOnlyMode if the system is in read only mode (there are some missing providers)
         Raises FatalOperationFailure (from distributer.put) if any provider operation throws an exception
         """
-        codename = generate_filename()
+        self._check_read_only()
+
+        codename = generate_random_name()
         key = self.distributor.put(codename, data)
 
         old_node = self.manifest.update_file(name, codename, len(data), key)
@@ -162,17 +228,23 @@ class FileManager:
         """
         Creates a directory with the specified path, creating intermediate directories along the way
         Does nothing if the directory already exists
+        Raises ReadOnlyMode if the system is in read only mode (there are some missing providers)
         Raises InvalidPath (from manifest.create_directory) if the path is invalid for a directory
         Raises FatalOperationFailure (from distributor.put) if any provider operation throws an exception
         """
+        self._check_read_only()
+
         self.manifest.create_directory(path)
         self.distribute_manifest()
 
     def move(self, old_path, new_path):
         """
         Move a file or folder from old_path to new_path
+        Raises ReadOnlyMode if the system is in read only mode (there are some missing providers)
         Raises InvalidPath (from manifest.move) if either path is invalid, or if new_path exists
         """
+        self._check_read_only()
+
         self.manifest.move(old_path, new_path)
         self.distribute_manifest()
 
@@ -197,10 +269,13 @@ class FileManager:
     def delete(self, name):
         """
         delete a file
+        Raises ReadOnlyMode if the system is in read only mode (there are some missing providers)
         Raises FileNotFound if file does not exist (from manifest.remove_line)
         Raises OperationFailure with errors and file contents if recoverable (from distributor.delete)
-            Raises FatalOperationFailure if unrecoverable (from distribute_manifest)
+        Raises FatalOperationFailure if unrecoverable (from distribute_manifest)
         """
+        self._check_read_only()
+
         node = self.manifest.remove(name)
 
         try:

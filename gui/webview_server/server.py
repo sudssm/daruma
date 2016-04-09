@@ -1,9 +1,20 @@
+import sys
 import os
 from flask import Flask, render_template, send_file
 import pkg_resources
 import gui
 
-app = Flask(__name__)
+
+# Change the static and template folder locations depending on whether we're
+# running in an app and what the platform is.  Py2App sets the sys.frozen
+# attribute, so we're just testing for that now.  For compatibility with other
+# installers, inspect the value of the attribute.
+if getattr(sys, "frozen", None):
+    app = Flask(__name__,
+                static_folder=os.path.join(os.getcwd(), "static"),
+                template_folder=os.path.join(os.getcwd(), "templates"))
+else:
+    app = Flask(__name__)
 
 WEBVIEW_SERVER_HOST = "localhost"
 WEBVIEW_SERVER_PORT = 28962  # This should be a free port

@@ -1,27 +1,21 @@
 """
-super ugly hacked together thing to play with secretbox
-usage:
-    python sb_ui.py init n tmp_dir
-    python sb_ui.py start n tmp_dir
-
-arg 1 is init if you want to start a new secretbox from scratch
-         start if you want to resume an existing secretbox
-
-n is the number of local providers to make
-k_key/k_file is the number of providers that need to be up to recover key/file
-tmp_dir is a local directory that will act as the providers
+Command line interface for Daruma
 """
-import shlex
-import traceback
+from providers.TestProvider import TestProviderState
+from providers.BaseProvider import ProviderStatus
+from managers.ProviderManager import ProviderManager
 from driver.SecretBox import SecretBox
 from custom_exceptions import exceptions
-from providers.TestProvider import TestProvider, TestProviderState
-from providers.DropboxProvider import DropboxProvider
-from providers.BaseProvider import ProviderStatus
-from providers.CredentialManager import CredentialManager
 from contextlib import contextmanager
-import sys
+import traceback
+import cmd
+import shlex
 import colorama
+
+
+provider_manager = ProviderManager()
+providers = []
+secret_box = None
 
 
 @contextmanager
@@ -34,67 +28,163 @@ def exception_handler():
         print "Error: no such file or directory"
     except exceptions.FatalOperationFailure:
         print "Operation Failed! check status"
-    except Exception as e:
+    except exceptions.ReadOnlyMode:
+        print "The system is in read only mode!"
+        print "You are missing the following provider:", secret_box.get_missing_providers()
+        print "To be able to write, either 'add' more providers, or 'reprovision' with the existing ones."
+    except:
         print traceback.format_exc()
 
-credential_manager = CredentialManager()
-credential_manager.load()
-colorama.init()
 
-try:
-    cmd = sys.argv[1]
-    n = int(sys.argv[2])
-    tmp_dir = sys.argv[3]
-
-    if cmd not in ["init", "start"]:
-        raise Exception
-except:
-    print __doc__
-    sys.exit()
+def pp_providers():
+    return map(lambda provider: provider.uuid, providers)
 
 
-providers = [TestProvider(tmp_dir + "/" + str(i)) for i in xrange(n)]
-# attempt to load authenticated dropbox providers
-dropbox_providers, failed_emails = DropboxProvider.load_cached_providers(credential_manager)
+def add_provider(line):
+    line = line.strip().lower()
 
-if len(failed_emails) > 0:
-    print "Failed to load DropboxProviders:", failed_emails
+    if len(line) == 0:
+        print "Enter a provider type!"
+        return
 
-if len(dropbox_providers) == 0:
-    # start a dropbox provider
-    dropbox_provider = DropboxProvider(credential_manager)
-    print "Visit", dropbox_provider.start_connection(), "to sign in to Dropbox"
-    localhost_url = raw_input("Enter resulting url (starts with localhost): ")
-    dropbox_provider.finish_connection(localhost_url)
-    providers.append(dropbox_provider)
-else:
-    print "Loaded Dropbox accounts:", [dbp.email for dbp in dropbox_providers]
-    providers += dropbox_providers
+    line = shlex.split(line)
 
-if cmd == "init":
-    SB = SecretBox.provision(providers, n-1, n-1)
-else:
-    SB = SecretBox.load(providers)
+    provider_type = line[0]
 
-while True:
-    print "\n"
-    print "SB commands: ls, mv, mkdir, get, put, del, exit"
-    print "provider commands: add, remove, set, wipe, status"
+    provider = None
 
-    with exception_handler():
-        cmd = shlex.split(raw_input("> "))
-
-    if len(cmd) == 0:
-        continue
-
-    if cmd[0] == "ls":
-        if len(cmd) > 1:
-            target = cmd[1]
-        else:
-            target = ""
-
+    if provider_type == "dropbox":
+        url = provider_manager.start_dropbox_connection()
+        print "Visit", url, "to log in to Dropbox"
+        localhost_url = raw_input("Enter resulting url (starts with localhost): ")
         with exception_handler():
-            files = SB.ls(target)
+            provider = provider_manager.finish_dropbox_connection(localhost_url)
+
+    elif provider_type == "local":
+        if len(line) < 2:
+            print "Usage: add Local <path_name>"
+            return
+        with exception_handler():
+            provider = provider_manager.make_local(line[1])
+
+    elif provider_type == "test":
+        if len(line) < 2:
+            print "Usage: add Test <path_name>"
+            return
+        with exception_handler():
+            provider = provider_manager.make_test(line[1])
+
+    elif provider_type == "testserver":
+        if len(line) < 3:
+            print "Usage: add Test <host> <port>"
+            return
+        with exception_handler():
+            provider = provider_manager.make_test_server(line[1], line[2])
+
+    else:
+        print "Invalid provider type!"
+
+    if provider is None:
+        print "Error loading provider"
+        return
+
+    return provider
+
+
+class ConfigureLoop(cmd.Cmd):
+    """
+    Configure settings and providers
+    """
+    prompt = "\nDaruma Configuration> "
+
+    def preloop(self):
+        global providers
+
+        print "Welcome to Daruma!"
+
+        # attempt to load cached providers from credentials
+        providers, errors = provider_manager.load_all_providers_from_credentials()
+        print "Loaded from cache:", pp_providers()
+        print "Errors loading from cache:", errors
+
+        if self.do_load():
+            print "Press enter to continue"
+
+    def postcmd(self, stop, line):
+        print "Loaded providers:", pp_providers()
+        # we're done with this section when secretbox is defined
+        return secret_box is not None
+
+    def do_add(self, line):
+        """
+        add <provider type>
+        provider_type can be one of "Dropbox", "Local", "Test", "TestServer"
+        """
+        provider = add_provider(line)
+        if provider is None:
+            return
+
+        if provider.uuid in pp_providers():
+            print provider.uuid, "exists!"
+            return
+
+        providers.append(provider)
+
+    def do_load(self, line=None):
+        """
+        Attempt to load Daruma from the added providers
+        """
+        global secret_box
+        # if we were able to load at least 2 providers, attempt to load an existing instance
+        # 2 because we may be trying to load a 3-provider instance in read only mode
+        try:
+            assert len(providers) >= 2
+            secret_box = SecretBox.load(providers)
+            print "Loaded an existing installation"
+            return True
+        except AssertionError:
+            print "Looks like you need to add more providers! Type 'add' to get started."
+        except exceptions.FatalOperationFailure:
+            print "Looks like there's no existing installation with these providers."
+            print "If this is correct, type 'provision' to start a new instance. If not, type 'add' to add more providers."
+        return False
+
+    def do_provision(self, line=None):
+        """
+        Attempt to start a new Daruma on the added providers
+        """
+        global secret_box
+        # if we were able to load at least 3 providers, attempt to load an existing instance
+        try:
+            assert len(providers) >= 3
+            threshold = len(providers) - 1
+            secret_box = SecretBox.provision(providers, threshold, threshold)
+            print "Created a new installation"
+        except AssertionError:
+            print "Looks like you need to add more providers! Type 'add' to get started."
+        except exceptions.FatalOperationFailure as e:
+            print "We were unable to create an instance because of errors with", map(lambda failure: failure.provider.uuid, e.failures)
+
+
+class MainLoop(cmd.Cmd):
+    """
+    Main loop to interact with SecretBox
+    """
+    prompt = "\nDaruma> "
+
+    def preloop(self):
+        missing = secret_box.get_missing_providers()
+        if len(missing) > 0:
+            print "The system is in read only mode!"
+            print "You are missing the following provider:", missing
+            print "To be able to write, either 'add' more providers, or 'reprovision' with the existing ones."
+
+    def do_ls(self, target):
+        """
+        ls [target]
+        """
+        with exception_handler():
+            files = secret_box.ls(target)
 
             if len(files) == 0:
                 print "EMPTY"
@@ -103,80 +193,72 @@ while True:
                 print "DIR" if is_dir else "" + str(item['size']),
                 print "\t" + item['name']
 
-    if cmd[0] == "mv":
-        if len(cmd) < 3:
+    def do_mv(self, line):
+        """
+        mv <old_path> <new_path>
+        """
+        line = shlex.split(line)
+        if len(line) < 2:
             print "Usage: mv <old_path> <new_path>"
-            continue
-        old_path = cmd[1]
-        new_path = cmd[2]
+            return
+
+        old_path = line[0]
+        new_path = line[1]
 
         with exception_handler():
-            SB.move(old_path, new_path)
+            secret_box.move(old_path, new_path)
 
-    if cmd[0] == "mkdir":
-        if len(cmd) < 2:
+    def do_mkdir(self, path):
+        """
+        mkdir <path>
+        """
+        if len(path) == 0:
             print "Usage: mkdir <path>"
-            continue
-        path = cmd[1]
+            return
 
         with exception_handler():
-            SB.mk_dir(path)
+            secret_box.mk_dir(path)
 
-    if cmd[0] == "get":
-        if len(cmd) < 2:
+    def do_get(self, path):
+        """
+        get <filename>
+        """
+        if len(path) == 0:
             print "Usage: get <filename>"
-            continue
-        name = cmd[1]
+            return
 
         with exception_handler():
-            print SB.get(name)
+            print secret_box.get(path)
 
-    if cmd[0] == "put":
-        if len(cmd) < 3:
+    def do_put(self, line):
+        """
+        put <filename> <contents>
+        """
+        line = shlex.split(line)
+        if len(line) < 2:
             print "Usage: put <filename> <contents>"
-            continue
-        name = cmd[1]
-        data = cmd[2]
+            return
+        name = line[0]
+        data = line[1]
         with exception_handler():
-            SB.put(name, data)
+            secret_box.put(name, data)
 
-    if cmd[0] == "del":
-        if len(cmd) < 2:
+    def do_del(self, path):
+        """
+        del <filename>
+        """
+        if len(path) == 0:
             print "Usage: del <filename>"
-            continue
-        name = cmd[1]
+            return
 
         with exception_handler():
-            SB.delete(name)
+            secret_box.delete(path)
 
-    if cmd[0] == "set":
-        if len(cmd) < 3:
-            print "Usage: set <all, n> <active, offline, authfail, corrupt>"
-            continue
-
-        try:
-            if cmd[1] == "all":
-                n = len(providers)
-            else:
-                n = int(cmd[1])
-            assert 0 < n
-            assert n <= len(providers)
-            assert cmd[2] in ["active", "offline", "authfail", "corrupt"]
-        except (AssertionError, ValueError):
-            print "Invalid input"
-            print "Usage: set <all, n> <active, offline, authfail, corrupt>"
-        for provider in providers[0:n]:
-            if cmd[2] == "active":
-                provider.set_state(TestProviderState.ACTIVE)
-            if cmd[2] == "offline":
-                provider.set_state(TestProviderState.OFFLINE)
-            if cmd[2] == "authfail":
-                provider.set_state(TestProviderState.UNAUTHENTICATED)
-            if cmd[2] == "corrupt":
-                provider.set_state(TestProviderState.CORRUPTING)
-
-    if cmd[0] == "status":
-        for provider in providers:
+    def do_status(self, line):
+        """
+        Get the status of all providers
+        """
+        for i, provider in enumerate(providers):
             color = colorama.Fore.RESET
             if provider.status == ProviderStatus.GREEN:
                 color = colorama.Fore.GREEN
@@ -186,31 +268,90 @@ while True:
                 color = colorama.Fore.RED
             if provider.status == ProviderStatus.AUTH_FAIL:
                 color = colorama.Fore.BLUE
-            print color + str(provider)
+            print color + str(i) + ":", str(provider)
         print colorama.Fore.RESET,
 
-    if cmd[0] == "wipe":
-        if len(cmd) < 2:
-            print "Usage: wipe <provider #>"
-            continue
+    def do_add(self, line):
+        """
+        add <provider type>
+        provider_type can be one of "Dropbox", "Local", "Test", "TestServer"
+        """
+        provider = add_provider(line)
+        if provider is None:
+            return
+
+        if provider.uuid in pp_providers():
+            print provider.uuid, "exists!"
+            return
+
+        providers.append(provider)
+
+        if secret_box.add_missing_provider(provider):
+            print "Thanks for adding the missing provider! You should be out of read only mode."
+            return
+
+        print "Provider Added. Type 'reprovision' to begin using it!"
+
+    def do_remove(self, line):
+        """
+        remove <provider index>
+        Removes the provider at the specified index (view indices with 'status')
+        """
+        if len(providers) <= 3:
+            print "You can never have under 3 providers!"
+            return
         try:
-            n = int(cmd[1])
-            assert 0 <= n
-            assert n < len(providers)
-        except (AssertionError, ValueError):
-            print "Invalid input"
-            print "Usage: wipe <provider #>"
-        providers[n].wipe()
+            provider = providers.pop(int(line))
+        except:
+            print "Invalid index"
+            return
 
-    if cmd[0] == "add":
+        print "Removed provider", provider.uuid
+        print "Type 'reprovision' to update system."
+
+    def do_reprovision(self, line):
+        """
+        Reprovision the system to use a new provider set
+        """
         with exception_handler():
-            providers.append(TestProvider(tmp_dir + "/" + str(len(providers))))
-            SB.add_provider(providers[-1])
+            threshold = len(providers) - 1
+            secret_box.reprovision(providers, threshold, threshold)
 
-    if cmd[0] == "remove":
-        with exception_handler():
-            provider = providers.pop(-1)
-            SB.remove_provider(provider)
+            print "Successfully reprovisioned"
 
-    if cmd[0] == "exit":
-        break
+    def do_set(self, line):
+        """
+        set <index> <property>
+        Set the properties of a Test Provider at the index
+        Property can be one of "active, offline, authfail, corrupt"
+        """
+        line = shlex.split(line.lower())
+        index = line[0]
+        prop = line[1]
+
+        if len(line) < 2:
+            print "Usage: set <index> <property>"
+            return
+        try:
+            provider = providers[int(index)]
+            assert provider.provider_name() == "Test"
+        except AssertionError:
+            print provider.uuid, "is not a Test Provider!"
+            return
+        except (ValueError, KeyError):
+            print "Invalid index"
+            return
+
+        state = {"active": TestProviderState.ACTIVE,
+                 "offline": TestProviderState.OFFLINE,
+                 "authfail": TestProviderState.UNAUTHENTICATED,
+                 "corrupt": TestProviderState.CORRUPTING}
+        try:
+            provider.set_state(state[prop])
+        except KeyError:
+            print "Invalid property"
+
+
+if __name__ == '__main__':
+    ConfigureLoop().cmdloop()
+    MainLoop().cmdloop()

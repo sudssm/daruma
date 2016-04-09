@@ -47,8 +47,8 @@ class MainAppMenu(wx.TaskBarIcon):
         self.app_frame = app_frame
         self.host = host
 
-        icon_path = pkg_resources.resource_filename(gui.__name__, ICON_NAME)
-        icon = wx.IconFromBitmap(wx.Bitmap(icon_path))
+        icon_stream = pkg_resources.resource_stream(__name__, ICON_NAME)
+        icon = wx.IconFromBitmap(wx.ImageFromStream(icon_stream).ConvertToBitmap())
         self.SetIcon(icon, ICON_HOVERTEXT)
 
         self.window_manager = WindowManager()

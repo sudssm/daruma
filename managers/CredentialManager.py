@@ -1,6 +1,5 @@
 import json
 import os
-import providers
 from tools.utils import APP_NAME
 from appdirs import user_config_dir
 from collections import defaultdict
@@ -100,17 +99,20 @@ class CredentialManager:
         self.user_creds[provider_class][provider_identifier] = credentials
         self._write_user_creds()
 
-    def clear_user_credentials(self, provider_class, provider_identifier=None):
+    def clear_user_credentials(self, provider_class=None, provider_identifier=None):
         """
         Remove the stored credential for the specific instance of provider_class, provider_identifier
-        If provider_identifier is not providers, all credentials for the provider_class will be deleted
+        If provider_identifier is None, all credentials for the provider_class will be deleted
+        If provider_class is None, all credentials for all providers will be wiped
         Args:
             provider_class: a string representing the provider's class
             provider_identifier: a value unique across all providers of this type
                                  for identification (ie username)
         """
         try:
-            if provider_identifier is None:
+            if provider_class is None:
+                self.user_creds = defaultdict(dict)
+            elif provider_identifier is None:
                 del self.user_creds[provider_class]
             else:
                 del self.user_creds[provider_class][provider_identifier]

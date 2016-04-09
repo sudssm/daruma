@@ -178,11 +178,14 @@ class Manifest:
 
     ROOT_DIRECTORY_NAME = ""
 
-    def __init__(self):
+    def __init__(self, providers=None):
         """
         Creates an empty Manifest.
+        Args: providers, a list of providers that will be using this Manifest, or None
         """
         self.root = Directory.from_values(Manifest.ROOT_DIRECTORY_NAME)
+        # self.providers becomes a list of tuples that uniquely identify providers
+        self.set_providers(providers)
 
     def __cmp__(self, other):
         """
@@ -195,7 +198,10 @@ class Manifest:
         Returns:
             The BSON representation of the manifest.
         """
-        return bson.dumps(self.root.attributes)
+        return bson.dumps({
+            "tree": self.root.attributes,
+            "providers": self.providers
+        })
 
     @staticmethod
     def deserialize(string):
@@ -208,12 +214,16 @@ class Manifest:
             ParseException if the string cannot be parsed
         """
         try:
-            attributes = bson.loads(string)
+            data = bson.loads(string)
+            parsed_root = _node_from_attributes(data['tree'])
+            parsed_providers = data['providers']
+            parsed_providers = map(tuple, parsed_providers)
         except Exception:
             raise exceptions.ParseException
-        parsed_root = _node_from_attributes(attributes)
+
         manifest = Manifest()
         manifest.root = parsed_root
+        manifest.providers = parsed_providers
         return manifest
 
     @staticmethod
@@ -412,3 +422,19 @@ class Manifest:
                     yield child
                 else:
                     frontier.append(child)
+
+    def set_providers(self, providers):
+        """
+        Updates the manifest provider list
+        Args: A list of provider objects
+        """
+        if providers is None:
+            self.providers = []
+        else:
+            self.providers = map(lambda provider: provider.uuid, providers)
+
+    def get_provider_strings(self):
+        """
+        Returns a set of unique identifiers for providers contained in this manifest
+        """
+        return self.providers[:]
