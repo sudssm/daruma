@@ -1,2 +1,3 @@
+recursive-include gui/webview_client/icons *.png
 recursive-include gui/webview_server/templates *.html
 recursive-include gui/webview_server/static *.css *.js *.png
