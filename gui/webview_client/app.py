@@ -1,6 +1,7 @@
 import os
 import pkg_resources
 import wx
+import gui
 import gui.webview_client.webview as webview
 
 ICON_NAME = os.path.join("icons", "menubar.png")
@@ -46,8 +47,8 @@ class MainAppMenu(wx.TaskBarIcon):
         self.app_frame = app_frame
         self.host = host
 
-        icon_path = pkg_resources.resource_filename(__name__, ICON_NAME)
-        icon = wx.IconFromBitmap(wx.Bitmap(icon_path))
+        icon_stream = pkg_resources.resource_stream(__name__, ICON_NAME)
+        icon = wx.IconFromBitmap(wx.ImageFromStream(icon_stream).ConvertToBitmap())
         self.SetIcon(icon, ICON_HOVERTEXT)
 
         self.window_manager = WindowManager()
@@ -59,8 +60,12 @@ class MainAppMenu(wx.TaskBarIcon):
         """
         menu = wx.Menu()
 
-        providers_item = menu.Append(wx.ID_ANY, "Providers")
-        menu.Bind(wx.EVT_MENU, self.on_open_providers, providers_item)
+        if self.setup_complete:
+            providers_item = menu.Append(wx.ID_ANY, "Providers")
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers"), providers_item)
+        else:
+            setup_item = menu.Append(wx.ID_ANY, "Continue setup")
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup"), setup_item)
 
         menu.AppendSeparator()
 
@@ -69,23 +74,25 @@ class MainAppMenu(wx.TaskBarIcon):
 
         return menu
 
-    def on_open_providers(self, event):
-        """
-        Opens the provider dashboard webview.
-        """
-        def on_close_providers(event):
-            provider_window = self.window_manager.windows.pop("providers")
-            provider_window.Destroy()
-        provider_window = self.window_manager.windows.get("providers")
-        if provider_window is None:
-            provider_window = webview.WebviewWindow(get_url_for_host(self.host, "providers"))
-            self.window_manager.windows["providers"] = provider_window
-            provider_window.Bind(wx.EVT_CLOSE, on_close_providers)
-            provider_window.CenterOnScreen()
-            provider_window.Show()
-        else:
-            # TODO: bring app to foreground
-            provider_window.Raise()
+    def generate_webview_handler(self, endpoint):
+        def on_open_webview(event):
+            """
+            Opens the specified webview.
+            """
+            def on_close_webview(event):
+                window = self.window_manager.windows.pop(endpoint)
+                window.Destroy()
+            window = self.window_manager.windows.get(endpoint)
+            if window is None:
+                window = webview.WebviewWindow(get_url_for_host(self.host, endpoint))
+                self.window_manager.windows[endpoint] = window
+                window.Bind(wx.EVT_CLOSE, on_close_webview)
+                window.CenterOnScreen()
+                window.Show()
+            else:
+                # TODO: bring app to foreground
+                window.Raise()
+        return on_open_webview
 
     def on_exit(self, event):
         """
@@ -97,25 +104,32 @@ class MainAppMenu(wx.TaskBarIcon):
 
 
 class SBApp(wx.App):
-    def __init__(self, host):
+    def __init__(self, host, setup_complete=False):
         """
+        To begin using the app, call this object's MainLoop() method.
+
         Args:
             host: The (hostname, port) tuple for the UI server.
+            setup_complete: See mark_setup_complete().  Defaults to False in
+                this method.
         """
         self.host = host
+        self.setup_complete = setup_complete
         super(SBApp, self).__init__(redirect=False)
 
     def OnInit(self):
+        """
+        A standard wxPython method.  Do not call directly.
+        """
         frame = wx.Frame(parent=None)
         self.SetTopWindow(frame)
-        MainAppMenu(frame, self.host)
+        self.menu = MainAppMenu(frame, self.host)
+        self.menu.setup_complete = self.setup_complete
         return True
 
-
-def run_app(host):
-    """
-    Args:
-        host: The (hostname, port) tuple for the UI server.
-    """
-    app = SBApp(host)
-    app.MainLoop()
+    def mark_setup_complete(self, is_complete=True):
+        """
+        Whether the menu should expose the provider dashboard or should instead
+        prompt the user to finish setup.  Defaults to True.
+        """
+        self.menu.setup_complete = is_complete
