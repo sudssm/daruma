@@ -36,7 +36,7 @@ class GoogleDriveProvider(BaseProvider):
         """
         Initialize a google drive provider.
         Not functional until start_connection and finish_connection are called.
-        Args: credential_manager, a credential_manager with information about DropboxProviders
+        Args: credential_manager, a credential_manager with information about GoogleDriveProviders
         """
         super(GoogleDriveProvider, self).__init__(credential_manager)
 
