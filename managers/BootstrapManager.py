@@ -63,7 +63,7 @@ class BootstrapManager:
             failures, a list of failures from failing providers
         Raises FatalOperationFailure if unable to reach consensus
         """
-        def _vote_for_params(vote_map):
+        def vote_for_params(vote_map):
             """
             Args:
                 vote_map: maps tuple of (threshold, n) votes to providers that voted
@@ -72,6 +72,8 @@ class BootstrapManager:
                 threshold: the voted bootstrap threshold
                 n: the voted n
                 failures: a list of providers who did not vote for the winning vote if one was found
+            Raises:
+                ValueError: no parameters were returned or there were too few providers in agreement to support the consensus threshold
             """
             # vote on threshold
             largest_group_size = 0
@@ -88,7 +90,7 @@ class BootstrapManager:
             # so, a group of defectors larger than k are outside threat model
             # just ensure that the largest group is size at least k
             if winning_vote is None or largest_group_size < threshold:
-                raise exceptions.FatalOperationFailure([])
+                raise ValueError
 
             failures = []  # add all providers who misvoted to failures
             for vote, sources in vote_map.items():
@@ -120,8 +122,8 @@ class BootstrapManager:
                 failures.append(exceptions.InvalidShareFailure(provider))
 
         try:
-            threshold, n, voting_failures = _vote_for_params(vote_map)
-        except exceptions.FatalOperationFailure:
+            threshold, n, voting_failures = vote_for_params(vote_map)
+        except ValueError:
             raise exceptions.FatalOperationFailure(failures)
 
         failures += voting_failures
@@ -224,8 +226,7 @@ class BootstrapManager:
         try:
             secret, shamir_failures = self._reconstruct_shares(provider_id_map, shares_map)
         except exceptions.FatalOperationFailure as e:
-            failures.append(e)
-            raise exceptions.FatalOperationFailure(failures)
+            raise exceptions.FatalOperationFailure(failures + e.failures)
 
         failures += shamir_failures
 
@@ -249,11 +250,11 @@ class BootstrapManager:
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
         shares_map = shamir_secret_sharing.share(string, provider_ids, self.bootstrap_reconstruction_threshold)
 
-        try:
-            for key, share in shares_map.items():
+        for key, share in shares_map.items():
+            try:
                 shares_map[key] = zlib.compress(share)
-        except zlib.error:
-            raise exceptions.LibraryException
+            except zlib.error:
+                raise exceptions.LibraryException
 
         # write shares to providers
         failures = []
