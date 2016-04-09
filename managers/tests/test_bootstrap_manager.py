@@ -67,7 +67,7 @@ def test_erase_recover():
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
     assert excinfo.value.result == (bootstrap, len(providers))
-    assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
+    assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:2])
 
 
 def test_erase_fail():
@@ -78,7 +78,7 @@ def test_erase_fail():
     providers[2].wipe()
     with pytest.raises(exceptions.FatalOperationFailure) as excinfo:
         BM.recover_bootstrap()
-        assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:3])
+        assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:3])
 
 
 def test_corrupt_share():
@@ -97,9 +97,28 @@ def test_corrupt_share():
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
-    assert excinfo.value.result == bootstrap
-    assert [failure.provider for failure in excinfo.value.failures] == providers[0:1]
+    assert excinfo.value.result == (bootstrap, len(providers))
+    assert excinfo.value.failures[0].provider == providers[0]
     assert BM.bootstrap_reconstruction_threshold == threshold
+
+
+def test_corrupt_share_failure():
+    threshold = 3
+    BM = BootstrapManager(providers, threshold)
+    BM.distribute_bootstrap(bootstrap)
+
+    # corrupt first share
+    for i in xrange(3):
+        share = providers[i].get(BootstrapManager.BOOTSTRAP_FILE_NAME)
+        data = json.loads(zlib.decompress(share))
+        data["share"] += 1
+        share = zlib.compress(json.dumps(data))
+        providers[i].put(BootstrapManager.BOOTSTRAP_FILE_NAME, share)
+
+    BM = BootstrapManager(providers, threshold)
+
+    with pytest.raises(exceptions.FatalOperationFailure):
+        BM.recover_bootstrap()
 
 
 def modify_bootstrap_plaintext(provider, new_k=None, new_n=None, new_id=None):
@@ -122,7 +141,7 @@ def test_corrupt_k_recover():
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
     assert excinfo.value.result == (bootstrap, len(providers))
-    assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
+    assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:2])
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -137,7 +156,7 @@ def test_corrupt_k_2_recover():
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
     assert excinfo.value.result == (bootstrap, len(providers))
-    assert sorted([failure.provider for failure in excinfo.value.failures]) == sorted(providers[0:2])
+    assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:2])
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -179,7 +198,7 @@ def test_id_type_error():
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
-    assert excinfo.value.result == bootstrap
+    assert excinfo.value.result == (bootstrap, len(providers))
     assert len(excinfo.value.failures) == 1
     assert excinfo.value.failures[0].provider == providers[0]
     assert BM.bootstrap_reconstruction_threshold == threshold
@@ -195,9 +214,9 @@ def test_impossible_ids():
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
-    assert excinfo.value.result == bootstrap
+    assert excinfo.value.result == (bootstrap, len(providers))
     assert len(excinfo.value.failures) == 2
-    assert [failure.provider for failure in excinfo.value.failures] == [providers[0], providers[1]]
+    assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:2])
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -208,7 +227,7 @@ def test_one_duplicate_id_before():
 
     modify_bootstrap_plaintext(providers[0], new_id=3)
 
-    assert BM.recover_bootstrap() == bootstrap
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -219,7 +238,7 @@ def test_one_duplicate_id_after():
 
     modify_bootstrap_plaintext(providers[4], new_id=3)
 
-    assert BM.recover_bootstrap() == bootstrap
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -231,7 +250,7 @@ def test_two_duplicate_id():
     modify_bootstrap_plaintext(providers[0], new_id=3)
     modify_bootstrap_plaintext(providers[1], new_id=3)
 
-    assert BM.recover_bootstrap() == bootstrap
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -243,7 +262,7 @@ def test_multiple_duplicate_ids():
     modify_bootstrap_plaintext(providers[0], new_id=3)
     modify_bootstrap_plaintext(providers[1], new_id=4)
 
-    assert BM.recover_bootstrap() == bootstrap
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -255,7 +274,7 @@ def test_swap_ids():
     modify_bootstrap_plaintext(providers[0], new_id=1)
     modify_bootstrap_plaintext(providers[1], new_id=0)
 
-    assert BM.recover_bootstrap() == bootstrap
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -284,7 +303,7 @@ def test_corrupt_bootstrap():
 
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         BM.recover_bootstrap()
-    assert excinfo.value.result == bootstrap
+    assert excinfo.value.result == (bootstrap, len(providers))
     assert len(excinfo.value.failures) == 1
     assert excinfo.value.failures[0].provider == providers[0]
     assert BM.bootstrap_reconstruction_threshold == threshold

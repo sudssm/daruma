@@ -160,7 +160,7 @@ class BootstrapManager:
         for share_set in share_sets:
             share_set_map = {provider_id: share for (provider_id, share) in share_set}
             try:
-                secret, good_ids, bad_ids = shamir_secret_sharing.reconstruct(share_set_map, Bootstrap.SIZE, self.n, self.bootstrap_reconstruction_threshold)
+                secret, good_ids, bad_ids = shamir_secret_sharing.reconstruct(share_set_map, Bootstrap.SIZE, self.num_providers, self.bootstrap_reconstruction_threshold)
                 break
             except exceptions.ReconstructionError:
                 pass
@@ -195,7 +195,7 @@ class BootstrapManager:
 
         for (provider_id, provider, share) in test_shares:
             good_share_map[provider_id] = share
-            if not shamir_secret_sharing.verify(good_share_map, secret, self.n):
+            if not shamir_secret_sharing.verify(good_share_map, secret, self.num_providers):
                 bad_providers.append(provider)
             del good_share_map[provider_id]
 
