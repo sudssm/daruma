@@ -1,5 +1,6 @@
 from managers.CredentialManager import CredentialManager
 from providers.DropboxProvider import DropboxProvider
+from providers.GoogleDriveProvider import GoogleDriveProvider
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from providers.TestProvider import TestProvider
 from demo_provider.client.TestServerProvider import TestServerProvider
@@ -13,7 +14,7 @@ class ProviderManager():
         """
         Setup a provider manager with a new default CredentialManager
         """
-        self.provider_classes = [DropboxProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+        self.provider_classes = [LocalFilesystemProvider, TestProvider, DropboxProvider, GoogleDriveProvider, TestServerProvider]
         self.credential_manager = CredentialManager()
         self.credential_manager.load()
 
@@ -51,6 +52,28 @@ class ProviderManager():
         self.temp_dropbox = None
         temp_dropbox.finish_connection(localhost_url)
         return temp_dropbox
+
+    # TODO maybe factor common functionality out when other providers are added
+    def start_google_connection(self):
+        """
+        Returns the login url for Google
+        Calling this additional times invalidates any previous unfinished flows
+        """
+        self.temp_google = GoogleDriveProvider(self.credential_manager)
+        return self.temp_google.start_connection()
+
+    def finish_google_connection(self, localhost_url):
+        """
+        Args: localhost_url, the url resulting from redirect after start_google_connection
+        Returns: a functional GoogleDriveProvider
+        Raises ProviderOperationFailure
+        """
+        if self.temp_google is None:
+            raise ValueError("Call start_google_connection first!")
+        temp_google = self.temp_google
+        self.temp_google = None
+        temp_google.finish_connection(localhost_url)
+        return temp_google
 
     def make_local(self, path):
         """

@@ -1,5 +1,6 @@
 from multiprocessing import Process, Pipe
 from uuid import uuid4
+from urlparse import urlparse, parse_qs
 from custom_exceptions.exceptions import SandboxProcessFailure
 
 APP_NAME = "daruma"
@@ -9,6 +10,15 @@ FILENAME_SIZE = 32
 # create a length-32 string of random uppercase letters and numbers
 def generate_random_name():
     return str(uuid4()).replace('-', '').upper()
+
+
+def parse_url(url):
+    """
+    Parse a url to get its parameters
+    Returns a map from parameter name to parameter value
+    """
+    params = parse_qs(urlparse(url).query)
+    return {k: v[0] for k, v in params.items()}
 
 
 def sandbox_function(function, *args):
