@@ -2,12 +2,28 @@
 
 ## Installation
 
-### OS X & Linux
-While in the project directory: `pip install --user -e . --process-dependency-links robustsecretsharing`
-Note: this assumes that ssh keys are configured for git
+### Command Line (OSX & Linux)
+While in the project directory:
 
-## Run UI
-See instructions in `driver/sb_ui.py`
+```
+pip install --user -e . --process-dependency-links robustsecretsharing
+```
+(Note: this assumes that ssh keys are configured for git)
+
+To run the command line REPL:
+
+```
+python driver/sb_cli.py
+```
+
+### GUI App (OSX only)
+While in the project directory:
+
+```
+pip install --user -e \.\[gui] --process-dependency-links robustsecretsharing
+python build.py
+```
+The newly built app will be in the `dist` directory.
 
 ## Testing
 `py.test` will automatically run all available test cases.

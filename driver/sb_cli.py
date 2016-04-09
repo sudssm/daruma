@@ -91,6 +91,58 @@ def add_provider(line):
     return provider
 
 
+def set_provider(line):
+    """
+    set <index> <property>
+    Set the properties of a Test Provider at the index
+    Property can be one of "active, offline, authfail, corrupt"
+    """
+
+    line = shlex.split(line.lower())
+    index = line[0]
+    prop = line[1]
+
+    if len(line) < 2:
+        print "Usage: set <index> <property>"
+        return
+    try:
+        provider = providers[int(index)]
+        assert provider.provider_name() == "Test"
+    except AssertionError:
+        print provider.uuid, "is not a Test Provider!"
+        return
+    except (ValueError, KeyError):
+        print "Invalid index"
+        return
+
+    state = {"active": TestProviderState.ACTIVE,
+             "offline": TestProviderState.OFFLINE,
+             "authfail": TestProviderState.UNAUTHENTICATED,
+             "corrupt": TestProviderState.CORRUPTING}
+    try:
+        provider.set_state(state[prop])
+    except KeyError:
+        print "Invalid property"
+
+
+def status():
+    """
+    Print the status of all providers
+    """
+    for i, provider in enumerate(providers):
+        color = colorama.Fore.RESET
+        if provider.status == ProviderStatus.GREEN:
+            color = colorama.Fore.GREEN
+        if provider.status == ProviderStatus.YELLOW:
+            color = colorama.Fore.YELLOW
+        if provider.status == ProviderStatus.RED:
+            color = colorama.Fore.RED
+        if provider.status == ProviderStatus.AUTH_FAIL:
+            color = colorama.Fore.BLUE
+        print color + str(i) + ":", str(provider)
+    print colorama.Fore.RESET,
+
+
 class ConfigureLoop(cmd.Cmd):
     """
     Configure settings and providers
@@ -129,6 +181,20 @@ class ConfigureLoop(cmd.Cmd):
             return
 
         providers.append(provider)
+
+    def do_status(self, line):
+        """
+        Get the status of all providers
+        """
+        status()
+
+    def do_set(self, line):
+        """
+        set <index> <property>
+        Set the properties of a Test Provider at the index
+        Property can be one of "active, offline, authfail, corrupt"
+        """
+        set_provider(line)
 
     def do_load(self, line=None):
         """
@@ -258,18 +324,7 @@ class MainLoop(cmd.Cmd):
         """
         Get the status of all providers
         """
-        for i, provider in enumerate(providers):
-            color = colorama.Fore.RESET
-            if provider.status == ProviderStatus.GREEN:
-                color = colorama.Fore.GREEN
-            if provider.status == ProviderStatus.YELLOW:
-                color = colorama.Fore.YELLOW
-            if provider.status == ProviderStatus.RED:
-                color = colorama.Fore.RED
-            if provider.status == ProviderStatus.AUTH_FAIL:
-                color = colorama.Fore.BLUE
-            print color + str(i) + ":", str(provider)
-        print colorama.Fore.RESET,
+        status()
 
     def do_add(self, line):
         """
@@ -325,31 +380,7 @@ class MainLoop(cmd.Cmd):
         Set the properties of a Test Provider at the index
         Property can be one of "active, offline, authfail, corrupt"
         """
-        line = shlex.split(line.lower())
-        index = line[0]
-        prop = line[1]
-
-        if len(line) < 2:
-            print "Usage: set <index> <property>"
-            return
-        try:
-            provider = providers[int(index)]
-            assert provider.provider_name() == "Test"
-        except AssertionError:
-            print provider.uuid, "is not a Test Provider!"
-            return
-        except (ValueError, KeyError):
-            print "Invalid index"
-            return
-
-        state = {"active": TestProviderState.ACTIVE,
-                 "offline": TestProviderState.OFFLINE,
-                 "authfail": TestProviderState.UNAUTHENTICATED,
-                 "corrupt": TestProviderState.CORRUPTING}
-        try:
-            provider.set_state(state[prop])
-        except KeyError:
-            print "Invalid property"
+        set_provider(line)
 
 
 if __name__ == '__main__':
