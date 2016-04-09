@@ -14,7 +14,8 @@ setup(
         "bson==0.4.2",
         "colorama==0.2.5",
         "dropbox==4.0",
-        "appdirs==1.4.0"
+        "appdirs==1.4.0",
+        "google-api-python-client==1.4.2"
     ],
     dependency_links=[
         "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@sss#egg=robustsecretsharing-0.1"
