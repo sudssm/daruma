@@ -17,12 +17,6 @@ def platform_specific_setup():
         info = bundle.localizedInfoDictionary() or bundle.infoDictionary()
         info['NSAppTransportSecurity'] = {'NSAllowsArbitraryLoads': Foundation.YES}
 
-
-def start_ui_server_with_app(app):
-    def function():
-        start_ui_server(native_app=app)
-    return function
-
 if __name__ == "__main__":
     platform_specific_setup()
 
@@ -30,7 +24,7 @@ if __name__ == "__main__":
     app = SBApp((WEBVIEW_SERVER_HOST, WEBVIEW_SERVER_PORT), setup_complete=False)
 
     # Start HTTP UI server
-    ui_server_thread = threading.Thread(target=start_ui_server_with_app(app),
+    ui_server_thread = threading.Thread(target=start_ui_server, args=(app,),
                                         name="ui_server_thread")
     ui_server_thread.daemon = True
     ui_server_thread.start()

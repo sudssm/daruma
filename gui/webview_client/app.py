@@ -84,7 +84,6 @@ class MainAppMenu(wx.TaskBarIcon):
                 window.Destroy()
             window = self.window_manager.windows.get(endpoint)
             if window is None:
-                print "getting url:", get_url_for_host(self.host, endpoint)
                 window = webview.WebviewWindow(get_url_for_host(self.host, endpoint))
                 self.window_manager.windows[endpoint] = window
                 window.Bind(wx.EVT_CLOSE, on_close_webview)
