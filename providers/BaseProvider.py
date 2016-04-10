@@ -66,8 +66,11 @@ class BaseProvider(object):
     def get_capacity(self):
         """
         Get quota and capacity information
-        Raises
-        Returns
+        Raises: ProviderOperationFailure if unable to get information
+        Returns:
+            (used_space, total_allocated_space)
+            used_space: The amount of space used
+            total_allocated_space: The total usable space
         """
         raise NotImplementedError
 
