@@ -23,7 +23,7 @@ class BaseProvider(object):
         Returns:
             (providers, failed_identifiers)
             providers: a list of functional Providers
-            failed_identifiers: a list of identifiers for the accounts that failed to load
+            failed_identifiers: a list of uuids for the accounts that failed to load
         """
         raise NotImplementedError
 
@@ -104,17 +104,32 @@ class BaseProvider(object):
             return ProviderStatus.YELLOW
         return ProviderStatus.GREEN
 
-    @staticmethod
-    def provider_name():
+    @classmethod
+    def provider_identifier(cls):
         """
-        Returns a pretty-printed identifier for this type of provider. Must be unique across all provider types
+        Returns a string for this provider. Must be unique across all provider
+        types.
+        This will not be displayed, but will be used in the following scenarios:
+            - The provider logo will be assumed to be called
+              <provider_identifier>.png
+            - The identifier may be used in various internal indexes and URLs.
+        """
+        return NotImplementedError
+
+    @classmethod
+    def provider_name(cls):
+        """
+        Returns a pretty-printed identifier for this type of provider. Must be
+        unique across all provider types.
         """
         raise NotImplementedError
 
     @property
     def uid(self):
         """
-        Returns an identifier for this provider. Must be unique across all providers of this type.
+        Returns an identifier for this provider. Must be unique across all
+        providers of this type.  This identifier will be user-facing, so an
+        account username or file path would be a good candidate.
         """
         raise NotImplementedError
 
@@ -124,7 +139,7 @@ class BaseProvider(object):
         Returns a globally unique identifier for the provider.
         Of the form (provider type, provider id)
         """
-        return (self.provider_name(), self.uid)
+        return (self.provider_identifier(), self.uid)
 
     def __str__(self):
         return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"

@@ -70,52 +70,52 @@ class CredentialManager:
         """
         Get all user credentials for a provider type
         Args:
-            provider_class: a string representing the provider's class
+            provider_class: a provider class
         Returns:
             The credentials for the specified provider, or [] if unavailable
             credentials is a dictionary of provider_identifier to credential values that have been stored in this manager
         """
-        return deepcopy(self.user_creds[provider_class])
+        return deepcopy(self.user_creds[provider_class.provider_identifier()])
 
     def get_app_credentials(self, provider_class):
         """
         Get app credentials for a provider
         Args:
-            provider_class: a string representing the provider's class
+            provider_class: a provider class
         Returns:
             The credentials for the specified provider, or None if unavailable
         """
-        return self.app_creds.get(provider_class)
+        return self.app_creds.get(provider_class.provider_identifier())
 
-    def set_user_credentials(self, provider_class, provider_identifier, credentials):
+    def set_user_credentials(self, provider_class, account_identifier, credentials):
         """
         Update user credential for the provider
         Args:
-            provider_class: a string representing the provider's class
-            provider_identifier: a value unique across all providers of this type
-                                 for identification (ie username)
+            provider_class: a provider class
+            account_identifier: a value unique across all providers of this type
+                                 for identification (e.g. username)
             credentials: a JSON-ifyable dictionary or string to store
         """
-        self.user_creds[provider_class][provider_identifier] = credentials
+        self.user_creds[provider_class.provider_identifier()][account_identifier] = credentials
         self._write_user_creds()
 
-    def clear_user_credentials(self, provider_class=None, provider_identifier=None):
+    def clear_user_credentials(self, provider_class=None, account_identifier=None):
         """
         Remove the stored credential for the specific instance of provider_class, provider_identifier
         If provider_identifier is None, all credentials for the provider_class will be deleted
         If provider_class is None, all credentials for all providers will be wiped
         Args:
-            provider_class: a string representing the provider's class
-            provider_identifier: a value unique across all providers of this type
-                                 for identification (ie username)
+            provider_class: a provider class
+            account_identifier: a value unique across all providers of this type
+                                 for identification (e.g. username)
         """
         try:
             if provider_class is None:
                 self.user_creds = defaultdict(dict)
-            elif provider_identifier is None:
-                del self.user_creds[provider_class]
+            elif account_identifier is None:
+                del self.user_creds[provider_class.provider_identifier()]
             else:
-                del self.user_creds[provider_class][provider_identifier]
+                del self.user_creds[provider_class.provider_identifier()][account_identifier]
             self._write_user_creds()
         except KeyError:
             return

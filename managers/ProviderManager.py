@@ -1,7 +1,10 @@
 from managers.CredentialManager import CredentialManager
 from providers.DropboxProvider import DropboxProvider
+from providers.GoogleDriveProvider import GoogleDriveProvider
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from providers.TestProvider import TestProvider
+from providers.OAuthProvider import OAuthProvider
+from providers.UnauthenticatedProvider import UnauthenticatedProvider
 from demo_provider.client.TestServerProvider import TestServerProvider
 
 
@@ -15,13 +18,14 @@ class ProviderManager():
         """
         self.credential_manager = CredentialManager()
         self.credential_manager.load()
+        self.tmp_oauth_providers = {}  # Stores data for in-flight OAuth transactions
 
     @staticmethod
     def exposed_providers():
         """
         Returns a list of provider classes that can be exposed to the user
         """
-        return [DropboxProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+        return [DropboxProvider, GoogleDriveProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
 
     def load_all_providers_from_credentials(self):
         """
@@ -38,49 +42,53 @@ class ProviderManager():
 
         return tuple(map(flatten, zip(*providers_and_errors)))
 
-    def start_dropbox_connection(self):
+    def get_provider_classes(self):
         """
-        Returns the login url for Dropbox
-        Calling this additional times invalidates any previous unfinished flows
+        Get all available provider classes
+        Returns a tuple (oauth_providers, unauth_providers)
+            oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
+            unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
         """
-        self.temp_dropbox = DropboxProvider(self.credential_manager)
-        return self.temp_dropbox.start_connection()
+        oauth_providers = {cls.provider_identifier(): cls for cls in self.exposed_providers() if issubclass(cls, OAuthProvider)}
+        unauth_providers = {cls.provider_identifier(): cls for cls in self.exposed_providers() if issubclass(cls, UnauthenticatedProvider)}
+        return oauth_providers, unauth_providers
 
-    def finish_dropbox_connection(self, localhost_url):
+    def start_oauth_connection(self, provider_class):
         """
-        Args: localhost_url, the url resulting from redirect after start_dropbox_connection
-        Returns: a functional DropboxProvider
+        Start a connection for the OAuthProvider of the specified class
+        Args: provider_class: the class of the provider to be created
+        Returns the login url for the provider
+        Calling this additional times invalidates any previous unfinished flows for this class
+        """
+        provider = provider_class(self.credential_manager)
+        self.tmp_oauth_providers[provider_class] = provider
+        return provider.start_connection()
+
+    def finish_oauth_connection(self, provider_class, localhost_url):
+        """
+        Finish the connection for the OAuthProvider of the specified class
+        Args:
+            provider_class: the class of the provider to be created
+            localhost_url, the url resulting from redirect after start_oauth_connection(provider_class)
+        Returns: a functional provider
         Raises ProviderOperationFailure
         """
-        if self.temp_dropbox is None:
-            raise ValueError("Call start_dropbox_connection first!")
-        temp_dropbox = self.temp_dropbox
-        self.temp_dropbox = None
-        temp_dropbox.finish_connection(localhost_url)
-        return temp_dropbox
+        provider = self.tmp_oauth_providers.get(provider_class)
+        if provider is None:
+            raise ValueError("Call start_oauth_connection with this class first!")
+        self.tmp_oauth_providers[provider_class] = None
 
-    def make_local(self, path):
-        """
-        Args: path, the path on the local filesystem to use for the provider
-        Returns: a functional LocalFilesystemProvider
-        Raises ProviderOperationFailure
-        """
-        return LocalFilesystemProvider(self.credential_manager, path)
+        provider.finish_connection(localhost_url)
+        return provider
 
-    def make_test(self, path):
-        """
-        Args: path, the path on the local filesystem to use for the test provider
-        Returns: a functional TestProvider
-        Raises ProviderOperationFailure
-        """
-        return TestProvider(self.credential_manager, path)
-
-    def make_test_server(self, hostname, port):
+    def make_unauth_provider(self, provider_class, provider_id):
         """
         Args:
-            hostname: the host where the test server is running
-            port: the port of the test provider
-        Returns: a functional TestServerProvider
+            provider_class: the class of the provider to be created
+            provider_id: the identifier of the provider to be created
+        Make an Unauthenticated provider with the specified class and provider_id
         Raises ProviderOperationFailure
         """
-        return TestProvider(self.credential_manager, hostname, port)
+        provider = provider_class(self.credential_manager)
+        provider.connect(provider_id)
+        return provider

@@ -16,10 +16,9 @@ def teardown_function(function):
 
 
 def test_load_providers():
-    # put a new provider in the credentials
-    fs = LocalFilesystemProvider(cm, "foo")
-
     pm = ProviderManager()
+    # put a new provider in the credentials
+    fs = pm.make_unauth_provider(LocalFilesystemProvider, "foo")
     cached_providers, errors = pm.load_all_providers_from_credentials()
 
     assert map(lambda provider: provider.uuid, cached_providers) == [fs.uuid]

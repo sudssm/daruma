@@ -1,29 +1,19 @@
 import dropbox
 import urllib3
-from urlparse import urlparse, parse_qs
+from tools.utils import parse_url
 from contextlib import contextmanager
 from custom_exceptions import exceptions
-from providers.BaseProvider import BaseProvider
+from providers.OAuthProvider import OAuthProvider
 
 
-class DropboxProvider(BaseProvider):
-    @staticmethod
-    def provider_name():
+class DropboxProvider(OAuthProvider):
+    @classmethod
+    def provider_identifier(cls):
+        return "dropbox"
+
+    @classmethod
+    def provider_name(cls):
         return "Dropbox"
-
-    @staticmethod
-    def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(DropboxProvider.provider_name())
-        providers = []
-        failed_ids = []
-        for provider_id, auth_token in credentials.items():
-            db_provider = DropboxProvider(credential_manager)
-            try:
-                db_provider._connect(auth_token)
-                providers.append(db_provider)
-            except:
-                failed_ids.append(provider_id)
-        return providers, failed_ids
 
     def __init__(self, credential_manager):
         """
@@ -57,15 +47,8 @@ class DropboxProvider(BaseProvider):
             raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
-        """
-        Initiate a new connection to Dropbox.
-        Args: app_key, app_secret - app identifiers, provided by Dropbox
-        Returns: a url that allows the user to log in
-        Raises: IOError if there was a problem reading app credentials
-                ProviderOperationFailure if there was a problem starting flow
-        """
         try:
-            credentials = self.credential_manager.get_app_credentials(self.provider_name())
+            credentials = self.credential_manager.get_app_credentials(self.provider_identifier())
             app_key, app_secret = credentials["app_key"], credentials["app_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -77,13 +60,7 @@ class DropboxProvider(BaseProvider):
         return authorize_url
 
     def finish_connection(self, url):
-        """
-        Finalize the connection to Dropbox
-        Args: url - a localhost url, resulting from a redirect after start_connection
-        """
-        # parse url
-        params = parse_qs(urlparse(url).query)
-        params = {k: v[0] for k, v in params.items()}
+        params = parse_url(url)
 
         # get auth_token
         with self.exception_handler():
@@ -95,7 +72,7 @@ class DropboxProvider(BaseProvider):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
             self.email = self.client.account_info()['email']
-        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, auth_token)
+        self.credential_manager.set_user_credentials(self.__class__, self.uid, auth_token)
 
     @property
     def uid(self):

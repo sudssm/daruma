@@ -14,6 +14,7 @@ import colorama
 
 
 provider_manager = ProviderManager()
+oauth_providers, unauth_providers = provider_manager.get_provider_classes()
 providers = []
 secret_box = None
 
@@ -37,10 +38,17 @@ def exception_handler():
 
 
 def pp_providers():
+    """
+    convert providers into their uuids
+    """
     return map(lambda provider: provider.uuid, providers)
 
 
 def add_provider(line):
+    """
+    add <provider type>
+    provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "DemoServer"
+    """
     line = line.strip().lower()
 
     if len(line) == 0:
@@ -53,42 +61,85 @@ def add_provider(line):
 
     provider = None
 
-    if provider_type == "dropbox":
-        url = provider_manager.start_dropbox_connection()
-        print "Visit", url, "to log in to Dropbox"
+    try:
+        provider_class = unauth_providers[provider_type]
+        if len(line) < 2:
+            print "Usage: add %s <path_or_host_name>" % provider_type
+            return
+        with exception_handler():
+            provider = provider_manager.make_unauth_provider(provider_class, line[1])
+        if provider is None:
+            print "Error loading provider"
+        return provider
+    except KeyError:
+        pass
+
+    try:
+        provider_class = oauth_providers[provider_type]
+        url = provider_manager.start_oauth_connection(provider_class)
+        print "Visit", url, "to log in"
         localhost_url = raw_input("Enter resulting url (starts with localhost): ")
         with exception_handler():
-            provider = provider_manager.finish_dropbox_connection(localhost_url)
+            provider = provider_manager.finish_oauth_connection(provider_class, localhost_url)
+        if provider is None:
+            print "Error loading provider"
+        return provider
+    except KeyError:
+        pass
 
-    elif provider_type == "local":
-        if len(line) < 2:
-            print "Usage: add Local <path_name>"
-            return
-        with exception_handler():
-            provider = provider_manager.make_local(line[1])
+    print "Invalid provider type!"
 
-    elif provider_type == "test":
-        if len(line) < 2:
-            print "Usage: add Test <path_name>"
-            return
-        with exception_handler():
-            provider = provider_manager.make_test(line[1])
 
-    elif provider_type == "testserver":
-        if len(line) < 3:
-            print "Usage: add Test <host> <port>"
-            return
-        with exception_handler():
-            provider = provider_manager.make_test_server(line[1], line[2])
+def set_provider(line):
+    """
+    set <index> <property>
+    Set the properties of a Test Provider at the index
+    Property can be one of "active, offline, authfail, corrupt"
+    """
 
-    else:
-        print "Invalid provider type!"
+    line = shlex.split(line.lower())
+    index = line[0]
+    prop = line[1]
 
-    if provider is None:
-        print "Error loading provider"
+    if len(line) < 2:
+        print "Usage: set <index> <property>"
+        return
+    try:
+        provider = providers[int(index)]
+        assert provider.provider_identifier() == "test"
+    except AssertionError:
+        print provider.uuid, "is not a Test Provider!"
+        return
+    except (ValueError, KeyError):
+        print "Invalid index"
         return
 
-    return provider
+    state = {"active": TestProviderState.ACTIVE,
+             "offline": TestProviderState.OFFLINE,
+             "authfail": TestProviderState.UNAUTHENTICATED,
+             "corrupt": TestProviderState.CORRUPTING}
+    try:
+        provider.set_state(state[prop])
+    except KeyError:
+        print "Invalid property"
+
+
+def status():
+    """
+    Print the status of all providers
+    """
+    for i, provider in enumerate(providers):
+        color = colorama.Fore.RESET
+        if provider.status == ProviderStatus.GREEN:
+            color = colorama.Fore.GREEN
+        if provider.status == ProviderStatus.YELLOW:
+            color = colorama.Fore.YELLOW
+        if provider.status == ProviderStatus.RED:
+            color = colorama.Fore.RED
+        if provider.status == ProviderStatus.AUTH_FAIL:
+            color = colorama.Fore.BLUE
+        print color + str(i) + ":", str(provider)
+    print colorama.Fore.RESET,
 
 
 class ConfigureLoop(cmd.Cmd):
@@ -118,7 +169,7 @@ class ConfigureLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -129,6 +180,20 @@ class ConfigureLoop(cmd.Cmd):
             return
 
         providers.append(provider)
+
+    def do_status(self, line):
+        """
+        Get the status of all providers
+        """
+        status()
+
+    def do_set(self, line):
+        """
+        set <index> <property>
+        Set the properties of a Test Provider at the index
+        Property can be one of "active, offline, authfail, corrupt"
+        """
+        set_provider(line)
 
     def do_load(self, line=None):
         """
@@ -258,23 +323,12 @@ class MainLoop(cmd.Cmd):
         """
         Get the status of all providers
         """
-        for i, provider in enumerate(providers):
-            color = colorama.Fore.RESET
-            if provider.status == ProviderStatus.GREEN:
-                color = colorama.Fore.GREEN
-            if provider.status == ProviderStatus.YELLOW:
-                color = colorama.Fore.YELLOW
-            if provider.status == ProviderStatus.RED:
-                color = colorama.Fore.RED
-            if provider.status == ProviderStatus.AUTH_FAIL:
-                color = colorama.Fore.BLUE
-            print color + str(i) + ":", str(provider)
-        print colorama.Fore.RESET,
+        status()
 
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -325,31 +379,7 @@ class MainLoop(cmd.Cmd):
         Set the properties of a Test Provider at the index
         Property can be one of "active, offline, authfail, corrupt"
         """
-        line = shlex.split(line.lower())
-        index = line[0]
-        prop = line[1]
-
-        if len(line) < 2:
-            print "Usage: set <index> <property>"
-            return
-        try:
-            provider = providers[int(index)]
-            assert provider.provider_name() == "Test"
-        except AssertionError:
-            print provider.uuid, "is not a Test Provider!"
-            return
-        except (ValueError, KeyError):
-            print "Invalid index"
-            return
-
-        state = {"active": TestProviderState.ACTIVE,
-                 "offline": TestProviderState.OFFLINE,
-                 "authfail": TestProviderState.UNAUTHENTICATED,
-                 "corrupt": TestProviderState.CORRUPTING}
-        try:
-            provider.set_state(state[prop])
-        except KeyError:
-            print "Invalid property"
+        set_provider(line)
 
 
 if __name__ == '__main__':
