@@ -106,7 +106,7 @@ def set_provider(line):
         return
     try:
         provider = providers[int(index)]
-        assert provider.provider_name() == "Test"
+        assert provider.provider_identifier() == "test"
     except AssertionError:
         print provider.uuid, "is not a Test Provider!"
         return

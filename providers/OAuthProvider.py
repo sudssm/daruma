@@ -8,7 +8,7 @@ class OAuthProvider(BaseProvider):
     """
     @classmethod
     def load_cached_providers(cls, credential_manager):
-        credentials = credential_manager.get_user_credentials(cls.provider_name())
+        credentials = credential_manager.get_user_credentials(cls)
         providers = []
         failed_ids = []
         for provider_id, credential in credentials.items():
@@ -17,7 +17,7 @@ class OAuthProvider(BaseProvider):
                 provider._connect(credential)
                 providers.append(provider)
             except:
-                failed_ids.append((cls.provider_name(), provider_id))
+                failed_ids.append((cls.provider_identifier(), provider_id))
         return providers, failed_ids
 
     def start_connection(self):

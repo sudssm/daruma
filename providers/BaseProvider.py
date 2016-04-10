@@ -139,7 +139,7 @@ class BaseProvider(object):
         Returns a globally unique identifier for the provider.
         Of the form (provider type, provider id)
         """
-        return (self.provider_name(), self.uid)
+        return (self.provider_identifier(), self.uid)
 
     def __str__(self):
         return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"

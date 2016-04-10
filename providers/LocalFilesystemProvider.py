@@ -44,7 +44,7 @@ class LocalFilesystemProvider(UnauthenticatedProvider):
         except (IOError, OSError) as error:
             if error.errno is not errno.EEXIST:
                 raise exceptions.ConnectionFailure(self)
-        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, None)
+        self.credential_manager.set_user_credentials(self.__class__, self.uid, None)
 
     @property
     def uid(self):

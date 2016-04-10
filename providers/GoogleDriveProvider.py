@@ -46,7 +46,7 @@ class GoogleDriveProvider(OAuthProvider):
 
     def start_connection(self):
         try:
-            credentials = self.credential_manager.get_app_credentials(self.provider_name())
+            credentials = self.credential_manager.get_app_credentials(self.provider_identifier())
             client_id, client_secret = credentials["client_id"], credentials["client_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -75,7 +75,7 @@ class GoogleDriveProvider(OAuthProvider):
 
             self.email = self.service.about().get(fields="user").execute()["user"]["emailAddress"]
 
-        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, credentials.to_json())
+        self.credential_manager.set_user_credentials(self.__class__, self.uid, credentials.to_json())
 
     @property
     def uid(self):

@@ -42,7 +42,7 @@ class TestServerProvider(UnauthenticatedProvider):
         except KeyError:
             raise exceptions.ProviderOperationFailure(self)
 
-        self.credential_manager.set_user_credentials(self.provider_name(), self.host, None)
+        self.credential_manager.set_user_credentials(self.__class__, self.host, None)
 
     @property
     def uid(self):

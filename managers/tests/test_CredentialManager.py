@@ -1,5 +1,6 @@
 from managers.CredentialManager import CredentialManager
 from providers.DropboxProvider import DropboxProvider
+from providers.TestProvider import TestProvider
 import os
 import pytest
 
@@ -27,9 +28,9 @@ def test_app_cred_missing():
 def test_get_not_exists():
     cm = CredentialManager()
     cm.load()
-    cm.clear_user_credentials("db")
-    assert cm.get_app_credentials("foo") is None
-    assert cm.get_user_credentials("db") == {}
+    cm.clear_user_credentials(DropboxProvider)
+    assert cm.get_app_credentials(TestProvider) is None
+    assert cm.get_user_credentials(DropboxProvider) == {}
 
 
 def test_roundtrip_user():
@@ -37,35 +38,35 @@ def test_roundtrip_user():
     cm.load()
     foo_creds = {"a": 1}
     bar_creds = "a_string"
-    cm.set_user_credentials("db", "foo", foo_creds)
-    cm.set_user_credentials("db", "bar", bar_creds)
+    cm.set_user_credentials(DropboxProvider, "foo", foo_creds)
+    cm.set_user_credentials(DropboxProvider, "bar", bar_creds)
 
     cm.load()
-    assert cm.get_user_credentials("db") == {"foo": foo_creds, "bar": bar_creds}
+    assert cm.get_user_credentials(DropboxProvider) == {"foo": foo_creds, "bar": bar_creds}
 
-    cm.clear_user_credentials("db", "foo")
+    cm.clear_user_credentials(DropboxProvider, "foo")
     cm.load()
-    assert cm.get_user_credentials("db") == {"bar": bar_creds}
+    assert cm.get_user_credentials(DropboxProvider) == {"bar": bar_creds}
 
-    cm.clear_user_credentials("db", "bar")
+    cm.clear_user_credentials(DropboxProvider, "bar")
 
     cm.load()
-    assert cm.get_user_credentials("db") == {}
+    assert cm.get_user_credentials(DropboxProvider) == {}
 
 
 def test_clear_entire_provider():
     cm = CredentialManager()
     cm.load()
-    cm.set_user_credentials("db", "foo", 0)
-    cm.set_user_credentials("db", "bar", 1)
-    cm.clear_user_credentials("db")
+    cm.set_user_credentials(DropboxProvider, "foo", 0)
+    cm.set_user_credentials(DropboxProvider, "bar", 1)
+    cm.clear_user_credentials(DropboxProvider)
 
     cm.load()
-    assert cm.get_user_credentials("db") == {}
+    assert cm.get_user_credentials(DropboxProvider) == {}
 
 
 def test_get_app_credentials():
     cm = CredentialManager()
     # Assume that the packaging includes an app credential file with at least "Dropbox"
     cm.load()
-    assert cm.get_app_credentials(DropboxProvider.provider_name()) is not None
+    assert cm.get_app_credentials(DropboxProvider) is not None

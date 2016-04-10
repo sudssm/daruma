@@ -48,7 +48,7 @@ class DropboxProvider(OAuthProvider):
 
     def start_connection(self):
         try:
-            credentials = self.credential_manager.get_app_credentials(self.provider_name())
+            credentials = self.credential_manager.get_app_credentials(self.provider_identifier())
             app_key, app_secret = credentials["app_key"], credentials["app_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -72,7 +72,7 @@ class DropboxProvider(OAuthProvider):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
             self.email = self.client.account_info()['email']
-        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, auth_token)
+        self.credential_manager.set_user_credentials(self.__class__, self.uid, auth_token)
 
     @property
     def uid(self):
