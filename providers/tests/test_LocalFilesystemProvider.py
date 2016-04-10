@@ -13,7 +13,8 @@ def teardown_function(function):
 
 
 def test_wipe():
-    FS = LocalFilesystemProvider(cm, "tmp")
+    FS = LocalFilesystemProvider(cm)
+    FS.connect("tmp")
     FS.put("file1", "abc")
     FS.put("file2", "def")
     FS.wipe()
@@ -22,14 +23,16 @@ def test_wipe():
 
 
 def test_roundtrip():
-    FS = LocalFilesystemProvider(cm, "tmp")
+    FS = LocalFilesystemProvider(cm)
+    FS.connect("tmp")
     FS.put("file1", "abc")
     assert FS.get("file1") == "abc"
 
 
 def test_exception_has_provider():
     try:
-        FS = LocalFilesystemProvider(cm, "tmp")
+        FS = LocalFilesystemProvider(cm)
+        FS.connect("tmp")
         FS.wipe()
         FS.get("file1")
         assert False
@@ -38,14 +41,16 @@ def test_exception_has_provider():
 
 
 def test_get_nonexisting():
-    FS = LocalFilesystemProvider(cm, "tmp")
+    FS = LocalFilesystemProvider(cm)
+    FS.connect("tmp")
     FS.wipe()
     with pytest.raises(exceptions.ProviderOperationFailure):
         FS.get("file1")
 
 
 def test_delete():
-    FS = LocalFilesystemProvider(cm, "tmp")
+    FS = LocalFilesystemProvider(cm)
+    FS.connect("tmp")
     FS.put("file1", "abc")
     FS.delete("file1")
     with pytest.raises(exceptions.ProviderOperationFailure):
@@ -53,7 +58,8 @@ def test_delete():
 
 
 def test_multiple_sessions():
-    FS = LocalFilesystemProvider(cm, "tmp")
+    FS = LocalFilesystemProvider(cm)
+    FS.connect("tmp")
     FS.wipe()
     FS.put("file1", "abc")
     providers, _ = LocalFilesystemProvider.load_cached_providers(cm)

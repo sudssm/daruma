@@ -14,6 +14,7 @@ import colorama
 
 
 provider_manager = ProviderManager()
+oauth_providers, unauth_providers = provider_manager.get_provider_classes()
 providers = []
 secret_box = None
 
@@ -46,7 +47,7 @@ def pp_providers():
 def add_provider(line):
     """
     add <provider type>
-    provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
+    provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "DemoServer"
     """
     line = line.strip().lower()
 
@@ -60,49 +61,33 @@ def add_provider(line):
 
     provider = None
 
-    if provider_type == "dropbox":
-        url = provider_manager.start_dropbox_connection()
-        print "Visit", url, "to log in to Dropbox"
+    try:
+        provider_class = unauth_providers[provider_type]
+        if len(line) < 2:
+            print "Usage: add %s <path_or_host_name>" % provider_type
+            return
+        with exception_handler():
+            provider = provider_manager.make_unauth_provider(provider_class, line[1])
+        if provider is None:
+            print "Error loading provider"
+        return provider
+    except KeyError:
+        pass
+
+    try:
+        provider_class = oauth_providers[provider_type]
+        url = provider_manager.start_oauth_connection(provider_class)
+        print "Visit", url, "to log in"
         localhost_url = raw_input("Enter resulting url (starts with localhost): ")
         with exception_handler():
-            provider = provider_manager.finish_dropbox_connection(localhost_url)
+            provider = provider_manager.finish_oauth_connection(provider_class, localhost_url)
+        if provider is None:
+            print "Error loading provider"
+        return provider
+    except KeyError:
+        pass
 
-    elif provider_type == "google":
-        url = provider_manager.start_google_connection()
-        print "Visit", url, "to log in to Google"
-        localhost_url = raw_input("Enter resulting url (starts with localhost): ")
-        with exception_handler():
-            provider = provider_manager.finish_google_connection(localhost_url)
-
-    elif provider_type == "local":
-        if len(line) < 2:
-            print "Usage: add Local <path_name>"
-            return
-        with exception_handler():
-            provider = provider_manager.make_local(line[1])
-
-    elif provider_type == "test":
-        if len(line) < 2:
-            print "Usage: add Test <path_name>"
-            return
-        with exception_handler():
-            provider = provider_manager.make_test(line[1])
-
-    elif provider_type == "testserver":
-        if len(line) < 3:
-            print "Usage: add Test <host> <port>"
-            return
-        with exception_handler():
-            provider = provider_manager.make_test_server(line[1], line[2])
-
-    else:
-        print "Invalid provider type!"
-
-    if provider is None:
-        print "Error loading provider"
-        return
-
-    return provider
+    print "Invalid provider type!"
 
 
 def set_provider(line):
@@ -121,7 +106,7 @@ def set_provider(line):
         return
     try:
         provider = providers[int(index)]
-        assert provider.provider_name() == "Test"
+        assert provider.provider_identifier() == "test"
     except AssertionError:
         print provider.uuid, "is not a Test Provider!"
         return

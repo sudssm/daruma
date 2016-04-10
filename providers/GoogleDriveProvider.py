@@ -1,5 +1,5 @@
 from tools.utils import parse_url
-from BaseProvider import BaseProvider
+from OAuthProvider import OAuthProvider
 import httplib2
 from contextlib import contextmanager
 from apiclient import discovery
@@ -10,27 +10,16 @@ from apiclient.errors import HttpError
 import io
 
 
-class GoogleDriveProvider(BaseProvider):
+class GoogleDriveProvider(OAuthProvider):
     SCOPE = 'https://www.googleapis.com/auth/drive.file'
 
-    @staticmethod
-    def provider_name():
-        return "Google Drive"
+    @classmethod
+    def provider_identifier(cls):
+        return "googledrive"
 
-    @staticmethod
-    def load_cached_providers(credential_manager):
-        credentials = credential_manager.get_user_credentials(GoogleDriveProvider.provider_name())
-        providers = []
-        failed_ids = []
-        for provider_id, json_str in credentials.items():
-            gd_provider = GoogleDriveProvider(credential_manager)
-            try:
-                credentials = client.OAuth2Credentials.from_json(json_str)
-                gd_provider._connect(credentials)
-                providers.append(gd_provider)
-            except:
-                failed_ids.append(provider_id)
-        return providers, failed_ids
+    @classmethod
+    def provider_name(cls):
+        return "Google Drive"
 
     def __init__(self, credential_manager):
         """
@@ -56,14 +45,8 @@ class GoogleDriveProvider(BaseProvider):
             raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
-        """
-        Initiate a new connection to Google.
-        Returns: a url that allows the user to log in
-        Raises: IOError if there was a problem reading app credentials
-                ProviderOperationFailure if there was a problem starting flow
-        """
         try:
-            credentials = self.credential_manager.get_app_credentials(self.provider_name())
+            credentials = self.credential_manager.get_app_credentials(self.provider_identifier())
             client_id, client_secret = credentials["client_id"], credentials["client_secret"]
         except (AttributeError, ValueError):
             raise IOError("No valid app credentials found!")
@@ -75,10 +58,6 @@ class GoogleDriveProvider(BaseProvider):
         return authorize_url
 
     def finish_connection(self, url):
-        """
-        Finalize the connection to Google
-        Args: url - a localhost url, resulting from a redirect after start_connection
-        """
         params = parse_url(url)
 
         with self.exception_handler():
@@ -86,13 +65,17 @@ class GoogleDriveProvider(BaseProvider):
         self._connect(credentials)
 
     def _connect(self, credentials):
+        # if this came from cache, it is a json string that needs to be converted
+        if type(credentials) == unicode:
+            credentials = client.OAuth2Credentials.from_json(credentials)
+
         with self.exception_handler():
             http = credentials.authorize(httplib2.Http())
             self.service = discovery.build('drive', 'v3', http=http)
 
             self.email = self.service.about().get(fields="user").execute()["user"]["emailAddress"]
 
-        self.credential_manager.set_user_credentials(self.provider_name(), self.uid, credentials.to_json())
+        self.credential_manager.set_user_credentials(self.__class__, self.uid, credentials.to_json())
 
     @property
     def uid(self):

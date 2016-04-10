@@ -19,7 +19,8 @@ def teardown_function(function):
 
 
 def test_wipe():
-    FS = TestServerProvider(cm, "127.0.0.1", 5000)
+    FS = TestServerProvider(cm)
+    FS.connect("http://127.0.0.1:5000")
     FS.put("file1", "abc")
     FS.put("file2", "def")
     FS.wipe()
@@ -30,14 +31,16 @@ def test_wipe():
 
 
 def test_roundtrip():
-    FS = TestServerProvider(cm, "127.0.0.1", 5000)
+    FS = TestServerProvider(cm)
+    FS.connect("http://127.0.0.1:5000")
     FS.put("file1", "abc")
     assert FS.get("file1") == "abc"
 
 
 def test_exception_has_provider():
     try:
-        FS = TestServerProvider(cm, "127.0.0.1", 5000)
+        FS = TestServerProvider(cm)
+        FS.connect("http://127.0.0.1:5000")
         FS.wipe()
         FS.get("file1")
         assert False
@@ -46,14 +49,16 @@ def test_exception_has_provider():
 
 
 def test_get_nonexisting():
-    FS = TestServerProvider(cm, "127.0.0.1", 5000)
+    FS = TestServerProvider(cm)
+    FS.connect("http://127.0.0.1:5000")
     FS.wipe()
     with pytest.raises(exceptions.ProviderOperationFailure):
         FS.get("file1")
 
 
 def test_delete():
-    FS = TestServerProvider(cm, "127.0.0.1", 5000)
+    FS = TestServerProvider(cm)
+    FS.connect("http://127.0.0.1:5000")
     FS.put("file1", "abc")
     FS.delete("file1")
     with pytest.raises(exceptions.ProviderOperationFailure):
@@ -61,7 +66,8 @@ def test_delete():
 
 
 def test_multiple_sessions():
-    FS = TestServerProvider(cm, "127.0.0.1", 5000)
+    FS = TestServerProvider(cm)
+    FS.connect("http://127.0.0.1:5000")
     FS.wipe()
     FS.put("file1", "abc")
     providers, _ = TestServerProvider.load_cached_providers(cm)
