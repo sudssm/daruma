@@ -47,10 +47,8 @@ class GoogleDriveProvider(OAuthProvider):
     def start_connection(self):
         try:
             credentials = self.credential_manager.get_app_credentials(self.__class__)
-            if credentials is None:
-                raise ValueError
             client_id, client_secret = credentials["client_id"], credentials["client_secret"]
-        except (KeyError, ValueError):
+        except (KeyError, TypeError):
             raise IOError("No valid app credentials found!")
 
         with self.exception_handler():
