@@ -21,11 +21,24 @@ class ProviderManager():
         self.tmp_oauth_providers = {}  # Stores data for in-flight OAuth transactions
 
     @staticmethod
-    def exposed_providers():
+    def get_provider_classes():
         """
-        Returns a list of provider classes that can be exposed to the user
+        Returns all available provider classes in a list.
         """
         return [DropboxProvider, GoogleDriveProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+
+    @staticmethod
+    def get_provider_classes_by_kind():
+        """
+        Get all available provider classes
+        Returns a tuple (oauth_providers, unauth_providers)
+            oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
+            unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
+        """
+        provider_classes = ProviderManager.get_provider_classes()
+        oauth_providers = {cls.provider_identifier(): cls for cls in provider_classes if issubclass(cls, OAuthProvider)}
+        unauth_providers = {cls.provider_identifier(): cls for cls in provider_classes if issubclass(cls, UnauthenticatedProvider)}
+        return oauth_providers, unauth_providers
 
     def load_all_providers_from_credentials(self):
         """
@@ -37,21 +50,10 @@ class ProviderManager():
         def flatten(list_of_lists):
             return [item for sublist in list_of_lists for item in sublist]
 
-        provider_classes = ProviderManager.exposed_providers()
+        provider_classes = ProviderManager.get_provider_classes()
         providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), provider_classes)
 
         return tuple(map(flatten, zip(*providers_and_errors)))
-
-    def get_provider_classes(self):
-        """
-        Get all available provider classes
-        Returns a tuple (oauth_providers, unauth_providers)
-            oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
-            unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
-        """
-        oauth_providers = {cls.provider_identifier(): cls for cls in self.exposed_providers() if issubclass(cls, OAuthProvider)}
-        unauth_providers = {cls.provider_identifier(): cls for cls in self.exposed_providers() if issubclass(cls, UnauthenticatedProvider)}
-        return oauth_providers, unauth_providers
 
     def start_oauth_connection(self, provider_class):
         """

@@ -14,7 +14,7 @@ import colorama
 
 
 provider_manager = ProviderManager()
-oauth_providers, unauth_providers = provider_manager.get_provider_classes()
+oauth_providers, unauth_providers = provider_manager.get_provider_classes_by_kind()
 providers = []
 secret_box = None
 
