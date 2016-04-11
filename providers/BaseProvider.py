@@ -1,3 +1,6 @@
+from tools.utils import APP_NAME
+
+
 class ProviderStatus:
     """
     Status codes to report to the UI
@@ -15,6 +18,8 @@ class BaseProvider(object):
     """
     RED_THRESHOLD = .1
     YELLOW_THRESHOLD = .95
+
+    ROOT_DIR = APP_NAME
 
     @staticmethod
     def load_cached_providers(credential_manager):
