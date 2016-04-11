@@ -10,7 +10,13 @@ import pytest
 cm = CredentialManager()
 cm.load()
 
-providers = [LocalFilesystemProvider(cm, "tmp/" + str(i)) for i in xrange(5)]
+
+def make_local(cm, path):
+    provider = LocalFilesystemProvider(cm)
+    provider.connect(path)
+    return provider
+
+providers = [make_local(cm, "tmp/" + str(i)) for i in xrange(5)]
 
 master_key = generate_key()
 manifest_name = generate_random_name()
