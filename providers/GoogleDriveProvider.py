@@ -11,7 +11,8 @@ import io
 
 
 class GoogleDriveProvider(OAuthProvider):
-    SCOPE = 'https://www.googleapis.com/auth/drive.file'
+    SCOPE = ['https://www.googleapis.com/auth/drive.appfolder']
+    ROOT_DIR = "appDataFolder"
 
     @classmethod
     def provider_identifier(cls):
@@ -66,7 +67,7 @@ class GoogleDriveProvider(OAuthProvider):
 
     def _connect(self, credentials):
         # if this came from cache, it is a json string that needs to be converted
-        if type(credentials) == unicode:
+        if type(credentials) in [unicode, str]:
             credentials = client.OAuth2Credentials.from_json(credentials)
 
         with self.exception_handler():
@@ -84,7 +85,7 @@ class GoogleDriveProvider(OAuthProvider):
     def _get_id(self, filename):
         query = "name = '%s' and mimeType = 'text/plain' and trashed = false" % filename
 
-        files = self.service.files().list(q=query).execute()["files"]
+        files = self.service.files().list(q=query, spaces=self.ROOT_DIR).execute()["files"]
         if len(files) == 0:
             raise exceptions.ProviderOperationFailure(self)
 
@@ -101,9 +102,12 @@ class GoogleDriveProvider(OAuthProvider):
             fh = io.BytesIO(data)
             media = MediaIoBaseUpload(fh, mimetype='text/plain', resumable=False)
 
-            metadata = {'name': filename}
+            metadata = {
+                'name': filename,
+                'parents': [self.ROOT_DIR]
+            }
 
-            self.service.files().create(body=metadata, media_body=media).execute()
+            self.service.files().create(body=metadata, media_body=media, fields='id').execute()
 
     def delete(self, filename):
         with self.exception_handler():
@@ -115,6 +119,6 @@ class GoogleDriveProvider(OAuthProvider):
 
     def wipe(self):
         with self.exception_handler():
-            files = self.service.files().list().execute()["files"]
+            files = self.service.files().list(spaces=self.ROOT_DIR).execute()["files"]
             for file in files:
                 self.service.files().delete(fileId=file['id']).execute()
