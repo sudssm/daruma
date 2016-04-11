@@ -2,7 +2,7 @@ from tools.utils import parse_url
 from OAuthProvider import OAuthProvider
 import httplib2
 from contextlib import contextmanager
-from apiclient import discovery
+from apiclient import discovery, http
 from custom_exceptions import exceptions
 from oauth2client import client
 from apiclient.http import MediaIoBaseUpload
@@ -70,8 +70,12 @@ class GoogleDriveProvider(OAuthProvider):
             credentials = client.OAuth2Credentials.from_json(credentials)
 
         with self.exception_handler():
-            http = credentials.authorize(httplib2.Http())
-            self.service = discovery.build('drive', 'v3', http=http)
+            # Create a new Http() object for every request to ensure thread safety
+            def build_request(old_http, *args, **kwargs):
+                new_http = credentials.authorize(httplib2.Http())
+                return http.HttpRequest(new_http, *args, **kwargs)
+
+            self.service = discovery.build('drive', 'v3', requestBuilder=build_request)
 
             self.email = self.service.about().get(fields="user").execute()["user"]["emailAddress"]
 
