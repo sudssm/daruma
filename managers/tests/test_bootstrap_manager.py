@@ -128,12 +128,13 @@ def test_corrupt_share_failure():
 
 
 def modify_bootstrap_plaintext(provider, new_k=None, new_n=None, new_id=None):
-    k, n, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
+    bootstrap_plaintext = zlib.decompress(provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME))
+    k, n, provider_id = bootstrap_plaintext.split(",")
     new_k = k if new_k is None else new_k
     new_n = n if new_n is None else new_n
     new_id = provider_id if new_id is None else new_id
     string = ",".join(map(str, [new_k, new_n, new_id]))
-    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, string)
+    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, zlib.compress(string))
 
 
 def test_corrupt_k_recover():

@@ -108,7 +108,8 @@ class BootstrapManager:
         failures = []
         for provider in self.providers:
             try:
-                threshold_vote, n_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",", 3)
+                bootstrap_plaintext = zlib.decompress(provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME))
+                threshold_vote, n_vote, provider_id = bootstrap_plaintext.split(",", 3)
 
                 # track provider votes for bootstrap threshold and n values
                 vote_map[(int(threshold_vote), int(n_vote))].append(provider)
@@ -250,22 +251,18 @@ class BootstrapManager:
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
         shares_map = shamir_secret_sharing.share(string, provider_ids, self.bootstrap_reconstruction_threshold)
 
-        for key, share in shares_map.items():
-            try:
-                shares_map[key] = zlib.compress(share)
-            except zlib.error:
-                raise exceptions.LibraryException
-
         # write shares to providers
         failures = []
         for provider, provider_id in zip(self.providers, provider_ids):
             share = shares_map[provider_id]
             try:
                 bootstrap_plaintext = ",".join(map(str, [self.bootstrap_reconstruction_threshold, self.num_providers, provider_id]))
-                provider.put(self.BOOTSTRAP_PLAINTEXT_FILE_NAME, bootstrap_plaintext)
-                provider.put(self.BOOTSTRAP_FILE_NAME, share)
+                provider.put(self.BOOTSTRAP_PLAINTEXT_FILE_NAME, zlib.compress(bootstrap_plaintext))
+                provider.put(self.BOOTSTRAP_FILE_NAME, zlib.compress(share))
             except exceptions.ProviderFailure as e:
                 failures.append(e)
+            except zlib.error:
+                raise exceptions.LibraryException
 
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
