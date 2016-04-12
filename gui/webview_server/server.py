@@ -3,10 +3,8 @@ import os
 from flask import Flask, render_template, send_file
 import pkg_resources
 import gui
+from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
 
-
-WEBVIEW_SERVER_HOST = "localhost"
-WEBVIEW_SERVER_PORT = 28962  # This should be a free port
 
 # Change the static and template folder locations depending on whether we're
 # running in an app and what the platform is.  Py2App sets the sys.frozen
@@ -47,4 +45,4 @@ def start_ui_server(native_app, app_state):
     """
     global global_app_state
     global_app_state = app_state
-    app.run(host=WEBVIEW_SERVER_HOST, port=WEBVIEW_SERVER_PORT)
+    app.run(host=INTERNAL_SERVER_HOST, port=INTERNAL_SERVER_PORT)

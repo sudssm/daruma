@@ -2,9 +2,10 @@ import sys
 import threading
 from custom_exceptions import exceptions
 from driver.SecretBox import SecretBox
-from gui.webview_server.server import start_ui_server, WEBVIEW_SERVER_HOST, WEBVIEW_SERVER_PORT
+from gui.webview_server.server import start_ui_server
 from gui.webview_client.app import SBApp
 from managers.ProviderManager import ProviderManager
+from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
 
 
 class ApplicationState(object):
@@ -34,7 +35,7 @@ def platform_specific_setup():
 
 def launch_gui(app_state):
     # Initialize native UI
-    app_menu = SBApp((WEBVIEW_SERVER_HOST, WEBVIEW_SERVER_PORT),
+    app_menu = SBApp((INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT),
                      setup_complete=(app_state.secretbox is not None))
 
     # Start HTTP UI server
