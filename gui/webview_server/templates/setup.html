@@ -51,11 +51,11 @@
         <div id="added-providers-area">
             <h2>Current Providers:</h2>
             <ul>
-                {% for provider in providers %}
+                {% for provider in added_providers %}
                 <li>
                     &#9989
-                    <span class="added-provider-name">{{ provider }}</span>
-                    <span class="added-username">user@gmail.com</span>
+                    <span class="added-provider-name">{{ provider.provider_name() }}</span>
+                    <span class="added-username">{{ provider.uid }}</span>
                 </li>
                 {% endfor %}
             </ul>

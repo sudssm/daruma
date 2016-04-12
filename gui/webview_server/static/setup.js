@@ -9,3 +9,7 @@ function onGetStartedClick() {
 	$("#done-adding-providers-button").show();
 	$("#added-providers-area").show();
 }
+
+function onAddProviderButtonClick() {
+	window.location.href = "/modal/show/providers/add.html";
+}

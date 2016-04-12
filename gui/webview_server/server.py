@@ -23,13 +23,22 @@ global_app_state = None
 
 @app.route('/app_logo.png')
 def download_logo():
+    """
+    Serves a large version of the app logo.
+    """
     icon_path = os.path.join("icons", "large.png")
     return send_file(pkg_resources.resource_filename(gui.__name__, icon_path))
 
 
 @app.route('/setup')
 def show_setup_page():
-    return render_template('setup.html', providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
+    """
+    This page is shown on app startup when we can't automatically load an
+    existing configuration.
+    """
+    return render_template('setup.html',
+                           available_providers=ProviderManager.get_provider_classes(),
+                           added_providers=global_app_state.prelaunch_providers)
 
 
 @app.route('/providers')
