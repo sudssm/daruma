@@ -59,7 +59,7 @@ def test_multiple_sessions():
     SB.put("test2", "moredata")
     assert sorted(SB.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
 
-    SecretBox.load(providers)
+    SB, _ = SecretBox.load(providers)
     assert sorted(SB.ls("")) == [{"name": "test", "is_directory": False, "size": 4}, {"name": "test2", "is_directory": False, "size": 8}]
     assert SB.get("test") == "data"
     assert SB.get("test2") == "moredata"
@@ -96,7 +96,7 @@ def test_different_ks():
     providers[1].wipe()
 
     # should be able to recover the key
-    SB = SecretBox.load(providers)
+    SB, _ = SecretBox.load(providers)
 
     providers[0].wipe()
     providers[1].wipe()
@@ -118,7 +118,7 @@ def test_add_provider():
 
     assert SB.get("test") == "data"
     # check that we can bootstrap
-    SB = SecretBox.load(providers)
+    SB, _ = SecretBox.load(providers)
 
     # check that k has been changed
     providers[0].wipe()
@@ -137,7 +137,7 @@ def test_remove_provider():
     assert SB.get("test") == "data"
 
     # check that we can bootstrap
-    SB = SecretBox.load(providers[0:4])
+    SB, _ = SecretBox.load(providers[0:4])
     assert SB.get("test") == "data"
 
     # check that k has been changed
@@ -150,7 +150,7 @@ def test_read_only_mode():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "file")
 
-    SB = SecretBox.load(providers[0:3])
+    SB, _ = SecretBox.load(providers[0:3])
     with pytest.raises(exceptions.ReadOnlyMode):
         SB.put("test", "something else")
 
@@ -164,7 +164,7 @@ def test_read_only_mode_fix_by_adding():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("file", "data")
 
-    SB = SecretBox.load(providers[:3])
+    SB, _ = SecretBox.load(providers[:3])
 
     with pytest.raises(exceptions.ReadOnlyMode):
         SB.put("test", "file")
@@ -200,7 +200,7 @@ def test_read_only_mode_fix_by_removing():
 
     provider_subset = providers[0:3]
 
-    SB = SecretBox.load(provider_subset)
+    SB, _ = SecretBox.load(provider_subset)
 
     with pytest.raises(exceptions.ReadOnlyMode):
         SB.put("test", "file")
@@ -229,3 +229,10 @@ def test_reprovision_bad_threshold():
     SB = SecretBox.provision(providers[:3], 2, 2)
     with pytest.raises(ValueError):
         SB.reprovision(providers[3:], 2, 2)
+
+
+def test_extra_providers():
+    SB = SecretBox.provision(providers[:3], 2, 2)
+    SB, extra_providers = SecretBox.load(providers)
+    assert SB.file_manager.providers == providers[:3]
+    assert sorted(extra_providers) == sorted(providers[3:])

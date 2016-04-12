@@ -108,7 +108,7 @@ def test_temporary_offline_load():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     providers[0].set_state(TestProviderState.FAILING, 4)
-    SB = SecretBox.load(providers)
+    SB, _ = SecretBox.load(providers)
     assert SB.get("test") == "data"
     assert providers[0].status == ProviderStatus.YELLOW
 
@@ -125,7 +125,7 @@ def test_permanently_offline_load():
     SB = SecretBox.provision(providers, 3, 3)
     SB.put("test", "data")
     providers[0].set_state(TestProviderState.OFFLINE)
-    SB = SecretBox.load(providers)
+    SB, _ = SecretBox.load(providers)
     assert providers[0].status == ProviderStatus.RED
     assert SB.get("test") == "data"
 
@@ -160,6 +160,6 @@ def test_attempt_repair_in_read_only():
 
     # load with only 4 providers, one of which is bad
     providers[0].set_state(TestProviderState.OFFLINE)
-    SB = SecretBox.load(providers[:4])
+    SB, _ = SecretBox.load(providers[:4])
 
     assert SB.get("test") == "data"

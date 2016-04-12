@@ -23,7 +23,7 @@ class SecretBox:
         self.resilience_manager = resilience_manager
         # load the manifest here
         # ensures that we fail immediately with FatalOperationFailure if we recovered the wrong reconstruction threshold
-        self._load_manifest()
+        self._load_manifest(discard_extra_providers=True)
 
     @staticmethod
     def _assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
@@ -83,10 +83,14 @@ class SecretBox:
     def load(providers):
         """
         Load an existing SecretBox
-        Providers: a list of providers
-        Returns a constructed SecretBox object
+        Args: providers, a list of providers
+        Returns (secretbox, extra_providers)
+            secretbox: a constructed SecretBox object
+            extra_providers: a list of providers that were provided but not part of the loaded installation
+        The client should decide whether to discard the extra_providers or to reprovision with them
         Raises FatalOperationFailure
         """
+        providers = providers[:]
         bootstrap_manager = BootstrapManager(providers)
         failures = []
         try:
@@ -105,7 +109,9 @@ class SecretBox:
         if len(failures) > 0:
             resilience_manager.diagnose_and_repair_bootstrap(failures)
 
-        return SecretBox(bootstrap_manager, file_manager, resilience_manager)
+        secretbox = SecretBox(bootstrap_manager, file_manager, resilience_manager)
+        extra_providers = list(set(providers) - set(secretbox.file_manager.providers))
+        return secretbox, extra_providers
 
     # TODO: update with other bad cases
     def _verify_parameters(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
@@ -177,6 +183,8 @@ class SecretBox:
            file_reconstruction_threshold == self.file_manager.file_reconstruction_threshold:
                 return
 
+        old_providers = self.file_manager.providers
+
         self.file_manager.providers = providers
         self.bootstrap_manager.providers = providers
         self.resilience_manager.providers = providers
@@ -186,23 +194,31 @@ class SecretBox:
 
         self._reset()
 
-    def _load_manifest(self):
+        # wipe the providers that were used previously but aren't any longer
+        for provider in set(old_providers) - set(providers):
+            provider.remove_provider()
+
+    def _load_manifest(self, discard_extra_providers=False):
         """
         Load the manifest into the file manager
         Without caching, this should be called before every public operation
+        Args: If discard_extra_providers is True, will discard any providers not in the manifest
         Raises FatalOperationFailure if the load was not successful
         """
         # TODO handle manifest caching
         try:
-            self.file_manager.load_manifest()
+            self.file_manager.load_manifest(discard_extra_providers)
             self.resilience_manager.log_success()
         except exceptions.OperationFailure as e:
             self.resilience_manager.diagnose_and_repair_bootstrap(e.failures)
         except exceptions.FatalOperationFailure as e:
             can_retry = self.resilience_manager.diagnose(e.failures)
             if can_retry:
-                return self._load_manifest()
+                return self._load_manifest(discard_extra_providers)
             raise
+
+        if discard_extra_providers:
+            self.bootstrap_manager.providers = self.file_manager.providers
 
     def get_missing_providers(self):
         """
