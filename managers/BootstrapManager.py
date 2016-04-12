@@ -1,7 +1,7 @@
 # This file handles keys using SSSS
 from tools import shamir_secret_sharing
 from tools.encryption import KEY_SIZE
-from tools.utils import FILENAME_SIZE
+from tools.utils import FILENAME_SIZE, generate_random_name
 from collections import defaultdict
 from custom_exceptions import exceptions
 from itertools import product
@@ -47,6 +47,12 @@ class BootstrapManager:
         self.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
         self.num_providers = None
 
+    def _make_bootstrap_plaintext(self, threshold, n, provider_id, version):
+        return ",".join(map(str, [threshold, n, provider_id, version]))
+
+    def _get_bootstrap_plaintext(self, plaintext):
+        return plaintext.split(",", 4)
+
     def _download_and_vote(self):
         """
         Recovers n, bootstrap threshold, shares, and failures from providers if there is a consensus
@@ -63,16 +69,15 @@ class BootstrapManager:
             failures, a list of failures from failing providers
         Raises FatalOperationFailure if unable to reach consensus
         """
-        def vote_for_params(vote_map, shares_map):
+        def vote_for_params(vote_map):
             """
             Args:
-                vote_map: maps tuple of (threshold, n) votes to providers that voted
-                shares_map: maps provider to bootstrap share. Invalid shares will be removed
+                vote_map: maps tuple of (threshold, n, version) votes to providers that voted
             Returns:
                 (threshold, n), failures
                 threshold: the voted bootstrap threshold
                 n: the voted n
-                failures: a list of providers who did not vote for the winning vote if one was found
+                failed_providers: a list of providers who did not vote for the winning vote if one was found
             Raises:
                 FatalOperationFailure: no parameters were returned or there were too few providers in agreement to support the consensus threshold
             """
@@ -85,7 +90,7 @@ class BootstrapManager:
                     largest_group_size = len(sources)
 
             if winning_vote is not None:
-                threshold, n = winning_vote
+                threshold, n, version = winning_vote
 
             # we protect against (k-1) providers failing
             # so, a group of defectors larger than k are outside threat model
@@ -93,15 +98,13 @@ class BootstrapManager:
             if winning_vote is None or largest_group_size < threshold:
                 raise exceptions.FatalOperationFailure([])
 
-            failures = []  # add all providers who misvoted to failures
+            failed_providers = []
+            # add all providers who misvoted to failures
             for vote, sources in vote_map.items():
                 if vote != winning_vote:
-                    for provider in sources:
-                        failures.append(exceptions.InvalidShareFailure(provider))
-                        # if the vote was invalid, the share may be outdated. Best to not use it
-                        del shares_map[provider]
+                    failed_providers += sources
 
-            return threshold, n, failures
+            return threshold, n, failed_providers
 
         # maps self-proclaimed provider_id to providers with that id
         # (there could be multiple providers that report the same one)
@@ -112,10 +115,10 @@ class BootstrapManager:
         failures = []
         for provider in self.providers:
             try:
-                threshold_vote, n_vote, provider_id = provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",", 3)
+                threshold_vote, n_vote, provider_id, version = self._get_bootstrap_plaintext(provider.get(self.BOOTSTRAP_PLAINTEXT_FILE_NAME))
 
-                # track provider votes for bootstrap threshold and n values
-                vote_map[(int(threshold_vote), int(n_vote))].append(provider)
+                # track provider votes for bootstrap threshold, n values, and version
+                vote_map[(int(threshold_vote), int(n_vote), version)].append(provider)
                 provider_id_map[provider_id].append(provider)
 
                 shares_map[provider] = zlib.decompress(provider.get(self.BOOTSTRAP_FILE_NAME))
@@ -126,11 +129,9 @@ class BootstrapManager:
                 failures.append(exceptions.InvalidShareFailure(provider))
 
         try:
-            threshold, n, voting_failures = vote_for_params(vote_map, shares_map)
+            threshold, n, voting_failures = vote_for_params(vote_map)
         except exceptions.FatalOperationFailure as e:
             raise exceptions.FatalOperationFailure(failures + e.failures)
-
-        failures += voting_failures
 
         # add all providers with invalid id to failures
         for provider_id, providers in provider_id_map.items():
@@ -142,6 +143,13 @@ class BootstrapManager:
                     failures.append(exceptions.InvalidShareFailure(provider))
                     # remove the provider's share from shares_map
                     del shares_map[provider]
+
+        # if a provider misvoted, don't use its share - delete it if it hasn't been deleted already
+        for provider in voting_failures:
+            try:
+                del shares_map[provider]
+            except:
+                pass
 
         # ensure that we have at least threshold shares
         if len(shares_map.values()) < threshold:
@@ -251,6 +259,9 @@ class BootstrapManager:
 
         provider_ids = map(str, xrange(len(self.providers)))
 
+        # make a random version
+        version = generate_random_name()
+
         # compute new shares using len(providers) and bootstrap_reconstruction_threshold
         shares_map = shamir_secret_sharing.share(string, provider_ids, self.bootstrap_reconstruction_threshold)
 
@@ -265,7 +276,7 @@ class BootstrapManager:
         for provider, provider_id in zip(self.providers, provider_ids):
             share = shares_map[provider_id]
             try:
-                bootstrap_plaintext = ",".join(map(str, [self.bootstrap_reconstruction_threshold, self.num_providers, provider_id]))
+                bootstrap_plaintext = self._make_bootstrap_plaintext(self.bootstrap_reconstruction_threshold, self.num_providers, provider_id, version)
                 provider.put(self.BOOTSTRAP_PLAINTEXT_FILE_NAME, bootstrap_plaintext)
                 provider.put(self.BOOTSTRAP_FILE_NAME, share)
             except exceptions.ProviderFailure as e:
