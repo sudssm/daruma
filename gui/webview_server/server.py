@@ -30,7 +30,7 @@ def download_logo():
     return send_file(pkg_resources.resource_filename(gui.__name__, icon_path))
 
 
-@app.route('/setup')
+@app.route('/setup.html')
 def show_setup_page():
     """
     This page is shown on app startup when we can't automatically load an
@@ -41,7 +41,7 @@ def show_setup_page():
                            added_providers=global_app_state.prelaunch_providers)
 
 
-@app.route('/providers')
+@app.route('/providers.html')
 def show_provider_status():
     """
     This page is shown as a dashboard to see the current state of providers and
