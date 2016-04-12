@@ -35,6 +35,16 @@ def show_provider_status():
     return render_template('providers.html', providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
 
 
+@app.route('/providers/add.html')
+def show_add_provider_modal():
+    """
+    This page is shown in a modal dialog to allow the user to add a new
+    provider.
+    """
+    return render_template('add_provider_modal.html',
+                           available_providers=ProviderManager.get_provider_classes())
+
+
 def start_ui_server(native_app, app_state):
     """
     Begins running the UI webserver.
