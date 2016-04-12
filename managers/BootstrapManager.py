@@ -63,10 +63,11 @@ class BootstrapManager:
             failures, a list of failures from failing providers
         Raises FatalOperationFailure if unable to reach consensus
         """
-        def vote_for_params(vote_map):
+        def vote_for_params(vote_map, shares_map):
             """
             Args:
                 vote_map: maps tuple of (threshold, n) votes to providers that voted
+                shares_map: maps provider to bootstrap share. Invalid shares will be removed
             Returns:
                 (threshold, n), failures
                 threshold: the voted bootstrap threshold
@@ -95,7 +96,10 @@ class BootstrapManager:
             failures = []  # add all providers who misvoted to failures
             for vote, sources in vote_map.items():
                 if vote != winning_vote:
-                    failures += [exceptions.InvalidShareFailure(provider) for provider in sources]
+                    for provider in sources:
+                        failures.append(exceptions.InvalidShareFailure(provider))
+                        # if the vote was invalid, the share may be outdated. Best to not use it
+                        del shares_map[provider]
 
             return threshold, n, failures
 
@@ -122,7 +126,7 @@ class BootstrapManager:
                 failures.append(exceptions.InvalidShareFailure(provider))
 
         try:
-            threshold, n, voting_failures = vote_for_params(vote_map)
+            threshold, n, voting_failures = vote_for_params(vote_map, shares_map)
         except exceptions.FatalOperationFailure as e:
             raise exceptions.FatalOperationFailure(failures + e.failures)
 
