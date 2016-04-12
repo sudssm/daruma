@@ -16,6 +16,7 @@ class ApplicationState(object):
     providers with valid authentication.
     """
     secretbox = None
+    provider_manager = ProviderManager()
     prelaunch_providers = []
 
 
@@ -52,8 +53,8 @@ def launch_gui(app_state):
 if __name__ == "__main__":
     platform_specific_setup()
 
-    providers, _ = ProviderManager().load_all_providers_from_credentials()
     app_state = ApplicationState()
+    providers, _ = app_state.provider_manager.load_all_providers_from_credentials()
     try:
         assert len(providers) >= 2
         app_state.secretbox = SecretBox.load(providers)

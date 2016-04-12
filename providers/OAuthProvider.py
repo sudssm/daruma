@@ -1,3 +1,4 @@
+from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
 from providers.BaseProvider import BaseProvider
 
 
@@ -6,6 +7,16 @@ class OAuthProvider(BaseProvider):
     Stub for OAuthProviders, defining the flow for connection
     OAuth Providers use the value portion of the CredentialManager (key,value) store to store user tokens
     """
+
+    @classmethod
+    def get_oauth_redirect_url(cls):
+        try:
+            return ("http://" + INTERNAL_SERVER_HOST + ":" +
+                    str(INTERNAL_SERVER_PORT) + "/providers/add/" +
+                    cls.provider_identifier() + "/finish")
+        except Exception as e:
+            print e
+
     @classmethod
     def load_cached_providers(cls, credential_manager):
         credentials = credential_manager.get_user_credentials(cls)

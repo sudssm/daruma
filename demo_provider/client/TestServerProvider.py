@@ -12,6 +12,10 @@ class TestServerProvider(UnauthenticatedProvider):
     def provider_name(cls):
         return "Demo Server"
 
+    @classmethod
+    def get_configuration_label(cls):
+        return "Server URL"
+
     def __init__(self, credential_manager):
         """
         Initialize a connection to an existing demo server provider
