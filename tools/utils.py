@@ -28,19 +28,14 @@ def run_parallel(func, args_list, workers=20):
     Discards return values
     Args:
         func: the function to execute.
-        args_list: a list of positional arguments to pass to the function
+        args_list: a list of lists of positional arguments to pass to the function
         workers: (optional) the max number of functions to run at a time
     Returns: exceptions, the exceptions (if any) thrown by the functions
     """
     with ThreadPoolExecutor(max_workers=workers) as tpe:
         futures = map(lambda args: tpe.submit(func, *args), args_list)
 
-    exceptions = []
-    for future in futures:
-        exception = future.exception()
-        if exception is not None:
-            exceptions.append(exception)
-    return exceptions
+    return [future.exception() for future in futures if future.exception() is not None]
 
 
 def sandbox_function(function, *args):
