@@ -59,6 +59,8 @@ if __name__ == "__main__":
     try:
         assert len(providers) >= 2
         app_state.secretbox = SecretBox.load(providers)
+        app_state.providers = providers
+        # TODO handle extra providers
     except (AssertionError, exceptions.FatalOperationFailure):
         app_state.providers = providers
     launch_gui(app_state)

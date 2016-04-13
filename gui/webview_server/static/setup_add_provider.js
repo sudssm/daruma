@@ -1,25 +1,24 @@
 "use strict";
 function onAddProviderButtonClick() {
-	window.location.href = "/modal/show/providers/add.html";
+    window.location.href = "/modal/show/providers/add.html";
 }
 
 var providers = []
 
 setInterval(function(){
-    $.getJSON("/provider_list")
+    $.getJSON("/get_state")
     .done(function(data){
-        if (data["loaded"]){
+        if (data["instance"] != null){
             window.location.href = "providers.html"
         }
         var new_providers = data["providers"];
         if (new_providers.length != providers.length){
             for (var i = providers.length; i < new_providers.length; i ++){
-                var provider_name = new_providers[i][0];
-                var provider_id = new_providers[i][1];
+                var provider = new_providers[i];
                 var li = "<li>" +
                          "&#9989" +
-                         "<span class='added-provider-name'>" + provider_name + "</span> " +
-                         "<span class='added-username'>" + provider_id + "</span>" + 
+                         "<span class='added-provider-name'>" + provider["name"] + "</span> " +
+                         "<span class='added-username'>" + provider["id"] + "</span>" +
                          "</li>"
 
                 $("#providers").append(li)

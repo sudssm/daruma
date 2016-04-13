@@ -18,7 +18,7 @@ body {
     color: green;
 }
 
-.status-orange {
+.status-yellow {
     color: goldenrod;
 }
 
@@ -44,6 +44,13 @@ body {
     border-width: 1px;
     border-color: lightgray;
 }
+
+#reprovision-button {
+    display: none;
+    margin-left: auto;
+    font-size: 12pt;
+}
+
 
 #add-provider-button {
     margin-left: auto;

@@ -147,6 +147,7 @@ def try_load_instance():
         return redirect("setup_add_providers.html")
 
     try:
+        # TODO handle extra providers
         global_app_state.secretbox = SecretBox.load(global_app_state.providers)
         return redirect("providers.html")
     except exceptions.FatalOperationFailure:
@@ -183,15 +184,35 @@ def try_provision_instance():
 ##################
 
 
-@app.route('/provider_list')
+@app.route('/get_state')
 def get_provider_list():
     """
     An API endpoint that returns a JSON-formatted list of active providers
     """
+    providers = []
+    overall_status = "GREEN"
+
+    for provider in global_app_state.providers:
+        provider_dict = {
+            "name": provider.provider_name(),
+            "identifier": provider.provider_identifier(),
+            "id": provider.uid,
+            "status": provider.status,
+        }
+        providers.append(provider_dict)
+
+        if provider.status == "RED":
+            if overall_status == "GREEN":
+                overall_status = "YELLOW"
+            else:
+                overall_status = "RED"
+
+    instance = None if global_app_state.secretbox is None else {"status": overall_status}
+
     # TODO update for not prelaunch
     return jsonify({
-        'loaded': global_app_state.secretbox is not None,
-        'providers': global_app_state.provider_uuids
+        'instance': instance,
+        'providers': providers
     })
 
 
