@@ -8,7 +8,15 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='add_provider_modal.css') }}">
         <script type=text/javascript src="{{ url_for('static', filename='jquery-2.2.2.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='global.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='add_provider_modal.js') }}"></script>
+        <script type="text/javascript">
+            "use strict";
+            $(document).ready(function () {
+                $(".provider-icon-wide").error(function() {
+                    var new_elt = "<span class='provider-icon-wide'>" + $(this).attr("alt") + "</span>";
+                    $(this).replaceWith(new_elt);
+                });
+            });
+        </script>
     </head>
 
     <body>

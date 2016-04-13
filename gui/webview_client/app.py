@@ -122,7 +122,6 @@ class MainAppMenu(wx.TaskBarIcon):
                 the modal.
                 """
                 if event.GetURL() == get_url_for_host(self.host, "modal/close"):
-                    print "close"
                     event.Veto()
                     dialog.Close()
             return on_request_resource

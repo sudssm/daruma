@@ -166,16 +166,17 @@ def confirm_provision():
 def try_provision_instance():
     """
     Attempt to provision a modal given the current list of providers.
-    Closes the current (confirm provision) modal window
     """
     try:
         global_app_state.secretbox = SecretBox.provision(global_app_state.providers,
                                                          len(global_app_state.providers) - 1,
                                                          len(global_app_state.providers) - 1)
-        return redirect("modal/close")
-    except exceptions.FatalOperationFailure:
-        # TODO give a nice error
-        return redirect("providers/add_failure.html")
+        return jsonify({"success": True})
+    except exceptions.FatalOperationFailure as e:
+        return jsonify({
+            "success": False,
+            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.provider_uid), e.failures)
+        })
 
 ##################
 # JSON endpoints #
