@@ -48,3 +48,18 @@ def test_sandbox_with_segfault():
     with pytest.raises(exceptions.SandboxProcessFailure) as excinfo:
         tools.utils.sandbox_function(cause_segfault)
     assert excinfo.value.exitcode < 0
+
+
+def test_parallel():
+    results = []
+
+    def f(x, y):
+        results.append(int(x) + y)
+
+    args = [["1", 2], ["2", 3], ["s", 0]]
+
+    exceptions = tools.utils.run_parallel(f, args)
+    assert sorted(results) == [3, 5]
+    assert len(exceptions) == 1
+    with pytest.raises(ValueError):
+        raise exceptions[0]
