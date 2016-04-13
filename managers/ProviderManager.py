@@ -12,6 +12,9 @@ class ProviderManager():
     """
     A manager for constructing providers and performing provider-related operations
     """
+    # the classes of all available providers
+    PROVIDER_CLASSES = [DropboxProvider, GoogleDriveProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+
     def __init__(self):
         """
         Setup a provider manager with a new default CredentialManager
@@ -25,7 +28,7 @@ class ProviderManager():
         """
         Returns all available provider classes in a list.
         """
-        return [DropboxProvider, GoogleDriveProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+        return self.PROVIDER_CLASSES[:]
 
     @staticmethod
     def get_provider_classes_by_kind():

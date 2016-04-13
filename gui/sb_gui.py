@@ -15,9 +15,10 @@ class ApplicationState(object):
     Otherwise, the prelaunch_providers field must be set with a list of
     providers with valid authentication.
     """
-    secretbox = None
-    provider_manager = ProviderManager()
-    prelaunch_providers = []
+    def __init__(self):
+        self.secretbox = None
+        self.provider_manager = ProviderManager()
+        self.prelaunch_providers = []
 
 
 def platform_specific_setup():

@@ -4,9 +4,10 @@ from urlparse import urlparse, parse_qs
 from custom_exceptions.exceptions import SandboxProcessFailure
 
 APP_NAME = "daruma"
-FILENAME_SIZE = 32
 INTERNAL_SERVER_HOST = "localhost"
 INTERNAL_SERVER_PORT = 28962  # This should be a free port
+
+FILENAME_SIZE = 32
 
 
 # create a length-32 string of random uppercase letters and numbers

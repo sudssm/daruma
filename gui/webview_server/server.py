@@ -37,7 +37,7 @@ def show_setup_page():
     existing configuration.
     """
     return render_template('setup.html',
-                           available_providers=ProviderManager.get_provider_classes(),
+                           available_providers=global_app_state.provider_manager.get_provider_classes(),
                            added_providers=global_app_state.prelaunch_providers)
 
 

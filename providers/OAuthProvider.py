@@ -10,12 +10,9 @@ class OAuthProvider(BaseProvider):
 
     @classmethod
     def get_oauth_redirect_url(cls):
-        try:
-            return ("http://" + INTERNAL_SERVER_HOST + ":" +
-                    str(INTERNAL_SERVER_PORT) + "/providers/add/" +
-                    cls.provider_identifier() + "/finish")
-        except Exception as e:
-            print e
+        return ("http://" + INTERNAL_SERVER_HOST + ":" +
+                str(INTERNAL_SERVER_PORT) + "/providers/add/" +
+                cls.provider_identifier() + "/finish")
 
     @classmethod
     def load_cached_providers(cls, credential_manager):
