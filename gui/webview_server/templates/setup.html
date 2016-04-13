@@ -8,7 +8,6 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='setup.css') }}">
         <script type=text/javascript src="{{ url_for('static', filename='jquery-2.2.2.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='global.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='setup.js') }}"></script>
     </head>
 
     <body>
@@ -28,11 +27,6 @@
                 These services, such as Dropbox and Google Drive, are what we call "providers".  You'll add some in just a minute.
             </div>
 
-            <div id="instructions-add">
-                To get started from scratch, add at least 3 providers.<br><br>
-                To load an existing installation, just add all the providers it used.  We'll automatically load everything as you left it.
-            </div>
-
             <div id="instructions-existing-config">
                 We couldn't find any secretbox files on your current providers.
                 <br><br>
@@ -43,22 +37,7 @@
         </div>
 
         <div id="button-container">
-            <button id="get-started-button" class="big-button" type="button" onclick="onGetStartedClick()">Get Started</button>
-            <button id="add-provider-button" class="big-button" type="button" onclick="onAddProviderButtonClick()">Add a Provider</button>
-            <button id="done-adding-providers-button" class="big-button tooltip" type="button" disabled>Begin Using<span class="tooltiptext">Add at least 3 providers<br>to begin</span></button>
+            <button id="get-started-button" class="big-button" type="button" onclick="window.location.href='setup_add_providers.html'">Get Started</button>
         </div>
-
-        <div id="added-providers-area">
-            <h2>Current Providers:</h2>
-            <ul>
-                {% for provider in added_providers %}
-                <li>
-                    &#9989
-                    <span class="added-provider-name">{{ provider.provider_name() }}</span>
-                    <span class="added-username">{{ provider.uid }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </body>
+     </body>
 </html>

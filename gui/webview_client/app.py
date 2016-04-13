@@ -3,9 +3,10 @@ import pkg_resources
 import wx
 import gui
 import gui.webview_client.webview as webview
+from tools.utils import APP_NAME
 
 ICON_NAME = os.path.join("icons", "menubar.png")
-ICON_HOVERTEXT = "trust-no-one"
+ICON_HOVERTEXT = APP_NAME
 
 
 def get_url_for_host(host, endpoint=""):
@@ -121,6 +122,7 @@ class MainAppMenu(wx.TaskBarIcon):
                 the modal.
                 """
                 if event.GetURL() == get_url_for_host(self.host, "modal/close"):
+                    print "close"
                     event.Veto()
                     dialog.Close()
             return on_request_resource

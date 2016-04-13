@@ -23,22 +23,20 @@ class ProviderManager():
         self.credential_manager.load()
         self.tmp_oauth_providers = {}  # Stores data for in-flight OAuth transactions
 
-    @staticmethod
-    def get_provider_classes():
+    def get_provider_classes(self):
         """
         Returns all available provider classes in a list.
         """
         return self.PROVIDER_CLASSES[:]
 
-    @staticmethod
-    def get_provider_classes_by_kind():
+    def get_provider_classes_by_kind(self):
         """
         Get all available provider classes
         Returns a tuple (oauth_providers, unauth_providers)
             oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
             unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
         """
-        provider_classes = ProviderManager.get_provider_classes()
+        provider_classes = self.get_provider_classes()
         oauth_providers = {cls.provider_identifier(): cls for cls in provider_classes if issubclass(cls, OAuthProvider)}
         unauth_providers = {cls.provider_identifier(): cls for cls in provider_classes if issubclass(cls, UnauthenticatedProvider)}
         return oauth_providers, unauth_providers
@@ -53,7 +51,7 @@ class ProviderManager():
         def flatten(list_of_lists):
             return [item for sublist in list_of_lists for item in sublist]
 
-        provider_classes = ProviderManager.get_provider_classes()
+        provider_classes = self.get_provider_classes()
         providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), provider_classes)
 
         return tuple(map(flatten, zip(*providers_and_errors)))

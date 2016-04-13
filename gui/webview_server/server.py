@@ -1,11 +1,12 @@
 import sys
 import os
-from flask import Flask, redirect, render_template, request, send_file
+from flask import Flask, redirect, render_template, request, send_file, jsonify
 import pkg_resources
 from custom_exceptions import exceptions
 import gui
 from managers.ProviderManager import ProviderManager
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
+from driver.SecretBox import SecretBox
 
 
 # Change the static and template folder locations depending on whether we're
@@ -36,9 +37,15 @@ def show_setup_page():
     This page is shown on app startup when we can't automatically load an
     existing configuration.
     """
-    return render_template('setup.html',
-                           available_providers=global_app_state.provider_manager.get_provider_classes(),
-                           added_providers=global_app_state.prelaunch_providers)
+    return render_template('setup.html')
+
+
+@app.route('/setup_add_providers.html')
+def show_setup_add_page():
+    """
+    This page is shown on app to add providers before loading or creating an instance
+    """
+    return render_template('setup_add_providers.html', available_providers=global_app_state.provider_manager.get_provider_classes())
 
 
 @app.route('/providers.html')
@@ -47,8 +54,9 @@ def show_provider_status():
     This page is shown as a dashboard to see the current state of providers and
     the system.
     """
+    # TODO show something if we are in read only mode
     return render_template('providers.html',
-                           available_providers=ProviderManager.get_provider_classes(),
+                           available_providers=global_app_state.provider_manager.get_provider_classes(),
                            providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
 
 
@@ -59,7 +67,7 @@ def show_add_provider_modal():
     provider.
     """
     return render_template('add_provider_modal.html',
-                           available_providers=ProviderManager.get_provider_classes())
+                           available_providers=global_app_state.provider_manager.get_provider_classes())
 
 
 @app.route('/providers/add_failure.html')
@@ -79,7 +87,7 @@ def add_provider(provider_name):
     to the authorization page.  Otherwise, it displays the provider
     configuration page.
     """
-    oauth_providers, unauth_providers = ProviderManager.get_provider_classes_by_kind()
+    oauth_providers, unauth_providers = global_app_state.provider_manager.get_provider_classes_by_kind()
     provider_manager = global_app_state.provider_manager
     if provider_name in oauth_providers:
         provider_class = oauth_providers[provider_name]
@@ -103,7 +111,7 @@ def finish_adding_provider(provider_name):
     login token in its query string.  Use this as the OAuth redirect URL.
     This endpoint also closes the current modal dialog window.
     """
-    oauth_providers, unauth_providers = ProviderManager.get_provider_classes_by_kind()
+    oauth_providers, unauth_providers = global_app_state.provider_manager.get_provider_classes_by_kind()
     provider_manager = global_app_state.provider_manager
     if provider_name in oauth_providers:
         try:
@@ -111,19 +119,79 @@ def finish_adding_provider(provider_name):
             new_provider = provider_manager.finish_oauth_connection(provider_class, request.url)
         except exceptions.ProviderOperationFailure:
             return redirect("providers/add_failure.html")
-        else:
-            global_app_state.prelaunch_providers.append(new_provider)
-            return redirect("modal/close")
     else:
         try:
             provider_class = unauth_providers[provider_name]
             provider_id = request.args.get("id")
-            new_provider = provider_manager.make_unauth_provider(provider_class,
-                                                                 provider_id)
-            global_app_state.prelaunch_providers.append(new_provider)
-            return redirect("modal/close")
+            new_provider = provider_manager.make_unauth_provider(provider_class, provider_id)
         except (KeyError, exceptions.ProviderOperationFailure):
-            return redirect("provider/add_failure.html")
+            return redirect("providers/add_failure.html")
+
+    # new_provider has been set
+    if new_provider.provider_name() in global_app_state.provider_uuids:
+        # TODO give a nice error
+        return redirect("providers/add_failure.html")
+    else:
+        global_app_state.providers.append(new_provider)
+        global_app_state.provider_uuids.append(new_provider.provider_name())
+        return redirect("modal/close")
+
+
+@app.route('/load_instance')
+def try_load_instance():
+    """
+    Attempts to load secretbox instance from active providers
+    Redirects to either status or confirmation page
+    """
+    if len(global_app_state.providers) < 3:
+        return redirect("setup_add_providers.html")
+
+    try:
+        global_app_state.secretbox = SecretBox.load(global_app_state.providers)
+        return redirect("providers.html")
+    except exceptions.FatalOperationFailure:
+        return redirect("modal/show/confirm_provision")
+
+
+@app.route('/confirm_provision')
+def confirm_provision():
+    """
+    Shows a confirmation before provisioning.
+    Should be opened in a modal
+    """
+    return render_template('confirm_provision_modal.html')
+
+
+@app.route('/provision_instance')
+def try_provision_instance():
+    """
+    Attempt to provision a modal given the current list of providers.
+    Closes the current (confirm provision) modal window
+    """
+    try:
+        global_app_state.secretbox = SecretBox.provision(global_app_state.providers,
+                                                         len(global_app_state.providers) - 1,
+                                                         len(global_app_state.providers) - 1)
+        return redirect("modal/close")
+    except exceptions.FatalOperationFailure:
+        # TODO give a nice error
+        return redirect("providers/add_failure.html")
+
+##################
+# JSON endpoints #
+##################
+
+
+@app.route('/provider_list')
+def get_provider_list():
+    """
+    An API endpoint that returns a JSON-formatted list of active providers
+    """
+    # TODO update for not prelaunch
+    return jsonify({
+        'loaded': global_app_state.secretbox is not None,
+        'providers': global_app_state.provider_uuids
+    })
 
 
 def start_ui_server(native_app, app_state):
@@ -136,4 +204,5 @@ def start_ui_server(native_app, app_state):
     """
     global global_app_state
     global_app_state = app_state
-    app.run(host=INTERNAL_SERVER_HOST, port=INTERNAL_SERVER_PORT)
+    global_app_state.provider_uuids = map(lambda provider: (provider.provider_name(), provider.uid), global_app_state.providers)
+    app.run(host=INTERNAL_SERVER_HOST, port=INTERNAL_SERVER_PORT, debug=True, use_reloader=False)

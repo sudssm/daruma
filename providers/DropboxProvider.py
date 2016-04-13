@@ -50,7 +50,7 @@ class DropboxProvider(OAuthProvider):
         try:
             credentials = self.credential_manager.get_app_credentials(self.__class__)
             app_key, app_secret = credentials["app_key"], credentials["app_secret"]
-        except (AttributeError, ValueError):
+        except (AttributeError, TypeError):
             raise IOError("No valid app credentials found!")
 
         with self.exception_handler():

@@ -1,0 +1,19 @@
+<!doctype html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>SecretBox | Provision Confirmation</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    </head>
+
+    <body>
+        <h2>We could not find an existing installation with those providers.</h2>
+        
+        <div id="error_message">
+            If you've used Daruma before, please try adding more providers. If this is your first time or you want to start fresh, click the button below. <strong>Note that this will clear any existing Daruma installations on these providers.</strong>
+        </div>
+
+        <button class="big-button" type="button" onclick="window.location.href='provision_instance'">Provision</button>
+    </body>
+</html>

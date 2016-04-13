@@ -12,13 +12,13 @@ class ApplicationState(object):
     """
     If the secretbox field is not None, then the application has been set up and
     it contains a valid SecretBox object.
-    Otherwise, the prelaunch_providers field must be set with a list of
+    Otherwise, the providers field must be set with a list of
     providers with valid authentication.
     """
     def __init__(self):
         self.secretbox = None
         self.provider_manager = ProviderManager()
-        self.prelaunch_providers = []
+        self.providers = []
 
 
 def platform_specific_setup():
@@ -60,5 +60,5 @@ if __name__ == "__main__":
         assert len(providers) >= 2
         app_state.secretbox = SecretBox.load(providers)
     except (AssertionError, exceptions.FatalOperationFailure):
-        app_state.prelaunch_providers = providers
+        app_state.providers = providers
     launch_gui(app_state)
