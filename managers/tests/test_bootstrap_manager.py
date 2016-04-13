@@ -30,13 +30,13 @@ def teardown_function(function):
 
 
 def modify_bootstrap_plaintext(provider, new_k=None, new_n=None, new_id=None, change_version=False):
-    k, n, provider_id, version = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
+    k, n, provider_id, version = zlib.decompress(provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME)).split(",")
     new_k = k if new_k is None else new_k
     new_n = n if new_n is None else new_n
     new_id = provider_id if new_id is None else new_id
     version = "foo" if change_version else version
     string = ",".join(map(str, [new_k, new_n, new_id, version]))
-    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, string)
+    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, zlib.compress(string))
 
 
 def corrupt_share(provider):

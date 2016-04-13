@@ -156,7 +156,7 @@ class BaseProvider(object):
     def __str__(self):
         return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"
 
-    def remove_provider(self):
+    def remove(self):
         """
         Clears the provider and its credentials from the system.
         The provider will be unusable after calling this function.

@@ -196,7 +196,7 @@ class SecretBox:
 
         # wipe the providers that were used previously but aren't any longer
         for provider in set(old_providers) - set(providers):
-            provider.remove_provider()
+            provider.remove()
 
     def _load_manifest(self, discard_extra_providers=False):
         """
