@@ -1,5 +1,6 @@
 from custom_exceptions import exceptions
 from tools import encryption, erasure_encoding
+from tools.utils import run_parallel
 import itertools
 
 # For RS distributing files
@@ -44,12 +45,10 @@ class FileDistributor:
         shares = erasure_encoding.share(ciphertext, self.file_reconstruction_threshold, self.num_providers)
 
         # upload to each provider
-        failures = []
-        for provider, share in zip(self.providers, shares):
-            try:
-                provider.put(filename, share)
-            except exceptions.ProviderFailure as e:
-                failures.append(e)
+        def upload(provider, share):
+            provider.put(filename, share)
+
+        failures = run_parallel(upload, zip(self.providers, shares))
 
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
@@ -138,15 +137,14 @@ class FileDistributor:
              FileReconstructionError
              OperationFailure if any provider failed
         """
-
         # map from share to provider returning that share
         shares_map = {}
-        failures = []
-        for provider in self.providers:
-            try:
-                shares_map[provider.get(filename)] = provider
-            except exceptions.ProviderFailure as e:
-                failures.append(e)
+
+        def get_share(provider):
+            shares_map[provider.get(filename)] = provider
+
+        args = map(lambda provider: [provider], self.providers)
+        failures = run_parallel(get_share, args)
 
         shares = shares_map.keys()
 
@@ -167,11 +165,10 @@ class FileDistributor:
         return data
 
     def delete(self, filename):
-        failures = []
-        for provider in self.providers:
-            try:
-                provider.delete(filename)
-            except exceptions.ProviderFailure as e:
-                failures.append(e)
+        def delete_share(provider):
+            provider.delete(filename)
+        args = map(lambda provider: [provider], self.providers)
+        failures = run_parallel(delete_share, args)
+
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)

@@ -39,6 +39,12 @@ class ProviderFailure(Exception):
         self.provider = provider
         provider.log_error(self)
 
+    def __eq__(self, other):
+        return self.provider == other.provider
+
+    def __hash__(self):
+        return self.provider.__hash__()
+
     def __str__(self):
         return "<" + self.__class__.__name__ + " in " + str(self.provider) + ">"
 
