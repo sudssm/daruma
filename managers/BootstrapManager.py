@@ -148,7 +148,7 @@ class BootstrapManager:
         for provider in voting_failures:
             try:
                 del shares_map[provider]
-            except:
+            except except KeyError:
                 pass
 
         # ensure that we have at least threshold shares
