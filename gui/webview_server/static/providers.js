@@ -17,7 +17,7 @@ function buildProviderString(provider){
             break;
     }
     var li_str = '<li class="inset-box">' +
-                '<img class="provider-icon-square" src="static/logos/square/"' + provider["identifier"] + '.png">' +
+                '<img class="provider-icon-square" src="static/logos/square/' + provider["identifier"] + '.png">' +
                 '<span class="provider-name">' + provider['name'] + '</span>' + 
                 '<span class="provider-id">' + provider['id'] + '</span>' + 
                 '<ul class="status-list">' + 

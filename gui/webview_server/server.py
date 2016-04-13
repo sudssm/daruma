@@ -128,12 +128,12 @@ def finish_adding_provider(provider_name):
             return redirect("providers/add_failure.html")
 
     # new_provider has been set
-    if new_provider.provider_name() in global_app_state.provider_uuids:
+    if new_provider.uuid in global_app_state.provider_uuids:
         # TODO give a nice error
         return redirect("providers/add_failure.html")
     else:
         global_app_state.providers.append(new_provider)
-        global_app_state.provider_uuids.append(new_provider.provider_name())
+        global_app_state.provider_uuids.append(new_provider.uuid)
         return redirect("modal/close")
 
 
@@ -226,5 +226,5 @@ def start_ui_server(native_app, app_state):
     """
     global global_app_state
     global_app_state = app_state
-    global_app_state.provider_uuids = map(lambda provider: (provider.provider_name(), provider.uid), global_app_state.providers)
+    global_app_state.provider_uuids = map(lambda provider: provider.uuid, global_app_state.providers)
     app.run(host=INTERNAL_SERVER_HOST, port=INTERNAL_SERVER_PORT, debug=True, use_reloader=False)
