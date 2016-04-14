@@ -1,9 +1,13 @@
 from custom_exceptions import exceptions
 from providers.UnauthenticatedProvider import UnauthenticatedProvider
+from contextlib import contextmanager
 import requests
 
 
 class TestServerProvider(UnauthenticatedProvider):
+    # the amount of time to wait on a request, in seconds
+    TIMEOUT = 0.1
+
     @classmethod
     def provider_identifier(cls):
         return "demoserver"
@@ -16,6 +20,15 @@ class TestServerProvider(UnauthenticatedProvider):
     def get_configuration_label(cls):
         return "Server URL"
 
+    @contextmanager
+    def exception_handler(self):
+        try:
+            yield
+        except requests.ConnectionError:
+            raise exceptions.ConnectionFailure(self)
+        except:
+            raise exceptions.ProviderOperationFailure(self)
+
     def __init__(self, credential_manager):
         """
         Initialize a connection to an existing demo server provider
@@ -26,14 +39,8 @@ class TestServerProvider(UnauthenticatedProvider):
         super(TestServerProvider, self).__init__(credential_manager)
 
     def _get_json(self, path):
-        try:
-            r = requests.get(self.host + "/" + path)
-        except:
-            raise exceptions.ConnectionFailure(self)
-        try:
-            return r.json()
-        except:
-            raise exceptions.ProviderOperationFailure(self)
+        r = requests.get(self.host + "/" + path, timeout=self.TIMEOUT)
+        return r.json()
 
     def connect(self, url):
         """
@@ -41,10 +48,8 @@ class TestServerProvider(UnauthenticatedProvider):
         url: the fully defined url (http://hostname:port) where the server is running
         """
         self.host = url
-        try:
+        with self.exception_handler():
             assert self._get_json("")['connected'] is True
-        except KeyError:
-            raise exceptions.ProviderOperationFailure(self)
 
         self.credential_manager.set_user_credentials(self.__class__, self.host, None)
 
@@ -53,26 +58,18 @@ class TestServerProvider(UnauthenticatedProvider):
         return self.host
 
     def get(self, filename):
-        try:
+        with self.exception_handler():
             return self._get_json("get/" + filename)['data']
-        except KeyError:
-            raise exceptions.ProviderOperationFailure(self)
 
     def put(self, filename, data):
-        try:
-            r = requests.post(self.host + "/put", files={filename: data})
+        with self.exception_handler():
+            r = requests.post(self.host + "/put", files={filename: data}, timeout=self.TIMEOUT)
             assert r.json()['success'] is True
-        except (KeyError, AssertionError):
-            raise exceptions.ProviderOperationFailure(self)
 
     def delete(self, filename):
-        try:
+        with self.exception_handler():
             assert self._get_json("delete/" + filename)['success'] is True
-        except (KeyError, AssertionError):
-            raise exceptions.ProviderOperationFailure(self)
 
     def wipe(self):
-        try:
+        with self.exception_handler():
             assert self._get_json("wipe")['success'] is True
-        except (KeyError, AssertionError):
-            raise exceptions.ProviderOperationFailure(self)
