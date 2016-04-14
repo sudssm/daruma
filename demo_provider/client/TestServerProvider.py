@@ -5,6 +5,7 @@ import requests
 
 
 class TestServerProvider(UnauthenticatedProvider):
+    # the amount of time to wait on a request, in seconds
     TIMEOUT = 0.1
 
     @classmethod
@@ -38,9 +39,8 @@ class TestServerProvider(UnauthenticatedProvider):
         super(TestServerProvider, self).__init__(credential_manager)
 
     def _get_json(self, path):
-        with self.exception_handler():
-            r = requests.get(self.host + "/" + path, timeout=self.TIMEOUT)
-            return r.json()
+        r = requests.get(self.host + "/" + path, timeout=self.TIMEOUT)
+        return r.json()
 
     def connect(self, url):
         """
@@ -59,7 +59,6 @@ class TestServerProvider(UnauthenticatedProvider):
 
     def get(self, filename):
         with self.exception_handler():
-            print self._get_json("get/" + filename)
             return self._get_json("get/" + filename)['data']
 
     def put(self, filename, data):
