@@ -1,7 +1,6 @@
 import errno
 import os
 import shutil
-from tools.utils import APP_NAME
 from custom_exceptions import exceptions
 from providers.UnauthenticatedProvider import UnauthenticatedProvider
 
@@ -29,7 +28,6 @@ class LocalFilesystemProvider(UnauthenticatedProvider):
             credential_manager, a credential_manager to store user credentials
         """
         super(LocalFilesystemProvider, self).__init__(credential_manager)
-        self.ROOT_DIR = APP_NAME
 
     def _get_translated_filepath(self, relative_filename):
         return os.path.join(self.provider_path, self.ROOT_DIR, relative_filename)

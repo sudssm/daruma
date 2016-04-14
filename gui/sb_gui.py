@@ -58,7 +58,7 @@ if __name__ == "__main__":
     providers, _ = app_state.provider_manager.load_all_providers_from_credentials()
     try:
         assert len(providers) >= 2
-        app_state.secretbox = SecretBox.load(providers)
+        app_state.secretbox, extra_provider = SecretBox.load(providers)
         app_state.providers = providers
         # TODO handle extra providers
     except (AssertionError, exceptions.FatalOperationFailure):

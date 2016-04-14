@@ -1,6 +1,7 @@
 from multiprocessing import Process, Pipe
 from uuid import uuid4
 from urlparse import urlparse, parse_qs
+from concurrent.futures import ThreadPoolExecutor
 from custom_exceptions.exceptions import SandboxProcessFailure
 
 APP_NAME = "daruma"
@@ -22,6 +23,22 @@ def parse_url(url):
     """
     params = parse_qs(urlparse(url).query)
     return {k: v[0] for k, v in params.items()}
+
+
+def run_parallel(func, args_list, workers=20):
+    """
+    Run a function several times in parallel.
+    Discards return values
+    Args:
+        func: the function to execute.
+        args_list: a list of lists of positional arguments to pass to the function
+        workers: (optional) the max number of functions to run at a time
+    Returns: exceptions, the exceptions (if any) thrown by the functions
+    """
+    with ThreadPoolExecutor(max_workers=workers) as tpe:
+        futures = map(lambda args: tpe.submit(func, *args), args_list)
+
+    return [future.exception() for future in futures if future.exception() is not None]
 
 
 def sandbox_function(function, *args):

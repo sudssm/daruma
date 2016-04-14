@@ -148,7 +148,7 @@ def try_load_instance():
 
     try:
         # TODO handle extra providers
-        global_app_state.secretbox = SecretBox.load(global_app_state.providers)
+        global_app_state.secretbox, extra_providers = SecretBox.load(global_app_state.providers)
         return redirect("providers.html")
     except exceptions.FatalOperationFailure:
         return redirect("modal/show/confirm_provision")

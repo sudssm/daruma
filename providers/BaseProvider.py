@@ -1,3 +1,7 @@
+from tools.utils import APP_NAME
+from custom_exceptions import exceptions
+
+
 class ProviderStatus:
     """
     Status codes to report to the UI
@@ -15,6 +19,8 @@ class BaseProvider(object):
     """
     RED_THRESHOLD = .1
     YELLOW_THRESHOLD = .95
+
+    ROOT_DIR = APP_NAME
 
     @staticmethod
     def load_cached_providers(credential_manager):
@@ -143,5 +149,22 @@ class BaseProvider(object):
         """
         return (self.provider_identifier(), self.uid)
 
+    def __eq__(self, other):
+        return self.uuid == other.uuid
+
+    def __hash__(self):
+        return self.uuid.__hash__()
+
     def __str__(self):
         return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"
+
+    def remove(self):
+        """
+        Clears the provider and removes its credentials from the system.
+        The provider will be unusable after calling this function.
+        """
+        try:
+            self.wipe()
+        except exceptions.ProviderFailure:
+            pass
+        self.credential_manager.clear_user_credentials(self.__class__, self.uid)

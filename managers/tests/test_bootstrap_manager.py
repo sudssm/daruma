@@ -29,6 +29,24 @@ def teardown_function(function):
     cm.clear_user_credentials()
 
 
+def modify_bootstrap_plaintext(provider, new_k=None, new_n=None, new_id=None, change_version=False):
+    k, n, provider_id, version = zlib.decompress(provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME)).split(",")
+    new_k = k if new_k is None else new_k
+    new_n = n if new_n is None else new_n
+    new_id = provider_id if new_id is None else new_id
+    version = "foo" if change_version else version
+    string = ",".join(map(str, [new_k, new_n, new_id, version]))
+    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, zlib.compress(string))
+
+
+def corrupt_share(provider):
+    share = provider.get(BootstrapManager.BOOTSTRAP_FILE_NAME)
+    data = json.loads(zlib.decompress(share))
+    data["share"] += 1
+    share = zlib.compress(json.dumps(data))
+    provider.put(BootstrapManager.BOOTSTRAP_FILE_NAME, share)
+
+
 def test_size():
     assert Bootstrap.SIZE == len(str(bootstrap))
 
@@ -93,11 +111,7 @@ def test_corrupt_share():
     BM.distribute_bootstrap(bootstrap)
 
     # corrupt first share
-    share = providers[0].get(BootstrapManager.BOOTSTRAP_FILE_NAME)
-    data = json.loads(zlib.decompress(share))
-    data["share"] += 1
-    share = zlib.compress(json.dumps(data))
-    providers[0].put(BootstrapManager.BOOTSTRAP_FILE_NAME, share)
+    corrupt_share(providers[0])
 
     BM = BootstrapManager(providers, threshold)
 
@@ -113,27 +127,13 @@ def test_corrupt_share_failure():
     BM = BootstrapManager(providers, threshold)
     BM.distribute_bootstrap(bootstrap)
 
-    # corrupt first share
     for i in xrange(3):
-        share = providers[i].get(BootstrapManager.BOOTSTRAP_FILE_NAME)
-        data = json.loads(zlib.decompress(share))
-        data["share"] += 1
-        share = zlib.compress(json.dumps(data))
-        providers[i].put(BootstrapManager.BOOTSTRAP_FILE_NAME, share)
+        corrupt_share(providers[i])
 
     BM = BootstrapManager(providers, threshold)
 
     with pytest.raises(exceptions.FatalOperationFailure):
         BM.recover_bootstrap()
-
-
-def modify_bootstrap_plaintext(provider, new_k=None, new_n=None, new_id=None):
-    k, n, provider_id = provider.get(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME).split(",")
-    new_k = k if new_k is None else new_k
-    new_n = n if new_n is None else new_n
-    new_id = provider_id if new_id is None else new_id
-    string = ",".join(map(str, [new_k, new_n, new_id]))
-    provider.put(BootstrapManager.BOOTSTRAP_PLAINTEXT_FILE_NAME, string)
 
 
 def test_corrupt_k_recover():
@@ -144,10 +144,7 @@ def test_corrupt_k_recover():
     for provider in providers[0:2]:
         modify_bootstrap_plaintext(provider, new_k=2)
 
-    with pytest.raises(exceptions.OperationFailure) as excinfo:
-        BM.recover_bootstrap()
-    assert excinfo.value.result == (bootstrap, len(providers))
-    assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:2])
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -159,10 +156,7 @@ def test_corrupt_k_2_recover():
     for provider in providers[0:2]:
         modify_bootstrap_plaintext(provider, new_k=4)
 
-    with pytest.raises(exceptions.OperationFailure) as excinfo:
-        BM.recover_bootstrap()
-    assert excinfo.value.result == (bootstrap, len(providers))
-    assert sorted(failure.provider for failure in excinfo.value.failures) == sorted(providers[0:2])
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == threshold
 
 
@@ -187,11 +181,7 @@ def test_corrupt_k_but_not_fail():
     for provider in providers[0:4]:
         modify_bootstrap_plaintext(provider, new_k=new_threshold)
 
-    with pytest.raises(exceptions.OperationFailure) as excinfo:
-        BM.recover_bootstrap()
-    assert excinfo.value.result == (bootstrap, len(providers))
-    assert len(excinfo.value.failures) == 1
-    assert excinfo.value.failures[0].provider == providers[4]
+    assert BM.recover_bootstrap() == (bootstrap, len(providers))
     assert BM.bootstrap_reconstruction_threshold == new_threshold
 
 
@@ -335,3 +325,25 @@ def test_ids_in_range_fail():
 
     with pytest.raises(exceptions.FatalOperationFailure):
         BM.recover_bootstrap()
+
+
+def test_one_corrupt_one_old():
+    BM = BootstrapManager(providers[:4], 3)
+    BM.distribute_bootstrap(bootstrap)
+
+    # first provider becomes outdated, but has right params
+    BM = BootstrapManager(providers[1:], 3)
+    BM.distribute_bootstrap(bootstrap)
+
+    # second provider is corrupt
+    corrupt_share(providers[1])
+
+    # try and recover with all providers
+    BM = BootstrapManager(providers, -1)  # this threshold doesn't matter
+    with pytest.raises(exceptions.OperationFailure) as excinfo:
+        BM.recover_bootstrap()
+
+    # only bad provider is 1, but 0 wasn't used to reconstruct
+    assert excinfo.value.result == (bootstrap, 4)
+    assert len(excinfo.value.failures) == 1
+    assert excinfo.value.failures[0].provider == providers[1]

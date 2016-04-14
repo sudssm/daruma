@@ -96,14 +96,14 @@ def set_provider(line):
     Set the properties of a Test Provider at the index
     Property can be one of "active, offline, authfail, corrupt"
     """
+    if len(line) < 2:
+        print "Usage: set <index> <property>"
+        return
 
     line = shlex.split(line.lower())
     index = line[0]
     prop = line[1]
 
-    if len(line) < 2:
-        print "Usage: set <index> <property>"
-        return
     try:
         provider = providers[int(index)]
         assert provider.provider_identifier() == "test"
@@ -169,7 +169,7 @@ class ConfigureLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "TestServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -204,8 +204,11 @@ class ConfigureLoop(cmd.Cmd):
         # 2 because we may be trying to load a 3-provider instance in read only mode
         try:
             assert len(providers) >= 2
-            secret_box = SecretBox.load(providers)
+            secret_box, extra_providers = SecretBox.load(providers)
             print "Loaded an existing installation"
+            if len(extra_providers) > 0:
+                print "Some providers were not part of the loaded installation:", map(lambda provider: provider.uuid, extra_providers)
+                print "Type 'reprovision' at the 'Daruma>' prompt if you would like to configure Daruma to use these providers"
             return True
         except AssertionError:
             print "Looks like you need to add more providers! Type 'add' to get started."
@@ -328,7 +331,7 @@ class MainLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "Google", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "TestServer"
         """
         provider = add_provider(line)
         if provider is None:
