@@ -45,12 +45,6 @@ body {
     border-color: lightgray;
 }
 
-#reprovision-button {
-    display: none;
-    margin-left: auto;
-    font-size: 12pt;
-}
-
 
 #add-provider-button {
     margin-left: auto;

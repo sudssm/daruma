@@ -176,7 +176,6 @@ class SecretBox:
             ValueError if arguments are invalid
         """
         SecretBox._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
-
         # do nothing if params are the same
         if providers == self.file_manager.providers and \
            bootstrap_reconstruction_threshold == self.bootstrap_manager.bootstrap_reconstruction_threshold and \
@@ -227,6 +226,9 @@ class SecretBox:
         To get out of read only mode, either call add_missing_providers or reprovision
         """
         return self.file_manager.get_missing_providers()
+
+    def get_providers(self):
+        return self.file_manager.providers[:]
 
     def ls(self, path):
         """

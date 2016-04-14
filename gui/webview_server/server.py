@@ -55,9 +55,7 @@ def show_provider_status():
     the system.
     """
     # TODO show something if we are in read only mode
-    return render_template('providers.html',
-                           available_providers=global_app_state.provider_manager.get_provider_classes(),
-                           providers=["AliceBox", "BobBox", "EveBox", "MalloryBox", "SillyBox"])
+    return render_template('providers.html')
 
 
 @app.route('/providers/add.html')
@@ -128,12 +126,16 @@ def finish_adding_provider(provider_name):
             return redirect("providers/add_failure.html")
 
     # new_provider has been set
-    if new_provider.uuid in global_app_state.provider_uuids:
+    if new_provider.uuid in global_app_state.provider_uuids_map:
         # TODO give a nice error
         return redirect("providers/add_failure.html")
     else:
         global_app_state.providers.append(new_provider)
-        global_app_state.provider_uuids.append(new_provider.uuid)
+        global_app_state.provider_uuids_map[new_provider.uuid] = new_provider
+
+        # if we already have an instance, we need to reprovision
+        if global_app_state.secretbox is not None:
+            global_app_state.needs_reprovision = True
         return redirect("modal/close")
 
 
@@ -163,22 +165,6 @@ def confirm_provision():
     return render_template('confirm_provision_modal.html')
 
 
-@app.route('/provision_instance')
-def try_provision_instance():
-    """
-    Attempt to provision a modal given the current list of providers.
-    """
-    try:
-        global_app_state.secretbox = SecretBox.provision(global_app_state.providers,
-                                                         len(global_app_state.providers) - 1,
-                                                         len(global_app_state.providers) - 1)
-        return jsonify({"success": True})
-    except exceptions.FatalOperationFailure as e:
-        return jsonify({
-            "success": False,
-            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.provider_uid), e.failures)
-        })
-
 ##################
 # JSON endpoints #
 ##################
@@ -189,6 +175,7 @@ def get_provider_list():
     """
     An API endpoint that returns a JSON-formatted list of active providers
     """
+    instance = None
     providers = []
     overall_status = "GREEN"
 
@@ -207,13 +194,61 @@ def get_provider_list():
             else:
                 overall_status = "RED"
 
-    instance = None if global_app_state.secretbox is None else {"status": overall_status}
+    if global_app_state.secretbox is not None:
+        instance = {
+            "status": overall_status,
+            "needs_reprovision": global_app_state.needs_reprovision
+        }
 
-    # TODO update for not prelaunch
     return jsonify({
         'instance': instance,
         'providers': providers
     })
+
+
+@app.route('/remove_provider')
+def remove_provider():
+    identifier = request.args.get("identifier")
+    uid = request.args.get("id")
+
+    try:
+        provider = global_app_state.provider_uuids_map[(identifier, uid)]
+        del global_app_state.provider_uuids_map[(identifier, uid)]
+        global_app_state.providers.remove(provider)
+    except KeyError:
+        return ""
+
+    # we removed a provider, should reprovision
+    global_app_state.needs_reprovision = True
+    return ""
+
+
+@app.route('/provision_instance')
+def try_provision_instance():
+    """
+    Attempt to provision a modal given the current list of providers.
+    """
+    try:
+        global_app_state.secretbox = SecretBox.provision(global_app_state.providers,
+                                                         len(global_app_state.providers) - 1,
+                                                         len(global_app_state.providers) - 1)
+        return jsonify({"success": True})
+    except exceptions.FatalOperationFailure as e:
+        return jsonify({
+            "success": False,
+            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.provider_uid), e.failures)
+        })
+
+
+@app.route('/reprovision')
+def reprovision():
+    try:
+        global_app_state.secretbox.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
+    except:
+        global_app_state.providers = global_app_state.secretbox.get_providers()
+        global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
+    global_app_state.needs_reprovision = False
+    return ""
 
 
 def start_ui_server(native_app, app_state):
@@ -226,5 +261,5 @@ def start_ui_server(native_app, app_state):
     """
     global global_app_state
     global_app_state = app_state
-    global_app_state.provider_uuids = map(lambda provider: provider.uuid, global_app_state.providers)
+    global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
     app.run(host=INTERNAL_SERVER_HOST, port=INTERNAL_SERVER_PORT, debug=True, use_reloader=False)

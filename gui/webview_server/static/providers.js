@@ -1,6 +1,22 @@
 "use strict";
-function onAddProviderButtonClick() {
+function onAddProviderButtonClick(){
     window.location.href = "/modal/show/providers/add.html";
+}
+function onRemoveProviderButtonClick(elt){
+    var $box = $(elt).parents("li.inset-box").remove()
+    var identifier = $box.children(".provider-identifier").html()
+    var id = $box.children(".provider-id").html()
+    $.get("/remove_provider", {"identifier": identifier, "id": id})
+}
+var reprovisioning = false;
+function reprovision(){
+    if (reprovisioning)
+        return
+    reprovisioning = true;
+    $.get("/reprovision")
+    .done(function(){
+        reprovisioning = false;
+    })
 }
 
 function buildProviderString(provider){
@@ -18,7 +34,8 @@ function buildProviderString(provider){
     }
     var li_str = '<li class="inset-box">' +
                 '<img class="provider-icon-square" src="static/logos/square/' + provider["identifier"] + '.png">' +
-                '<span class="provider-name">' + provider['name'] + '</span>' + 
+                '<span class="provider-name">' + provider['name'] + '</span>' +
+                '<span class="provider-identifier" style="display:none">' + provider['identifier'] + '</span>' + 
                 '<span class="provider-id">' + provider['id'] + '</span>' + 
                 '<ul class="status-list">' + 
                     '<li>Status: <span class="status-' + provider["status"].toLowerCase() + '">' + statusMessage + '</span></li>' +
@@ -26,7 +43,7 @@ function buildProviderString(provider){
                     //'<li>Capacity Used: <span class="status-red">99%</span></li>' +
                 '</ul>' + 
                 '<fieldset class="provider-controls">' +
-                    '<button type="button">Remove</button>' +
+                    '<button type="button" onclick="onRemoveProviderButtonClick(this)">Remove</button>' +
                 '</fieldset>' + 
                 '</li>';
     return li_str
@@ -39,6 +56,7 @@ setInterval(function(){
     .done(function(data){
         var new_providers = data["providers"];
         if (new_providers.length != providers.length){
+            $("#provider-list").html("")
             $.each(new_providers, function(i, provider){
                 // TODO do something when we've added/removed a provider but not yet reprovisioned
                 var li = buildProviderString(provider)
@@ -48,16 +66,23 @@ setInterval(function(){
             providers = new_providers;
         }
         var statusMessage = "";
-        switch(data["instance"]["status"]){
+        switch (data["instance"]["status"]){
             case "GREEN":
                 statusMessage = "Fully Operational"
                 break;
             case "YELLOW":
-                statusMessage = "Cannot connect to a provider! Please repair or reprovision."
+                statusMessage = "Cannot connect to a provider! Files are recoverable."
                 break;
             case "RED":
                 statusMessage = "Offline"
                 break;
+        }
+        if (data["instance"]["needs_reprovision"]){
+            if (data["instance"]["status"] == "GREEN"){
+                statusMessage = "Redistributing files"
+                data["instance"]["status"] = "YELLOW"
+            }
+            reprovision()
         }
         $("#system-status").html(statusMessage)
         $("#system-status").removeClass()

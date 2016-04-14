@@ -19,6 +19,7 @@ class ApplicationState(object):
         self.secretbox = None
         self.provider_manager = ProviderManager()
         self.providers = []
+        self.needs_reprovision = False
 
 
 def platform_specific_setup():
@@ -58,9 +59,9 @@ if __name__ == "__main__":
     providers, _ = app_state.provider_manager.load_all_providers_from_credentials()
     try:
         assert len(providers) >= 2
-        app_state.secretbox, extra_provider = SecretBox.load(providers)
+        app_state.secretbox, extra_providers = SecretBox.load(providers)
         app_state.providers = providers
-        # TODO handle extra providers
+        app_state.needs_reprovision = len(extra_providers) > 0 or len(app_state.secretbox.get_missing_providers()) > 0
     except (AssertionError, exceptions.FatalOperationFailure):
         app_state.providers = providers
     launch_gui(app_state)
