@@ -26,7 +26,7 @@ class TestServerProvider(UnauthenticatedProvider):
         except requests.ConnectionError:
             raise exceptions.ConnectionFailure(self)
         except:
-            raise exceptions.ProviderFailure(self)
+            raise exceptions.ProviderOperationFailure(self)
 
     def __init__(self, credential_manager):
         """
@@ -59,6 +59,7 @@ class TestServerProvider(UnauthenticatedProvider):
 
     def get(self, filename):
         with self.exception_handler():
+            print self._get_json("get/" + filename)
             return self._get_json("get/" + filename)['data']
 
     def put(self, filename, data):
