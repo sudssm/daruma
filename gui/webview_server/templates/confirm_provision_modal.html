@@ -5,6 +5,7 @@
         <meta charset="utf-8">
         <title>SecretBox | Provision Confirmation</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+        <script type=text/javascript src="{{ url_for('static', filename='jquery-2.2.2.min.js') }}"></script>
         <script type="text/javascript">
             "use strict";
 
@@ -19,11 +20,11 @@
                         var err_str = "We could not provision due to errors with the following providers:";
                         $.each(data["errors"], function(error){
                             err_str += "<br>" + error[0] + ": " + error[1];
-                        }
+                        });
                         err_str += "<br>If you think this is a temporary issue, please try again later".
                         $("#error_message").html(err_str)
                     }
-                })
+                });
 
             }
         </script>
@@ -37,6 +38,6 @@
         </div>
 
         <button class="big-button" type="button" onclick="provision()">Provision</button>
-        <p>Hang tight, we're setting things up! GIF! </p>
+        <p id="loading" style="display: none">Hang tight, we're setting things up! GIF! </p>
     </body>
 </html>
