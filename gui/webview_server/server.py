@@ -245,8 +245,9 @@ def reprovision():
     try:
         global_app_state.secretbox.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
     except:
-        global_app_state.providers = global_app_state.secretbox.get_providers()
-        global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
+        pass
+    global_app_state.providers = global_app_state.secretbox.get_providers()
+    global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
     global_app_state.needs_reprovision = False
     return ""
 

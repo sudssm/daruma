@@ -1,4 +1,6 @@
 "use strict";
+var reprovisioning = false;
+
 function onAddProviderButtonClick(){
     window.location.href = "/modal/show/providers/add.html";
 }
@@ -8,7 +10,6 @@ function onRemoveProviderButtonClick(elt){
     var id = $box.children(".provider-id").html()
     $.get("/remove_provider", {"identifier": identifier, "id": id})
 }
-var reprovisioning = false;
 function reprovision(){
     if (reprovisioning)
         return
@@ -58,9 +59,7 @@ setInterval(function(){
         if (new_providers.length != providers.length){
             $("#provider-list").html("")
             $.each(new_providers, function(i, provider){
-                // TODO do something when we've added/removed a provider but not yet reprovisioned
-                var li = buildProviderString(provider)
-                $("#provider-list").append(li)
+                $("#provider-list").append(buildProviderString(provider))
             })
 
             providers = new_providers;
