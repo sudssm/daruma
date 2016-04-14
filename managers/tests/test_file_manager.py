@@ -245,7 +245,7 @@ def test_remove_provider_and_decrement_k():
     FM.put("test2", "data2")
 
     FM.file_reconstruction_threshold = 3
-    FM.providers.remove(providers[0])
+    FM.providers.remove(providers[-1])
     FM.reset()
 
     FM.load_manifest()

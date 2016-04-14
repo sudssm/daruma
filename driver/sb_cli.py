@@ -204,8 +204,11 @@ class ConfigureLoop(cmd.Cmd):
         # 2 because we may be trying to load a 3-provider instance in read only mode
         try:
             assert len(providers) >= 2
-            secret_box = SecretBox.load(providers)
+            secret_box, extra_providers = SecretBox.load(providers)
             print "Loaded an existing installation"
+            if len(extra_providers) > 0:
+                print "Some providers were not part of the loaded installation:", map(lambda provider: provider.uuid, extra_providers)
+                print "Type 'reprovision' at the 'Daruma>' prompt if you would like to configure Daruma to use these providers"
             return True
         except AssertionError:
             print "Looks like you need to add more providers! Type 'add' to get started."
