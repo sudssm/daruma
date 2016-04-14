@@ -233,6 +233,8 @@ def test_reprovision_bad_threshold():
 
 def test_extra_providers():
     SecretBox.provision(providers, 4, 4)
+    SB, extra_providers = SecretBox.load(providers)
+    assert extra_providers == []
     SecretBox.provision(providers[:3], 2, 2)
     SB, extra_providers = SecretBox.load(providers)
     assert SB.file_manager.providers == providers[:3]

@@ -158,7 +158,7 @@ class BaseProvider(object):
 
     def remove(self):
         """
-        Clears the provider and its credentials from the system.
+        Clears the provider and removes its credentials from the system.
         The provider will be unusable after calling this function.
         """
         try:

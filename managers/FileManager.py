@@ -40,7 +40,7 @@ class FileManager:
         """
         Loads the manifest into memory
         Also compiles a list of missing providers for later use
-        Args: If discard_extra_providers is True, will discard any providers not in the manifest
+        Args: If discard_extra_providers is True, will internally discard any providers not in the manifest
         Raises:
             OperationFailure with None result if any provider fails
             FatalOperationFailure if we couldn't load
