@@ -154,14 +154,11 @@ class BootstrapManager:
                 for provider in providers:
                     failures.append(exceptions.InvalidShareFailure(provider))
                     # remove the provider's share from shares_map
-                    del shares_map[provider]
+                    shares_map.pop(provider, None)
 
         # if a provider misvoted, don't use its share - delete it if it hasn't been deleted already
         for provider in voting_failures:
-            try:
-                del shares_map[provider]
-            except KeyError:
-                pass
+            shares_map.pop(provider, None)
 
         # ensure that we have at least threshold shares
         if len(shares_map.values()) < threshold:
@@ -211,7 +208,7 @@ class BootstrapManager:
         for good_id in good_ids:
             for provider in provider_id_map[good_id]:
                 # there is no uncertainty about this share; don't test again
-                del shares_map[provider]
+                shares_map.pop(provider, None)
 
         # handle the shares that were marked bad by reconstruction
         for bad_id in bad_ids:
@@ -219,7 +216,7 @@ class BootstrapManager:
                 # if this was the provider whose share went into reconstruct
                 if shares_map[provider] == share_set_map[bad_id]:
                     bad_providers.append(provider)
-                    del shares_map[provider]
+                    shares_map.pop(provider, None)
 
                     break
 
@@ -232,7 +229,7 @@ class BootstrapManager:
             good_share_map[provider_id] = share
             if not shamir_secret_sharing.verify(good_share_map, secret, self.num_providers):
                 bad_providers.append(provider)
-            del good_share_map[provider_id]
+            good_share_map.pop(provider_id, None)
 
         failures = [exceptions.InvalidShareFailure(provider) for provider in bad_providers]
 
