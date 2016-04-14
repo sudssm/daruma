@@ -36,10 +36,11 @@ class FileManager:
         # else:
         # self.load_manifest()
 
-    def load_manifest(self):
+    def load_manifest(self, discard_extra_providers=False):
         """
         Loads the manifest into memory
         Also compiles a list of missing providers for later use
+        Args: If discard_extra_providers is True, will internally discard any providers not in the manifest
         Raises:
             OperationFailure with None result if any provider fails
             FatalOperationFailure if we couldn't load
@@ -56,6 +57,11 @@ class FileManager:
         providers_uuids = set(map(lambda provider: provider.uuid, self.providers))
         expected_providers = set(self.manifest.get_provider_strings())
         self.missing_providers = list(expected_providers - providers_uuids)
+
+        if discard_extra_providers:
+            # remove any extra providers
+            self.providers = filter(lambda provider: provider.uuid in expected_providers, self.providers)
+            self.distributor.providers = self.providers
 
         if failures is not None:
             raise exceptions.OperationFailure(failures, None)
