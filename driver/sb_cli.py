@@ -96,14 +96,14 @@ def set_provider(line):
     Set the properties of a Test Provider at the index
     Property can be one of "active, offline, authfail, corrupt"
     """
+    if len(line) < 2:
+        print "Usage: set <index> <property>"
+        return
 
     line = shlex.split(line.lower())
     index = line[0]
     prop = line[1]
 
-    if len(line) < 2:
-        print "Usage: set <index> <property>"
-        return
     try:
         provider = providers[int(index)]
         assert provider.provider_identifier() == "test"
