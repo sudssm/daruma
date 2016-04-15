@@ -1,6 +1,7 @@
 from managers.CredentialManager import CredentialManager
 from providers.DropboxProvider import DropboxProvider
 from providers.GoogleDriveProvider import GoogleDriveProvider
+from providers.BoxProvider import BoxProvider
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from providers.TestProvider import TestProvider
 from providers.OAuthProvider import OAuthProvider
@@ -16,7 +17,7 @@ class ProviderManager():
         """
         Setup a provider manager with a new default CredentialManager
         """
-        self.provider_classes = [LocalFilesystemProvider, TestProvider, DropboxProvider, GoogleDriveProvider, TestServerProvider]
+        self.provider_classes = [LocalFilesystemProvider, TestProvider, DropboxProvider, GoogleDriveProvider, BoxProvider, TestServerProvider]
         self.credential_manager = CredentialManager()
         self.credential_manager.load()
         self.tmp_oauth_providers = {}  # Stores data for in-flight OAuth transactions
