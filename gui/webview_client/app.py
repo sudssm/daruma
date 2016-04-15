@@ -3,9 +3,10 @@ import pkg_resources
 import wx
 import gui
 import gui.webview_client.webview as webview
+from tools.utils import APP_NAME
 
 ICON_NAME = os.path.join("icons", "menubar.png")
-ICON_HOVERTEXT = "trust-no-one"
+ICON_HOVERTEXT = APP_NAME
 
 
 def get_url_for_host(host, endpoint=""):
@@ -47,7 +48,7 @@ class MainAppMenu(wx.TaskBarIcon):
         self.app_frame = app_frame
         self.host = host
 
-        icon_stream = pkg_resources.resource_stream(__name__, ICON_NAME)
+        icon_stream = pkg_resources.resource_stream(gui.__name__, ICON_NAME)
         icon = wx.IconFromBitmap(wx.ImageFromStream(icon_stream).ConvertToBitmap())
         self.SetIcon(icon, ICON_HOVERTEXT)
 
@@ -62,10 +63,10 @@ class MainAppMenu(wx.TaskBarIcon):
 
         if self.setup_complete:
             providers_item = menu.Append(wx.ID_ANY, "Providers")
-            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers"), providers_item)
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers.html"), providers_item)
         else:
             setup_item = menu.Append(wx.ID_ANY, "Continue setup")
-            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup"), setup_item)
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup.html"), setup_item)
 
         menu.AppendSeparator()
 
@@ -79,6 +80,20 @@ class MainAppMenu(wx.TaskBarIcon):
             """
             Opens the specified webview.
             """
+            def open_modal_factory(window):
+                matching_url = get_url_for_host(self.host, "modal/show/")
+
+                def on_request_resource(event):
+                    """
+                    Filters all full page redirects for the keyword URL to open
+                    a modal.
+                    """
+                    if event.GetURL().startswith(matching_url):
+                        target_endpoint = event.GetURL()[len(matching_url):]
+                        event.Veto()
+                        self.open_webview_modal_for(window, target_endpoint)
+                return on_request_resource
+
             def on_close_webview(event):
                 window = self.window_manager.windows.pop(endpoint)
                 window.Destroy()
@@ -86,6 +101,7 @@ class MainAppMenu(wx.TaskBarIcon):
             if window is None:
                 window = webview.WebviewWindow(get_url_for_host(self.host, endpoint))
                 self.window_manager.windows[endpoint] = window
+                window.Bind(wx.html2.EVT_WEBVIEW_NAVIGATING, open_modal_factory(window))
                 window.Bind(wx.EVT_CLOSE, on_close_webview)
                 window.CenterOnScreen()
                 window.Show()
@@ -93,6 +109,32 @@ class MainAppMenu(wx.TaskBarIcon):
                 # TODO: bring app to foreground
                 window.Raise()
         return on_open_webview
+
+    def open_webview_modal_for(self, target_window, modal_endpoint):
+        """
+        Opens a modal window under the target_window pointing to the URL
+        referenced by modal_endpoint/
+        """
+        def close_listener_factory(dialog):
+            def on_request_resource(event):
+                """
+                Filters all full page redirects for the keyword URL to close
+                the modal.
+                """
+                if event.GetURL() == get_url_for_host(self.host, "modal/close"):
+                    event.Veto()
+                    dialog.Close()
+            return on_request_resource
+
+        def on_close_modal_webview(event):
+            dialog = event.GetDialog()
+            dialog.Destroy()
+        dialog = webview.WebviewModal(url=get_url_for_host(self.host, modal_endpoint),
+                                      size=(500, 500),
+                                      parent=target_window)
+        dialog.Bind(wx.html2.EVT_WEBVIEW_NAVIGATING, close_listener_factory(dialog))
+        self.Bind(wx.EVT_WINDOW_MODAL_DIALOG_CLOSED, on_close_modal_webview)
+        dialog.ShowWindowModal()
 
     def on_exit(self, event):
         """

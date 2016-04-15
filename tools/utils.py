@@ -5,6 +5,9 @@ from concurrent.futures import ThreadPoolExecutor
 from custom_exceptions.exceptions import SandboxProcessFailure
 
 APP_NAME = "daruma"
+INTERNAL_SERVER_HOST = "localhost"
+INTERNAL_SERVER_PORT = 28962  # This should be a free port
+
 FILENAME_SIZE = 32
 
 

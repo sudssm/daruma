@@ -127,6 +127,8 @@ class BaseProvider(object):
         """
         Returns a pretty-printed identifier for this type of provider. Must be
         unique across all provider types.
+        If no provider logo is provided, this will be rendered in its place in
+        the GUI.
         """
         raise NotImplementedError
 

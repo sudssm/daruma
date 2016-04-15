@@ -1,4 +1,16 @@
-#add-provider-modal > h2 {
+body {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+            flex-direction: column;
+}
+
+h2 {
     font-weight: normal;
     font-size: 1.2em;
 }
@@ -9,6 +21,7 @@
         -ms-flex: 1;
             flex: 1;
     width: 100%;
+    height: initial;
     margin: 0;
     padding: 0;
     display: block;
@@ -33,6 +46,12 @@
 
 #provider-chooser-box > li+li {
     border-top: 1px solid #D2D2D2
+}
+
+#provider-chooser-box > li > a {
+    height: 100%;
+    width: 100%;
+    display: block;
 }
 
 #provider-login-frame {

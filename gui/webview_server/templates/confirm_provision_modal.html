@@ -1,0 +1,43 @@
+<!doctype html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>SecretBox | Provision Confirmation</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+        <script type=text/javascript src="{{ url_for('static', filename='jquery-2.2.2.min.js') }}"></script>
+        <script type="text/javascript">
+            "use strict";
+
+            function provision(){
+                $("#loading").show();
+                $.getJSON("provision_instance")
+                .done(function(data){
+                    if (data["success"])
+                        window.location.href = "modal/close";
+                    else {
+                        $("#loading").hide();
+                        var err_str = "We could not provision due to errors with the following providers:";
+                        $.each(data["errors"], function(error){
+                            err_str += "<br>" + error[0] + ": " + error[1];
+                        });
+                        err_str += "<br>If you think this is a temporary issue, please try again later".
+                        $("#error_message").html(err_str)
+                    }
+                });
+
+            }
+        </script>
+    </head>
+
+    <body>
+        <h2>We could not find an existing installation with those providers.</h2>
+        
+        <div id="error_message">
+            If you've used Daruma before, please try adding more providers. If this is your first time or you want to start fresh, click the button below. <strong>Note that this will clear any existing Daruma installations on these providers.</strong>
+        </div>
+
+        <button class="big-button" type="button" onclick="provision()">Provision</button>
+        <p id="loading" style="display: none">Hang tight, we're setting things up! GIF! </p>
+    </body>
+</html>

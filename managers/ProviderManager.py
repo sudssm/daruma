@@ -12,14 +12,34 @@ class ProviderManager():
     """
     A manager for constructing providers and performing provider-related operations
     """
+    # the classes of all available providers
+    PROVIDER_CLASSES = [DropboxProvider, GoogleDriveProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+
     def __init__(self):
         """
         Setup a provider manager with a new default CredentialManager
         """
-        self.provider_classes = [LocalFilesystemProvider, TestProvider, DropboxProvider, GoogleDriveProvider, TestServerProvider]
         self.credential_manager = CredentialManager()
         self.credential_manager.load()
         self.tmp_oauth_providers = {}  # Stores data for in-flight OAuth transactions
+
+    def get_provider_classes(self):
+        """
+        Returns all available provider classes in a list.
+        """
+        return self.PROVIDER_CLASSES[:]
+
+    def get_provider_classes_by_kind(self):
+        """
+        Get all available provider classes
+        Returns a tuple (oauth_providers, unauth_providers)
+            oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
+            unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
+        """
+        provider_classes = self.get_provider_classes()
+        oauth_providers = {cls.provider_identifier(): cls for cls in provider_classes if issubclass(cls, OAuthProvider)}
+        unauth_providers = {cls.provider_identifier(): cls for cls in provider_classes if issubclass(cls, UnauthenticatedProvider)}
+        return oauth_providers, unauth_providers
 
     def load_all_providers_from_credentials(self):
         """
@@ -31,20 +51,10 @@ class ProviderManager():
         def flatten(list_of_lists):
             return [item for sublist in list_of_lists for item in sublist]
 
-        providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), self.provider_classes)
+        provider_classes = self.get_provider_classes()
+        providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), provider_classes)
 
         return tuple(map(flatten, zip(*providers_and_errors)))
-
-    def get_provider_classes(self):
-        """
-        Get all available provider classes
-        Returns a tuple (oauth_providers, unauth_providers)
-            oauth_providers: a map from provider_identifier to provider class that follows the oauth flow
-            unauth_providers: a map from provider_identifier to provider class that follows the unauth flow
-        """
-        oauth_providers = {cls.provider_identifier(): cls for cls in self.provider_classes if issubclass(cls, OAuthProvider)}
-        unauth_providers = {cls.provider_identifier(): cls for cls in self.provider_classes if issubclass(cls, UnauthenticatedProvider)}
-        return oauth_providers, unauth_providers
 
     def start_oauth_connection(self, provider_class):
         """
