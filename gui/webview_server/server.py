@@ -4,7 +4,6 @@ from flask import Flask, redirect, render_template, request, send_file, jsonify
 import pkg_resources
 from custom_exceptions import exceptions
 import gui
-from managers.ProviderManager import ProviderManager
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
 from driver.SecretBox import SecretBox
 
@@ -34,8 +33,8 @@ def download_logo():
 @app.route('/setup.html')
 def show_setup_page():
     """
-    This page is shown on app startup when we can't automatically load an
-    existing configuration.
+    This splash page is shown on app startup when we can't automatically load
+    an existing configuration.
     """
     return render_template('setup.html')
 
@@ -43,9 +42,11 @@ def show_setup_page():
 @app.route('/setup_add_providers.html')
 def show_setup_add_page():
     """
-    This page is shown on app to add providers before loading or creating an instance
+    This page is shown to allow users to add providers before loading or
+    creating an instance.
     """
-    return render_template('setup_add_providers.html', available_providers=global_app_state.provider_manager.get_provider_classes())
+    return render_template('setup_add_providers.html',
+                           available_providers=global_app_state.provider_manager.get_provider_classes())
 
 
 @app.route('/providers.html')
@@ -127,6 +128,7 @@ def finish_adding_provider(provider_name):
 
     # new_provider has been set
     if new_provider.uuid in global_app_state.provider_uuids_map:
+        # The provider already exists
         # TODO give a nice error
         return redirect("providers/add_failure.html")
     else:
@@ -226,7 +228,7 @@ def remove_provider():
 @app.route('/provision_instance')
 def try_provision_instance():
     """
-    Attempt to provision a modal given the current list of providers.
+    Attempt to provision a SecretBox object given the current list of providers.
     """
     try:
         global_app_state.secretbox = SecretBox.provision(global_app_state.providers,
