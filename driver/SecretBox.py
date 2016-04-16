@@ -261,6 +261,7 @@ class SecretBox:
         Move a file or folder
         Raises InvalidPath if either path is invalid or if new_path exists
         Raises ReadOnlyMode if the system is in ReadOnlyMode
+        Raises FatalOperationFailure if unsuccessful
         """
         self._load_manifest()
         self.file_manager.move(old_path, new_path)
