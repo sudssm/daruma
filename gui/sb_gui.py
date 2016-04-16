@@ -2,10 +2,11 @@ import sys
 import threading
 from custom_exceptions import exceptions
 from driver.SecretBox import SecretBox
+from gui.filesystem.FilesystemWatcher import FilesystemWatcher
 from gui.webview_server.server import start_ui_server
 from gui.webview_client.app import SBApp
 from managers.ProviderManager import ProviderManager
-from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
+from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT, get_app_folder, make_app_folder
 
 
 class ApplicationState(object):
@@ -47,6 +48,14 @@ def launch_gui(app_state):
                                         name="ui_server_thread")
     ui_server_thread.daemon = True
     ui_server_thread.start()
+
+    # Start filesystem watcher
+    make_app_folder()
+    filesystem_watcher_thread = threading.Thread(target=FilesystemWatcher,
+                                                 args=(get_app_folder(), app_state),
+                                                 name="filesytem_watcher_thread")
+    filesystem_watcher_thread.daemon = True
+    filesystem_watcher_thread.start()
 
     # Start native UI
     app_menu.MainLoop()
