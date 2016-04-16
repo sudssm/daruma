@@ -109,6 +109,11 @@ class FilesystemWatcher():
         event_handler = SBFileSystemEventHandler(path, app_state)
         self.observer = Observer()
         self.observer.schedule(event_handler, path, recursive=True)
+
+    def start(self):
+        """
+        Starts running the observer in the given thread.
+        """
         self.observer.start()
 
     def stop(self):

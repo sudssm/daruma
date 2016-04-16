@@ -51,14 +51,15 @@ def launch_gui(app_state):
 
     # Start filesystem watcher
     make_app_folder()
-    filesystem_watcher_thread = threading.Thread(target=FilesystemWatcher,
-                                                 args=(get_app_folder(), app_state),
+    filesystem_watcher = FilesystemWatcher(get_app_folder(), app_state)
+    filesystem_watcher_thread = threading.Thread(target=filesystem_watcher.start(),
                                                  name="filesytem_watcher_thread")
     filesystem_watcher_thread.daemon = True
     filesystem_watcher_thread.start()
 
     # Start native UI
     app_menu.MainLoop()
+    filesystem_watcher.stop()
 
 
 if __name__ == "__main__":
