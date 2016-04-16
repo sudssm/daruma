@@ -237,7 +237,7 @@ class Manifest:
             An array of strings representing the directories (and filename
         where applicable) in the given path.
         """
-        path = os.path.normpath(path)
+        path = os.path.normpath(path).lstrip(os.sep)
         if path is os.curdir:
             return []
 

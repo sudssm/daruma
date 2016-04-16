@@ -451,3 +451,10 @@ def test_roundtrip_providers():
     provider_strings = map(lambda provider: provider.uuid, providers)
 
     assert Manifest.deserialize(manifest.serialize()).get_provider_strings() == provider_strings
+
+
+def test_dont_break_on_absolute_paths():
+    manifest = Manifest()
+
+    with pytest.raises(exceptions.InvalidPath):
+        manifest.get("/usr/bin/yes")
