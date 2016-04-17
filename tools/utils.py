@@ -93,13 +93,6 @@ def sandbox_function(function, *args):
     process.start()
     pipe_sender.close()
 
-    # Wait for the new process to exit
-    process.join()
-
-    # The status code will be non-zero on a crash or exception
-    if process.exitcode is not EXIT_SUCCESS:
-        raise SandboxProcessFailure(process.exitcode)
-
     # Reconstruct the returned data
     results = []
     while True:
@@ -108,5 +101,12 @@ def sandbox_function(function, *args):
             results.append(result)
         except EOFError:
             break
+
+    # Wait for the new process to exit
+    process.join()
+
+    # The status code will be non-zero on a crash or exception
+    if process.exitcode is not EXIT_SUCCESS:
+        raise SandboxProcessFailure(process.exitcode)
 
     return results
