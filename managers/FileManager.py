@@ -286,7 +286,7 @@ class FileManager:
 
         try:
             self.distribute_manifest()
-        except FatalOperationFailure:
+        except exceptions.FatalOperationFailure:
             # local manifest is different from remote manifest; we need to rollback
             # TODO need a way to get the old manifest back
             # and then distribute it (handle when implementing caching)
@@ -294,6 +294,9 @@ class FileManager:
 
         try:
             self.distributor.delete(node.code_name)
+        except AttributeError:
+            # We assumed node was a file, but it's actually a directory.
+            pass
         except exceptions.FatalOperationFailure as e:
             # some provider deletes failed, but it wasn't fatal
             raise exceptions.OperationFailure(e.failures, None)
