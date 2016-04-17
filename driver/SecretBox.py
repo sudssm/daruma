@@ -3,6 +3,7 @@
 # TODO note to self: think about caching
 # make a daemon to periodically garbage collect and ping / reload manifest
 
+import threading
 from managers.ResilienceManager import ResilienceManager
 from managers.BootstrapManager import BootstrapManager, Bootstrap
 from managers.FileManager import FileManager
@@ -18,12 +19,19 @@ class SecretBox:
         Construct a new SecretBox object
         NB: In normal usage, one should use the static load or provision methods
         """
+        self.lock = threading.RLock()
         self.bootstrap_manager = bootstrap_manager
         self.file_manager = file_manager
         self.resilience_manager = resilience_manager
         # load the manifest here
         # ensures that we fail immediately with FatalOperationFailure if we recovered the wrong reconstruction threshold
         self._load_manifest(discard_extra_providers=True)
+
+    def synchronized(method):
+        def synchronized_method(self, *args, **kwargs):
+            with self.lock:
+                return method(self, *args, **kwargs)
+        return synchronized_method
 
     @staticmethod
     def _assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
@@ -121,17 +129,21 @@ class SecretBox:
             bootstrap_reconstruction_threshold < len(providers) and \
             file_reconstruction_threshold < len(providers)
 
+    @synchronized
     def update_master_key(self):
         """
         Cycle the master key and rebootstrap
+        This method is thread-safe.
         """
         # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
 
+    @synchronized
     def add_missing_provider(self, missing_provider):
         """
         Add a missing provider to the system. Used to get out of read only mode
         Does nothing if the provider is not one of the missing providers.
+        This method is thread-safe.
         Args:
             missing_provider: a provider object that is one of the provider uuids returned by get_missing_providers
         Returns:
@@ -164,10 +176,12 @@ class SecretBox:
                 return self._reset()
             raise
 
+    @synchronized
     def reprovision(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
         """
         Update the thresholds and providers for the system
         Will redistribute every file across the new provider list
+        This method is thread-safe.
         Args:
             providers: a list of provider objects across which to distribute
             bootstrap_reconstruction_threshold: the new bootstrap threshold. Between 1 and len(providers)-1, inclusive
@@ -219,17 +233,24 @@ class SecretBox:
         if discard_extra_providers:
             self.bootstrap_manager.providers = self.file_manager.providers
 
+    @synchronized
     def get_missing_providers(self):
         """
         Gets a list of the providers needed to be added before the system can be writable
         Is empty if and only if the system is not in read only mode
         To get out of read only mode, either call add_missing_providers or reprovision
+        This method is thread-safe.
         """
         return self.file_manager.get_missing_providers()
 
+    @synchronized
     def get_providers(self):
+        """
+        This method is thread-safe.
+        """
         return self.file_manager.providers[:]
 
+    @synchronized
     def ls(self, path):
         """
         Lists information about the entries at the given path.  If the given
@@ -242,34 +263,42 @@ class SecretBox:
 
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
+        This method is thread-safe.
         Raises InvalidPath or FatalOperationFailure if unsuccessful
         """
         self._load_manifest()
         return self.file_manager.ls(path)
 
+    @synchronized
     def mk_dir(self, path):
         """
         Create a directory
+        This method is thread-safe.
         Raises InvalidPath or FatalOperationFailure if unsuccessful
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
         self._load_manifest()
         self.file_manager.mk_dir(path)
 
+    @synchronized
     def move(self, old_path, new_path):
         """
         Move a file or folder
+        This method is thread-safe.
         Raises InvalidPath if either path is invalid or if new_path exists
         Raises ReadOnlyMode if the system is in ReadOnlyMode
+        Raises FatalOperationFailure if unsuccessful
         """
         self._load_manifest()
         self.file_manager.move(old_path, new_path)
 
+    @synchronized
     def get(self, path):
         """
         Get the contents of a file given the file path
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
+        This method is thread-safe.
         Raises FileNotFound if path is invalid
         Raises FatalOperationFailure if unsuccessful
         """
@@ -288,11 +317,13 @@ class SecretBox:
                 return self.get(path)
             raise
 
+    @synchronized
     def put(self, path, data):
         """
         Put the data to path location
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
+        This method is thread-safe.
         Raises FatalOperationFailure if unsuccessful
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
@@ -308,11 +339,13 @@ class SecretBox:
                 return self.put(path, data)
             raise
 
+    @synchronized
     def delete(self, path):
         """
         Delete the data at path
         If some providers are in error, attempts to repair them
         Upon return either all providers are stable or at least one provider is RED
+        This method is thread-safe.
         Raises FileNotFound if path is invalid
         Raises FatalOperationFailure if unsuccessful
         Raises ReadOnlyMode if the system is in ReadOnlyMode

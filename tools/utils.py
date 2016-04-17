@@ -1,4 +1,5 @@
 from multiprocessing import Process, Pipe
+import os
 from uuid import uuid4
 from urlparse import urlparse, parse_qs
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +10,18 @@ INTERNAL_SERVER_HOST = "localhost"
 INTERNAL_SERVER_PORT = 28962  # This should be a free port
 
 FILENAME_SIZE = 32
+
+
+def get_app_folder():
+    return os.path.expanduser("~/" + APP_NAME)
+
+
+def make_app_folder():
+    try:
+        os.makedirs(get_app_folder(), 0o700)
+    except OSError:
+        # The app directory already exists
+        pass
 
 
 # create a length-32 string of random uppercase letters and numbers
