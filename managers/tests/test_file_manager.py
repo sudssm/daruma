@@ -91,6 +91,15 @@ def test_mk_dir():
     assert FM.ls("foo") == [{"name": "bar", "is_directory": True}]
 
 
+def test_delete_directory():
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.mk_dir("foo")
+    FM.delete("foo")
+    assert FM.ls("") == []
+
+
 def test_nested_file():
     FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()

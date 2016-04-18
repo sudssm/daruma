@@ -55,7 +55,7 @@ def test_return_to_yellow():
     providers[0].set_state(TestProviderState.OFFLINE)
     providers[1].set_state(TestProviderState.OFFLINE)
 
-    SB.ls("")
+    SB.get("test")
 
     assert providers[0].status == ProviderStatus.RED
     assert providers[1].status == ProviderStatus.RED
@@ -63,7 +63,7 @@ def test_return_to_yellow():
     providers[0].set_state(TestProviderState.ACTIVE)
     providers[1].set_state(TestProviderState.ACTIVE)
 
-    SB.ls("")
+    SB.get("test")
 
     assert providers[0].status == ProviderStatus.YELLOW
     assert providers[1].status == ProviderStatus.YELLOW
