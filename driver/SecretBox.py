@@ -261,12 +261,11 @@ class SecretBox:
             - is_directory
             - size (only available if not is_directory)
 
-        If some providers are in error, attempts to repair them
-        Upon return either all providers are stable or at least one provider is RED
+        Note that this method reads a cached version of the system manifest and
+        does not re-download it for verification.
         This method is thread-safe.
-        Raises InvalidPath or FatalOperationFailure if unsuccessful
+        Raises InvalidPath.
         """
-        self._load_manifest()
         return self.file_manager.ls(path)
 
     @synchronized
@@ -297,13 +296,13 @@ class SecretBox:
         """
         Get the contents of a file given the file path
         If some providers are in error, attempts to repair them
-        Upon return either all providers are stable or at least one provider is RED
+        Note that this method reads a cached version of the system manifest and
+        does not re-download it for verification.
+        Upon return either all providers are stable or at least one provider is RED.
         This method is thread-safe.
         Raises FileNotFound if path is invalid
         Raises FatalOperationFailure if unsuccessful
         """
-        self._load_manifest()
-
         try:
             result = self.file_manager.get(path)
             self.resilience_manager.log_success()
