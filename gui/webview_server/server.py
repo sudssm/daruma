@@ -259,18 +259,13 @@ def reprovision():
     return ""
 
 
-##################
-# JSON endpoints #
-##################
-
-@app.route('/iconstatus/')
-def get_icon_status_for_root():
-    return "2"
-
-
-@app.route('/iconstatus/<path:target_path>')
-def get_icon_status_for_path(target_path):
-    return "2"
+@app.route('/iconstatus')
+def get_icon_statuses():
+    try:
+        status_dict = {path: 2 for path in global_app_state.secretbox.list_all_paths()}
+    except AttributeError:
+        status_dict = {}
+    return jsonify(status_dict)
 
 
 def start_ui_server(native_app, app_state):

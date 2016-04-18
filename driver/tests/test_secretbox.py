@@ -239,3 +239,16 @@ def test_extra_providers():
     SB, extra_providers = SecretBox.load(providers)
     assert SB.file_manager.providers == providers[:3]
     assert sorted(extra_providers) == sorted(providers[3:])
+
+
+def test_list_paths():
+    SB = SecretBox.provision(providers, 2, 2)
+
+    SB.put("file1", "data1")
+    SB.put("file2", "data2")
+    SB.put("dir1/file3", "data3")
+    SB.mk_dir("dir1/dir2")
+
+    expected_paths = ["file1", "file2", "dir1", "dir1/file3", "dir1/dir2"]
+
+    assert sorted(SB.list_all_paths()) == sorted(expected_paths)
