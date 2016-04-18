@@ -266,3 +266,17 @@ def test_remove_provider_and_decrement_k():
     with pytest.raises(exceptions.OperationFailure) as excinfo:
         FM.get("test")
     assert excinfo.value.result == "data"
+
+
+def test_path_generator():
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.put("file1", "data1")
+    FM.put("file2", "data2")
+    FM.put("dir1/file3", "data3")
+    FM.mk_dir("dir1/dir2")
+
+    expected_paths = ["file1", "file2", "dir1", "dir1/file3", "dir1/dir2"]
+
+    assert sorted(FM.path_generator()) == sorted(expected_paths)

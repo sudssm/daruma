@@ -119,7 +119,7 @@ class FileManager:
         # we use num_providers = len(providers) here, because we want to reprovision with all current providers
         new_distributor = FileDistributor(self.providers, len(self.providers), self.file_reconstruction_threshold)
 
-        for file_node in self.manifest.generate_files_under(""):
+        for _, file_node in self.manifest.generate_nodes_under(""):
             filename = file_node.name
             old_codename = file_node.code_name
             old_key = file_node.key
@@ -154,6 +154,13 @@ class FileManager:
 
         if len(errors) > 0:
             raise exceptions.OperationFailure(errors)
+
+    def path_generator(self):
+        """
+        Yields the paths for all files and directories in the system.
+        """
+        for node_path, _ in self.manifest.generate_nodes_under(""):
+            yield node_path
 
     def ls(self, path):
         """

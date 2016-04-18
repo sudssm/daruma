@@ -414,24 +414,26 @@ def test_mkdir_with_conflicting_file():
 def test_generate_files_empty():
     manifest = Manifest()
 
-    assert list(manifest.generate_files_under("")) == []
+    assert list(manifest.generate_nodes_under("")) == []
 
 
-def test_generate_files_tree():
+def test_generate_nodes_tree():
     key1 = generate_key()
 
     manifest = Manifest()
 
+    asdf_file = File.from_values("asdf", codename1, 23, key1)
     expected_files = [
-        File.from_values("bar", codename1, 23, key1),
-        File.from_values("asdf", codename1, 23, key1),
+        ("bar", File.from_values("bar", codename1, 23, key1)),
+        ("dir2", Directory.from_values("dir2", [asdf_file])),
+        ("dir2/asdf", asdf_file)
     ]
     created_filepaths = ["foo", "asd", "dir1/bar", "dir1/dir2/asdf", "dir3/baz"]
 
     for path in created_filepaths:
         manifest.update_file(path, codename1, 23, key1)
 
-    assert sorted(manifest.generate_files_under("dir1")) == sorted(expected_files)
+    assert sorted(manifest.generate_nodes_under("dir1")) == sorted(expected_files)
 
 
 def test_roundtrip_providers():

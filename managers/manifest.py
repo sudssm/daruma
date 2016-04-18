@@ -409,19 +409,21 @@ class Manifest:
         new_parent_directory = self.create_directory(new_parent)
         new_parent_directory._add_child(_Node(moved_node_attributes))
 
-    def generate_files_under(self, path):
+    def generate_nodes_under(self, path):
         """
-        Returns a generator for all File nodes in the manifest under the given
-        path.
+        Returns a generator for all files and directories in the manifest under
+        the given path.  Nodes are returned as a (path, Node) tuple, where path
+        is a string relative to the given path and Node is a File or Directory
+        object.
         """
-        frontier = [self.get(path)]
+        frontier = [("", self.get(path))]
         while len(frontier) > 0:
-            target_node = frontier.pop(0)
+            target_path, target_node = frontier.pop(0)
             for child in target_node.get_children():
-                if type(child) is File:
-                    yield child
-                else:
-                    frontier.append(child)
+                child_name = os.path.join(target_path, child.name)
+                yield child_name, child
+                if type(child) is Directory:
+                    frontier.append((child_name, child))
 
     def set_providers(self, providers):
         """
