@@ -21,6 +21,11 @@ else:
 global_app_state = None
 
 
+#########################
+# Primary GUI endpoints #
+#########################
+
+
 @app.route('/app_logo.png')
 def download_logo():
     """
@@ -252,6 +257,20 @@ def reprovision():
     global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
     global_app_state.needs_reprovision = False
     return ""
+
+
+##################
+# JSON endpoints #
+##################
+
+@app.route('/iconstatus/')
+def get_icon_status_for_root():
+    return "2"
+
+
+@app.route('/iconstatus/<path:target_path>')
+def get_icon_status_for_path(target_path):
+    return "2"
 
 
 def start_ui_server(native_app, app_state):
