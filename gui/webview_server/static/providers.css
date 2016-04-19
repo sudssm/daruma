@@ -18,7 +18,7 @@ body {
     color: green;
 }
 
-.status-orange {
+.status-yellow {
     color: goldenrod;
 }
 
@@ -44,6 +44,7 @@ body {
     border-width: 1px;
     border-color: lightgray;
 }
+
 
 #add-provider-button {
     margin-left: auto;

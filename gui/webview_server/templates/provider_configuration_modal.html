@@ -1,0 +1,19 @@
+<!doctype html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>SecretBox | {{ name }} Configuration</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    </head>
+
+    <body>
+        <h2>{{ name }} Configuration</h2>
+        
+        <form action="/providers/add/{{ identifier }}/finish" method="get">
+            <label for="configuration_id">{{ configuration_label }}:</label>
+            <input id="configuration_id" name="id" type="text" required>
+            <input type="submit" value="Continue">
+        </form>
+    </body>
+</html>

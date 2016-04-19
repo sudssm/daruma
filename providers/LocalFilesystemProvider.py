@@ -14,7 +14,11 @@ class LocalFilesystemProvider(UnauthenticatedProvider):
 
     @classmethod
     def provider_name(cls):
-        return "Local"
+        return "Local Storage"
+
+    @classmethod
+    def get_configuration_label(cls):
+        return "File Path"
 
     def __init__(self, credential_manager):
         """

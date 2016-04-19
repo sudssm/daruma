@@ -22,14 +22,6 @@ body {
 	display: block;
 }
 
-#button-container > button {
-	display: none;
-}
-
-#button-container > .big-button:first-child {
-	display: inline-block;
-}
-
 .big-button {
 	margin: auto;
 	margin-top: 5%;
@@ -52,7 +44,6 @@ body {
 }
 
 #added-providers-area {
-	display: none;
 	margin-top: 5%;
 }
 
@@ -64,7 +55,7 @@ body {
 	padding: 0 10px;
 	margin: 0;
 	display: inline-block;
-	overflow: scroll;
+	overflow: auto;
     list-style-type: none;
 	text-align: initial;
 }

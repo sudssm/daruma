@@ -1,4 +1,5 @@
 from tools.utils import APP_NAME
+from custom_exceptions import exceptions
 
 
 class ProviderStatus:
@@ -126,6 +127,8 @@ class BaseProvider(object):
         """
         Returns a pretty-printed identifier for this type of provider. Must be
         unique across all provider types.
+        If no provider logo is provided, this will be rendered in its place in
+        the GUI.
         """
         raise NotImplementedError
 
@@ -146,5 +149,22 @@ class BaseProvider(object):
         """
         return (self.provider_identifier(), self.uid)
 
+    def __eq__(self, other):
+        return self.uuid == other.uuid
+
+    def __hash__(self):
+        return self.uuid.__hash__()
+
     def __str__(self):
         return "<" + self.provider_name() + "@" + self.uid + "-" + str(self.score) + ">"
+
+    def remove(self):
+        """
+        Clears the provider and removes its credentials from the system.
+        The provider will be unusable after calling this function.
+        """
+        try:
+            self.wipe()
+        except exceptions.ProviderFailure:
+            pass
+        self.credential_manager.clear_user_credentials(self.__class__, self.uid)

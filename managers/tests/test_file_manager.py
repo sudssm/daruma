@@ -91,6 +91,15 @@ def test_mk_dir():
     assert FM.ls("foo") == [{"name": "bar", "is_directory": True}]
 
 
+def test_delete_directory():
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.mk_dir("foo")
+    FM.delete("foo")
+    assert FM.ls("") == []
+
+
 def test_nested_file():
     FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()
@@ -245,7 +254,7 @@ def test_remove_provider_and_decrement_k():
     FM.put("test2", "data2")
 
     FM.file_reconstruction_threshold = 3
-    FM.providers.remove(providers[0])
+    FM.providers.remove(providers[-1])
     FM.reset()
 
     FM.load_manifest()

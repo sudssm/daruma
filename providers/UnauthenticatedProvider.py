@@ -27,3 +27,12 @@ class UnauthenticatedProvider(BaseProvider):
         Raises ProviderFailure
         """
         raise NotImplementedError
+
+    @classmethod
+    def get_configuration_label(cls):
+        """
+        Returns a string title for the provider_id argument to connect().
+        This will be displayed to users to help them select a suitable id (e.g.
+        file path or server address).
+        """
+        raise NotImplementedError
