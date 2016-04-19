@@ -10,7 +10,7 @@ import json
 
 
 class BoxProvider(OAuthProvider):
-    BOX_ROOT_ID = '0'  # Box root directory has id zero
+    BOX_ROOT_ID = '0'  # The root of the Box system (per Box docs)
     MAX_BOX_LIMIT = 1000  # the maximum number of items returned from a Box request
 
     @classmethod
@@ -23,8 +23,19 @@ class BoxProvider(OAuthProvider):
 
     def __init__(self, credential_manager):
         super(BoxProvider, self).__init__(credential_manager)
-        self.id_cache = {}
-        self._email, self._client_id, self._client_secret = None, None, None
+        self.id_cache, self._email, self._app_credentials = None, None, None
+
+    @property
+    def app_credentials(self):
+        """
+        A dictionary with keys 'client_id' and client_secret'
+        """
+        if self._app_credentials is None:
+            try:
+                self._app_credentials = self.credential_manager.get_app_credentials(self.__class__)
+            except (KeyError, TypeError):
+                raise IOError("No valid app credentials found!")
+        return self._app_credentials
 
     @contextmanager
     def exception_handler(self):
@@ -39,15 +50,22 @@ class BoxProvider(OAuthProvider):
         except Exception:
             raise exceptions.ProviderOperationFailure(self)
 
-    def refresh_on_fail(self, func):
+    def _try_with_refresh(self, func):
+        """
+        Runs func. If func raises an AuthFailure, refreshes tokens and tries again.
+        Updates self.auth_token and self.refresh_token
+        Write updated credentials to the internal credential_manager after running func
+        """
         try:
             with self.exception_handler():
                 return func()
         except exceptions.AuthFailure:
             with self.exception_handler():
-                # implicitly stores refreshed tokens with _store_user_tokens callback
+                # self.auth_token and self.refresh_token are updated in store_tokens_callback
                 self.client.auth.refresh(self.access_token)
-                return func()
+                result = func()
+                self._persist_tokens()
+                return result
 
     def start_connection(self):
         self.oauth = OAuth2(client_id=self.app_credentials["client_id"], client_secret=self.app_credentials["client_secret"])
@@ -84,50 +102,38 @@ class BoxProvider(OAuthProvider):
 
         self._connect(credentials)
 
-    def _store_user_tokens(self, access_token, refresh_token):
-        self.access_token, self.refresh_token = access_token, refresh_token
-        print "STORE"
-        print access_token, refresh_token
-        user_credentials = {"access_token": access_token, "refresh_token": refresh_token}
+    def _persist_tokens(self):
+        user_credentials = {"access_token": self.access_token, "refresh_token": self.refresh_token}
         self.credential_manager.set_user_credentials(self.__class__, self.uid, user_credentials)
 
-    def _make_app_folder(self):
-        box_root_folder = self.client.folder(self.BOX_ROOT_ID)
+    def _connect(self, user_credentials):
+        def store_tokens_callback(access_token, refresh_token):
+            self.access_token = access_token
+            self.refresh_token = refresh_token
 
-        def inner_folder_setup():
+        def load_email():
+            with self.exception_handler():
+                self._email = self.client.user(user_id='me').get()['login']
+
+        def make_app_folder():
+            box_root_folder = self.client.folder(self.BOX_ROOT_ID)
+
             try:  # make an app-specific folder if one does not already exist
                 _, folder_id, _ = box_root_folder.create_subfolder(self.ROOT_DIR)
-            except BoxAPIException:
-                search_results = self.client.search(self.ROOT_DIR,
-                                                    limit=1, 
-                                                    offset=0,
-                                                    ancestor_folders=[box_root_folder],
-                                                    result_type="folder")
-                if len(search_results) != 1:
-                    raise
-                folder_id = search_results[0].object_id
+            except BoxAPIException as e:
+                folder_id = e.context_info['conflicts'][0]['id']
 
             self.app_folder = self.client.folder(folder_id)
 
-        self.refresh_on_fail(inner_folder_setup)
+        def prime_cache():
+            # get all items
+            files = []
+            offset = 0
+            while len(files) == offset:
+                files += self.app_folder.get_items(self.MAX_BOX_LIMIT, offset=offset)
+                offset += self.MAX_BOX_LIMIT
+            self.id_cache = {user_file.name: user_file.object_id for user_file in files}
 
-    def _collect_items(self):
-        files = []
-        offset = 0
-        while len(files) == offset:
-            files += self.app_folder.get_items(self.MAX_BOX_LIMIT, offset=offset)
-            offset += self.MAX_BOX_LIMIT
-        return files
-
-    def _prime_cache(self):
-        def inner_prime_cache():
-            files = self._collect_items()
-            for user_file in files:
-                self.id_cache[user_file.name] = user_file.object_id
-
-        self.refresh_on_fail(inner_prime_cache)
-
-    def _connect(self, user_credentials):
         # if this came from cache, it is a json string that needs to be converted
         if type(user_credentials) in [unicode, str]:
             user_credentials = json.loads(user_credentials)
@@ -136,71 +142,52 @@ class BoxProvider(OAuthProvider):
 
         oauth = OAuth2(client_id=self.app_credentials["client_id"],
                        client_secret=self.app_credentials["client_secret"],
-                       store_tokens=self._store_user_tokens,
+                       store_tokens=store_tokens_callback,
                        access_token=self.access_token,
                        refresh_token=self.refresh_token)
-        
+
         self.client = Client(oauth)
 
-        print "CONNECT"
-        print self.access_token, self.refresh_token
-        self._store_user_tokens(self.access_token, self.refresh_token)
+        self._try_with_refresh(load_email)
+        self._try_with_refresh(make_app_folder)
+        self._try_with_refresh(prime_cache)
 
-        self._make_app_folder()
-        self._prime_cache()
-
-        # print self.id_cache
-
-    @property
-    def app_credentials(self):
-        """
-        A dictionary with keys 'client_id' and client_secret'
-        """
-        if self._client_id is None or self._client_secret is None:
-            try:
-                credentials = self.credential_manager.get_app_credentials(self.__class__)
-                self._client_id, self._client_secret = credentials["client_id"], credentials["client_secret"]
-            except (KeyError, TypeError):
-                raise IOError("No valid app credentials found!")
-        return {"client_id": self._client_id, "client_secret": self._client_secret}
+        self._persist_tokens()
 
     @property
     def uid(self):
-        if self._email is None:
-            with self.exception_handler():
-                self._email = self.client.user(user_id='me').get()['login']
         return self._email
 
     def get(self, filename):
-        def inner_get():
+        def try_get():
             box_file = self.client.file(self.id_cache[filename])
             return box_file.content()
-        
-        return self.refresh_on_fail(inner_get)
+
+        return self._try_with_refresh(try_get)
 
     def put(self, filename, data):
         data_stream = StringIO(data)
 
-        def inner_put():
+        def try_put():
             if filename in self.id_cache:
                 existing_file = self.client.file(self.id_cache[filename])
                 existing_file.update_contents_with_stream(data_stream)
-            else:       
+            else:
                 new_file = self.app_folder.upload_stream(data_stream, filename)
                 self.id_cache[filename] = new_file.object_id
 
-        self.refresh_on_fail(inner_put)
+        self._try_with_refresh(try_put)
 
     def delete(self, filename):
-        def inner_delete():
+        def try_delete():
             box_file = self.client.file(self.id_cache[filename])
             box_file.delete()
             self.id_cache.pop(filename, None)
 
-        self.refresh_on_fail(inner_delete)
+        self._try_with_refresh(try_delete)
 
     def wipe(self):
-        def inner_wipe():
+        def try_wipe():
             try:
                 for _, file_id in self.id_cache.items():
                     box_file = self.client.file(file_id)
@@ -210,5 +197,4 @@ class BoxProvider(OAuthProvider):
             finally:
                 self.id_cache = {}
 
-        self.refresh_on_fail(inner_wipe)
-
+        self._try_with_refresh(try_wipe)

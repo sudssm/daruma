@@ -64,7 +64,6 @@ class CredentialManager:
         except OSError:
             pass
         with open(self.user_creds_file, 'w') as file:
-            print self.user_creds
             json.dump(self.user_creds, file)
 
     def get_user_credentials(self, provider_class):
