@@ -4,7 +4,7 @@ Command line interface for Daruma
 from providers.TestProvider import TestProviderState
 from providers.BaseProvider import ProviderStatus
 from managers.ProviderManager import ProviderManager
-from driver.SecretBox import SecretBox
+from driver.Daruma import Daruma
 from custom_exceptions import exceptions
 from contextlib import contextmanager
 import traceback
@@ -163,7 +163,7 @@ class ConfigureLoop(cmd.Cmd):
 
     def postcmd(self, stop, line):
         print "Loaded providers:", pp_providers()
-        # we're done with this section when secretbox is defined
+        # we're done with this section when Daruma is defined
         return secret_box is not None
 
     def do_add(self, line):
@@ -204,7 +204,7 @@ class ConfigureLoop(cmd.Cmd):
         # 2 because we may be trying to load a 3-provider instance in read only mode
         try:
             assert len(providers) >= 2
-            secret_box, extra_providers = SecretBox.load(providers)
+            secret_box, extra_providers = Daruma.load(providers)
             print "Loaded an existing installation"
             if len(extra_providers) > 0:
                 print "Some providers were not part of the loaded installation:", map(lambda provider: provider.uuid, extra_providers)
@@ -226,7 +226,7 @@ class ConfigureLoop(cmd.Cmd):
         try:
             assert len(providers) >= 3
             threshold = len(providers) - 1
-            secret_box = SecretBox.provision(providers, threshold, threshold)
+            secret_box = Daruma.provision(providers, threshold, threshold)
             print "Created a new installation"
         except AssertionError:
             print "Looks like you need to add more providers! Type 'add' to get started."
@@ -236,7 +236,7 @@ class ConfigureLoop(cmd.Cmd):
 
 class MainLoop(cmd.Cmd):
     """
-    Main loop to interact with SecretBox
+    Main loop to interact with Daruma
     """
     prompt = "\nDaruma> "
 

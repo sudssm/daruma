@@ -1,23 +1,23 @@
 import sys
 import threading
 from custom_exceptions import exceptions
-from driver.SecretBox import SecretBox
+from driver.Daruma import Daruma
 from gui.filesystem.FilesystemWatcher import FilesystemWatcher
 from gui.webview_server.server import start_ui_server
-from gui.webview_client.app import SBApp
+from gui.webview_client.app import DarumaApp
 from managers.ProviderManager import ProviderManager
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT, get_app_folder, make_app_folder
 
 
 class ApplicationState(object):
     """
-    If the secretbox field is not None, then the application has been set up and
-    it contains a valid SecretBox object.
+    If the Daruma field is not None, then the application has been set up and
+    it contains a valid Daruma object.
     Otherwise, the providers field must be set with a list of
     providers with valid authentication.
     """
     def __init__(self):
-        self.secretbox = None
+        self.daruma = None
         self.provider_manager = ProviderManager()
         self.providers = []
         self.needs_reprovision = False
@@ -39,8 +39,8 @@ def platform_specific_setup():
 
 def launch_gui(app_state):
     # Initialize native UI
-    app_menu = SBApp((INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT),
-                     setup_complete=(app_state.secretbox is not None))
+    app_menu = DarumaApp((INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT),
+                         setup_complete=(app_state.daruma is not None))
 
     # Start HTTP UI server
     ui_server_thread = threading.Thread(target=start_ui_server,
@@ -69,9 +69,9 @@ if __name__ == "__main__":
     providers, _ = app_state.provider_manager.load_all_providers_from_credentials()
     try:
         assert len(providers) >= 2
-        app_state.secretbox, extra_providers = SecretBox.load(providers)
+        app_state.daruma, extra_providers = Daruma.load(providers)
         app_state.providers = providers
-        app_state.needs_reprovision = len(extra_providers) > 0 or len(app_state.secretbox.get_missing_providers()) > 0
+        app_state.needs_reprovision = len(extra_providers) > 0 or len(app_state.daruma.get_missing_providers()) > 0
     except (AssertionError, exceptions.FatalOperationFailure):
         app_state.providers = providers
     launch_gui(app_state)

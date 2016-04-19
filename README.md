@@ -13,7 +13,7 @@ pip install --user -e . --process-dependency-links robustsecretsharing
 To run the command line REPL:
 
 ```
-python driver/sb_cli.py
+python driver/daruma_cli.py
 ```
 
 ### GUI App (OSX only)

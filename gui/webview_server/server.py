@@ -5,7 +5,7 @@ import pkg_resources
 from custom_exceptions import exceptions
 import gui
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
-from driver.SecretBox import SecretBox
+from driver.Daruma import Daruma
 
 
 # Change the static and template folder locations depending on whether we're
@@ -136,7 +136,7 @@ def finish_adding_provider(provider_name):
         global_app_state.provider_uuids_map[new_provider.uuid] = new_provider
 
         # if we already have an instance, we need to reprovision
-        if global_app_state.secretbox is not None:
+        if global_app_state.daruma is not None:
             global_app_state.needs_reprovision = True
         return redirect("modal/close")
 
@@ -144,7 +144,7 @@ def finish_adding_provider(provider_name):
 @app.route('/load_instance')
 def try_load_instance():
     """
-    Attempts to load secretbox instance from active providers
+    Attempts to load Daruma instance from active providers
     Redirects to either status or confirmation page
     """
     if len(global_app_state.providers) < 3:
@@ -152,7 +152,7 @@ def try_load_instance():
 
     try:
         # TODO handle extra providers
-        global_app_state.secretbox, extra_providers = SecretBox.load(global_app_state.providers)
+        global_app_state.daruma, extra_providers = Daruma.load(global_app_state.providers)
         return redirect("providers.html")
     except exceptions.FatalOperationFailure:
         return redirect("modal/show/confirm_provision")
@@ -196,7 +196,7 @@ def get_provider_list():
             else:
                 overall_status = "RED"
 
-    if global_app_state.secretbox is not None:
+    if global_app_state.daruma is not None:
         instance = {
             "status": overall_status,
             "needs_reprovision": global_app_state.needs_reprovision
@@ -228,10 +228,10 @@ def remove_provider():
 @app.route('/provision_instance')
 def try_provision_instance():
     """
-    Attempt to provision a SecretBox object given the current list of providers.
+    Attempt to provision a Daruma object given the current list of providers.
     """
     try:
-        global_app_state.secretbox = SecretBox.provision(global_app_state.providers,
+        global_app_state.daruma = Daruma.provision(global_app_state.providers,
                                                          len(global_app_state.providers) - 1,
                                                          len(global_app_state.providers) - 1)
         return jsonify({"success": True})
@@ -245,10 +245,10 @@ def try_provision_instance():
 @app.route('/reprovision')
 def reprovision():
     try:
-        global_app_state.secretbox.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
+        global_app_state.daruma.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
     except:
         pass
-    global_app_state.providers = global_app_state.secretbox.get_providers()
+    global_app_state.providers = global_app_state.daruma.get_providers()
     global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
     global_app_state.needs_reprovision = False
     return ""
