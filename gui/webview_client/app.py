@@ -145,7 +145,7 @@ class MainAppMenu(wx.TaskBarIcon):
         self.app_frame.Close()
 
 
-class SBApp(wx.App):
+class DarumaApp(wx.App):
     def __init__(self, host, setup_complete=False):
         """
         To begin using the app, call this object's MainLoop() method.
@@ -157,7 +157,7 @@ class SBApp(wx.App):
         """
         self.host = host
         self.setup_complete = setup_complete
-        super(SBApp, self).__init__(redirect=False)
+        super(DarumaApp, self).__init__(redirect=False)
 
     def OnInit(self):
         """
