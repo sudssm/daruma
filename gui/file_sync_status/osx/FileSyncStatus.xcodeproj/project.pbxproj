@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		51C21BD81C6AF7DD00345F75 /* client.py in Resources */ = {isa = PBXBuildFile; fileRef = 51C21BD71C6AF7DC00345F75 /* client.py */; };
 		51F8B75C1C67E4E500E88D9E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 51F8B75B1C67E4E500E88D9E /* AppDelegate.m */; };
 		51F8B75F1C67E4E500E88D9E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 51F8B75E1C67E4E500E88D9E /* main.m */; };
 		51F8B7611C67E4E500E88D9E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51F8B7601C67E4E500E88D9E /* Assets.xcassets */; };
@@ -41,7 +40,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		51C21BD71C6AF7DC00345F75 /* client.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = client.py; path = ../../communication/client.py; sourceTree = "<group>"; };
 		51F8B7571C67E4E500E88D9E /* FileSyncStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FileSyncStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51F8B75A1C67E4E500E88D9E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		51F8B75B1C67E4E500E88D9E /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -116,7 +114,6 @@
 		51F8B7701C67E59200E88D9E /* FileSyncClient */ = {
 			isa = PBXGroup;
 			children = (
-				51C21BD71C6AF7DC00345F75 /* client.py */,
 				51F8B7731C67E59200E88D9E /* FinderSync.h */,
 				51F8B7741C67E59200E88D9E /* FinderSync.m */,
 				51F8B7761C67E59200E88D9E /* Info.plist */,
@@ -222,7 +219,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				51C21BD81C6AF7DD00345F75 /* client.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
