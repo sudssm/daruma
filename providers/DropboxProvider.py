@@ -47,14 +47,11 @@ class DropboxProvider(OAuthProvider):
             raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
-        try:
-            credentials = self.credential_manager.get_app_credentials(self.__class__)
-            app_key, app_secret = credentials["app_key"], credentials["app_secret"]
-        except (KeyError, TypeError):
-            raise IOError("No valid app credentials found!")
+        credentials = self.app_credentials
+        app_key, app_secret = credentials["app_key"], credentials["app_secret"]
 
         with self.exception_handler():
-            self.flow = dropbox.client.DropboxOAuth2Flow(app_key, app_secret, "http://localhost", {}, "dropbox-auth-csrf-token")
+            self.flow = dropbox.client.DropboxOAuth2Flow(app_key, app_secret, self.get_oauth_redirect_url(), {}, "dropbox-auth-csrf-token")
             authorize_url = self.flow.start()
 
         return authorize_url

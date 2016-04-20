@@ -25,18 +25,6 @@ class OneDriveProvider(OAuthProvider):
         self._app_credentials = None
         self.client = None
 
-    @property
-    def app_credentials(self):
-        """
-        A dictionary with keys 'client_id' and client_secret'
-        """
-        if self._app_credentials is None:
-            try:
-                self._app_credentials = self.credential_manager.get_app_credentials(self.__class__)
-            except (KeyError, TypeError):
-                raise IOError("No valid app credentials found!")
-        return self._app_credentials
-
     @contextmanager
     def exception_handler(self):
         error_map = {
