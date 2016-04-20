@@ -1,5 +1,6 @@
 from multiprocessing import Process, Pipe
 import os
+import sys
 from uuid import uuid4
 from urlparse import urlparse, parse_qs
 from concurrent.futures import ThreadPoolExecutor
@@ -10,6 +11,21 @@ INTERNAL_SERVER_HOST = "localhost"
 INTERNAL_SERVER_PORT = 28962  # This should be a free port
 
 FILENAME_SIZE = 32
+
+
+def get_resource_path(path):
+    """
+    Returns the filesystem path to a non-python project file, correctly
+    accounting for whether the app is running in frozen mode or not.
+    """
+    # Return a different location depending on whether we're running in a
+    # packaged app and what the platform is.  Py2App sets the sys.frozen
+    # attribute, so we're just testing for that now.  For compatibility with
+    # other installers, inspect the value of the frozen attribute.
+    if getattr(sys, "frozen", None):
+        return os.path.join(os.getcwd(), path)
+    else:
+        return path
 
 
 def get_app_folder():
