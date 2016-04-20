@@ -1,6 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, make_response
 import os
-import sys
 import shutil
 
 app = Flask(__name__)
@@ -12,39 +11,39 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 @app.route('/')
 def home():
-    return jsonify(connected=True)
+    return ""
 
 
 @app.route('/put', methods=["POST"])
 def put():
     if len(request.files) == 0:
-        return jsonify(success=False)
+        return "", 400
     filename, file = request.files.items()[0]
     file.save(os.path.join(UPLOAD_FOLDER, filename))
-    return jsonify(success=True)
+    return ""
 
 
 @app.route('/get/<filename>')
 def get(filename):
     path = os.path.join(UPLOAD_FOLDER, filename)
     if not os.path.exists(path):
-        return jsonify(error="File does not exist")
+        return "", 400
     try:
-        return jsonify(data=open(path, 'r').read())
+        return make_response(open(path, 'r').read())
     except:
-        return jsonify(error="Could not read")
+        return "", 400
 
 
 @app.route('/delete/<filename>')
 def delete(filename):
     path = os.path.join(UPLOAD_FOLDER, filename)
     if not os.path.exists(path):
-        return jsonify(error="File does not exist")
+        return "", 400
     try:
         os.remove(path)
-        return jsonify(success=True)
+        return ""
     except:
-        return jsonify(success=False)
+        return "", 400
 
 
 @app.route('/wipe')
@@ -57,9 +56,9 @@ def wipe():
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
 
-        return jsonify(success=True)
+        return ""
     except:
-        return jsonify(success=False)
+        return "", 400
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5000)

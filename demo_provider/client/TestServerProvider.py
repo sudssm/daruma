@@ -6,7 +6,7 @@ import requests
 
 class TestServerProvider(UnauthenticatedProvider):
     # the amount of time to wait on a request, in seconds
-    TIMEOUT = 0.1
+    TIMEOUT = 0.5
 
     @classmethod
     def provider_identifier(cls):
@@ -38,9 +38,10 @@ class TestServerProvider(UnauthenticatedProvider):
         """
         super(TestServerProvider, self).__init__(credential_manager)
 
-    def _get_json(self, path):
-        r = requests.get(self.host + "/" + path, timeout=self.TIMEOUT)
-        return r.json()
+    def _do_get(self, path):
+        response = requests.get(self.host + "/" + path, timeout=self.TIMEOUT)
+        assert response.status_code == 200
+        return response
 
     def connect(self, url):
         """
@@ -49,7 +50,7 @@ class TestServerProvider(UnauthenticatedProvider):
         """
         self.host = url
         with self.exception_handler():
-            assert self._get_json("")['connected'] is True
+            self._do_get("")
 
         self.credential_manager.set_user_credentials(self.__class__, self.host, None)
 
@@ -59,17 +60,18 @@ class TestServerProvider(UnauthenticatedProvider):
 
     def get(self, filename):
         with self.exception_handler():
-            return self._get_json("get/" + filename)['data']
+            response = self._do_get("get/" + filename)
+            return response.content
 
     def put(self, filename, data):
         with self.exception_handler():
-            r = requests.post(self.host + "/put", files={filename: data}, timeout=self.TIMEOUT)
-            assert r.json()['success'] is True
+            response = requests.post(self.host + "/put", files={filename: data}, timeout=self.TIMEOUT)
+            assert response.status_code == 200
 
     def delete(self, filename):
         with self.exception_handler():
-            assert self._get_json("delete/" + filename)['success'] is True
+            self._do_get("delete/" + filename)
 
     def wipe(self):
         with self.exception_handler():
-            assert self._get_json("wipe")['success'] is True
+            self._do_get("wipe")
