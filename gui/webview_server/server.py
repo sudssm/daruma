@@ -263,6 +263,7 @@ def reprovision():
 def get_icon_statuses():
     try:
         status_dict = {path: 2 for path in global_app_state.secretbox.list_all_paths()}
+        status_dict[""] = 2
     except AttributeError:
         status_dict = {}
     return jsonify(status_dict)
