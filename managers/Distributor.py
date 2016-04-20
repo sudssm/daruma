@@ -147,6 +147,7 @@ class FileDistributor:
         failures = run_parallel(get_share, args)
 
         shares = shares_map.keys()
+        return shares[0]
 
         if len(shares) < self.file_reconstruction_threshold:
             raise exceptions.FatalOperationFailure(failures)

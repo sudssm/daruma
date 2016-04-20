@@ -63,7 +63,7 @@ class MainAppMenu(wx.TaskBarIcon):
 
         if self.setup_complete:
             providers_item = menu.Append(wx.ID_ANY, "Providers")
-            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("providers.html"), providers_item)
+            menu.Bind(wx.EVT_MENU, self.generate_webview_handler("dashboard.html"), providers_item)
         else:
             setup_item = menu.Append(wx.ID_ANY, "Continue setup")
             menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup.html"), setup_item)

@@ -8,36 +8,33 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='setup.css') }}">
         <script type=text/javascript src="{{ url_for('static', filename='jquery-2.2.2.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='global.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='setup.js') }}"></script>
     </head>
 
     <body>
-        <img id="app-logo" src="app_logo.png">
+        <div id="header" class="status-green">
+            <img id="app-logo" height="100" src="/images/daruma-horizontal.png">
+            <div id="right-header">
+                <div id="provider-count">0</div>
+                <button id="add-provider-button" class="big-button" type="button" onclick="onAddProviderButtonClick()">+</button>
+                <button id="done-adding-providers-button" class="big-button tooltip" type="button" disabled onclick="window.location.href='load_instance'">Start<span class="tooltiptext">Add at least 3 providers<br>to begin</span></button>
+            </div>
+        </div>
 
         <h1>Welcome to Daruma.</h1>
 
         <div id="instructions-box">
-            <div id="instructions-welcome">
-                Daruma is a fundamental change to the way people store files in the Cloud.
-                <br><br>
-                When you use it, we make a strong promise:<br>
-                <strong>Nobody can ever read, edit, or delete your files.</strong>
-                <br><br>
-                We guarantee this by combining the storage of your existing cloud services with cryptographic and redundancy algorithms.
-                <br><br>
-                These services, such as Dropbox and Google Drive, are what we call "providers".  You'll add some in just a minute.
-            </div>
-
-            <div id="instructions-existing-config">
-                We couldn't find any Daruma files on your current providers.
-                <br><br>
-                If you're starting fresh, you're all set to start a clean slate!
-                <br>
-                Otherwise, if you expected to see some files, add any providers you're missing.
+            <div id="instructions-add">
+                To get started from scratch, add at least 3 providers.<br><br>
+                To load an existing installation, just add all the providers it used.  We'll automatically load everything as you left it.
             </div>
         </div>
-
-        <div id="button-container">
-            <button id="get-started-button" class="big-button" type="button" onclick="window.location.href='setup_add_providers.html'">Get Started</button>
+            
         </div>
-     </body>
+
+        <div id="providers">
+            <h2>Current Providers:</h2>
+            </ul>
+        </div>
+    </body>
 </html>

@@ -45,12 +45,6 @@ body {
     border-color: lightgray;
 }
 
-
-#add-provider-button {
-    margin-left: auto;
-    font-size: 12pt;
-}
-
 #provider-list {
     list-style-type: none;
     padding: 0;
