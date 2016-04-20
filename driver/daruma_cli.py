@@ -1,7 +1,7 @@
 """
 Command line interface for Daruma
 """
-from providers.TestProvider import TestProviderState
+from providers.TestProvider import TestProvider, TestProviderState
 from providers.BaseProvider import ProviderStatus
 from managers.ProviderManager import ProviderManager
 from driver.Daruma import Daruma
@@ -62,7 +62,10 @@ def add_provider(line):
     provider = None
 
     try:
-        provider_class = unauth_providers[provider_type]
+        if provider_type == "test":
+            provider_class = TestProvider
+        else:
+            provider_class = unauth_providers[provider_type]
         if len(line) < 2:
             print "Usage: add %s <path_or_host_name>" % provider_type
             return

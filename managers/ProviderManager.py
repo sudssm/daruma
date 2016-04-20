@@ -4,7 +4,6 @@ from providers.GoogleDriveProvider import GoogleDriveProvider
 from providers.BoxProvider import BoxProvider
 from providers.OneDriveProvider import OneDriveProvider
 from providers.LocalFilesystemProvider import LocalFilesystemProvider
-from providers.TestProvider import TestProvider
 from providers.OAuthProvider import OAuthProvider
 from providers.UnauthenticatedProvider import UnauthenticatedProvider
 from demo_provider.client.TestServerProvider import TestServerProvider
@@ -16,7 +15,7 @@ class ProviderManager():
     A manager for constructing providers and performing provider-related operations
     """
     # the classes of all available providers
-    PROVIDER_CLASSES = [DropboxProvider, GoogleDriveProvider, BoxProvider, OneDriveProvider, LocalFilesystemProvider, TestProvider, TestServerProvider]
+    PROVIDER_CLASSES = [DropboxProvider, GoogleDriveProvider, BoxProvider, OneDriveProvider, LocalFilesystemProvider, TestServerProvider]
 
     def __init__(self):
         """
