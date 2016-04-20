@@ -6,7 +6,7 @@ import requests
 
 class TestServerProvider(UnauthenticatedProvider):
     # the amount of time to wait on a request, in seconds
-    TIMEOUT = 0.5
+    TIMEOUT = 0.1
 
     @classmethod
     def provider_identifier(cls):
