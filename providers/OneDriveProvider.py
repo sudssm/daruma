@@ -9,7 +9,7 @@ from tools.utils import parse_url
 
 
 class OneDriveProvider(OAuthProvider):
-    SCOPES = ['wl.emails', 'onedrive.readwrite']
+    SCOPES = ['wl.emails', 'onedrive.readwrite', 'wl.offline_access']
 
     @classmethod
     def provider_identifier(cls):
@@ -59,7 +59,7 @@ class OneDriveProvider(OAuthProvider):
         try:
             yield
         except OneDriveError as e:
-            raise error_map.get(e.message, exceptions.ProviderOperationFailure)(self)
+            raise error_map.get(e.message.split()[0], exceptions.ProviderOperationFailure)(self)
         except:
             raise exceptions.ProviderOperationFailure(self)
 
@@ -114,13 +114,13 @@ class OneDriveProvider(OAuthProvider):
             request.method = "GET"
             response = request.send()
             # result is returned in quotes; remove these
-            return response.content[1:-1]
+            return response.content
 
     def put(self, filename, data):
         with self.exception_handler():
             request = self._get_item(filename).content.request()
-            request.method = "PUT"
-            request.send(content=data)
+            self.client.auth_provider.authenticate_request(request)
+            self.client.http_provider.send("PUT", request._headers, request.request_url, data=data)
 
     def get_capacity(self):
         # TODO
@@ -139,5 +139,5 @@ class OneDriveProvider(OAuthProvider):
                 self._get_item("").delete()
             except OneDriveError as e:
                 # if does not exist, consider this successfully wiped
-                if e.message == ErrorCode.ItemNotFound:
-                    pass
+                if e.message.split()[0] != ErrorCode.ItemNotFound:
+                    raise
