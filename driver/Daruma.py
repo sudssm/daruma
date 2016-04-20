@@ -206,8 +206,9 @@ class Daruma:
         self._reset()
 
         # wipe the providers that were used previously but aren't any longer
-        for provider in set(old_providers) - set(providers):
+        def remove(provider):
             provider.remove()
+        run_parallel(remove, map(lambda provider: [provider], set(old_providers) - set(providers)))
 
     def _load_manifest(self, discard_extra_providers=False):
         """
