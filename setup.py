@@ -3,7 +3,7 @@ import sys
 
 # Base settings required for CLI and GUI setup
 base_setup = dict(
-    name="trustnoone",
+    name="daruma",
     version="0.1",
     setup_requires=[],
     packages=find_packages(),
@@ -49,7 +49,7 @@ if sys.platform == "darwin":
     ])
 
     build_setup.update(
-        app=["gui/sb_gui.py"],
+        app=["gui/daruma_gui.py"],
         data_files=["gui/webview_server/templates", 'gui/webview_server/static'],
         options={
             "py2app": {
