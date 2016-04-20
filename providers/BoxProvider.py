@@ -81,7 +81,7 @@ class BoxProvider(OAuthProvider):
         if self.write_tokens and self.access_token is not None:
             user_credentials = {"access_token": self.access_token, "refresh_token": self.refresh_token}
             self.credential_manager.set_user_credentials(self.__class__, self.uid, user_credentials)
-        self.write_tokens = False
+            self.write_tokens = False
 
     def _connect(self, user_credentials):
         def store_tokens_callback(access_token, refresh_token):

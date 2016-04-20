@@ -9,12 +9,12 @@ from managers.BootstrapManager import BootstrapManager, Bootstrap
 from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
-from tools.utils import generate_random_name
+from tools.utils import generate_random_name, run_parallel
 
 
 class Daruma:
 
-    def __init__(self, bootstrap_manager, file_manager, resilience_manager):
+    def __init__(self, bootstrap_manager, file_manager, resilience_manager, load_manifest=True):
         """
         Construct a new Daruma object
         NB: In normal usage, one should use the static load or provision methods
@@ -23,9 +23,10 @@ class Daruma:
         self.bootstrap_manager = bootstrap_manager
         self.file_manager = file_manager
         self.resilience_manager = resilience_manager
-        # load the manifest here
-        # ensures that we fail immediately with FatalOperationFailure if we recovered the wrong reconstruction threshold
-        self._load_manifest(discard_extra_providers=True)
+
+        if load_manifest:
+            # ensures that we fail immediately with FatalOperationFailure if we recovered the wrong reconstruction threshold
+            self._load_manifest(discard_extra_providers=True)
 
     def synchronized(method):
         def synchronized_method(self, *args, **kwargs):
@@ -61,12 +62,9 @@ class Daruma:
         # make a copy of providers so that changes to the external list doesn't affect this one
         providers = providers[:]
 
-        failures = []
-        for provider in providers:
-            try:
-                provider.wipe()
-            except exceptions.ProviderFailure as e:
-                failures.append(e)
+        def wipe(provider):
+            provider.wipe()
+        failures = run_parallel(wipe, map(lambda provider: [provider], providers))
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
 
@@ -85,7 +83,7 @@ class Daruma:
 
         file_manager = FileManager(providers, len(providers), file_reconstruction_threshold, master_key, manifest_name, setup=True)
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
-        return Daruma(bootstrap_manager, file_manager, resilience_manager)
+        return Daruma(bootstrap_manager, file_manager, resilience_manager, load_manifest=False)
 
     @staticmethod
     def load(providers):
@@ -208,8 +206,9 @@ class Daruma:
         self._reset()
 
         # wipe the providers that were used previously but aren't any longer
-        for provider in set(old_providers) - set(providers):
+        def remove(provider):
             provider.remove()
+        run_parallel(remove, map(lambda provider: [provider], set(old_providers) - set(providers)))
 
     def _load_manifest(self, discard_extra_providers=False):
         """
