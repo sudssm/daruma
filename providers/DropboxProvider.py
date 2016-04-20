@@ -54,7 +54,7 @@ class DropboxProvider(OAuthProvider):
             raise IOError("No valid app credentials found!")
 
         with self.exception_handler():
-            self.flow = dropbox.client.DropboxOAuth2Flow(app_key, app_secret, self.get_oauth_redirect_url(), {}, "dropbox-auth-csrf-token")
+            self.flow = dropbox.client.DropboxOAuth2Flow(app_key, app_secret, "http://localhost", {}, "dropbox-auth-csrf-token")
             authorize_url = self.flow.start()
 
         return authorize_url
@@ -71,6 +71,7 @@ class DropboxProvider(OAuthProvider):
     def _connect(self, auth_token):
         with self.exception_handler():
             self.client = dropbox.client.DropboxClient(auth_token)
+            self.dropbox = dropbox.Dropbox(auth_token)
             self.email = self.client.account_info()['email']
         self.credential_manager.set_user_credentials(self.__class__, self.uid, auth_token)
 
@@ -86,6 +87,14 @@ class DropboxProvider(OAuthProvider):
     def put(self, filename, data):
         with self.exception_handler():
             self.client.put_file(filename, data, overwrite=True)
+
+    def get_capacity(self):
+        with self.exception_handler():
+            space_usage = self.dropbox.users_get_space_usage()
+            used_space = space_usage.used
+            total_allocated_space = space_usage.allocation.get_individual().allocated
+
+            return used_space, total_allocated_space
 
     def delete(self, filename):
         with self.exception_handler():
