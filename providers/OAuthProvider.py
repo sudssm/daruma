@@ -7,6 +7,7 @@ class OAuthProvider(BaseProvider):
     Stub for OAuthProviders, defining the flow for connection
     OAuth Providers use the value portion of the CredentialManager (key,value) store to store user tokens
     """
+    _app_credentials = None
 
     @classmethod
     def get_oauth_redirect_url(cls):
@@ -27,6 +28,19 @@ class OAuthProvider(BaseProvider):
             except:
                 failed_ids.append((cls.provider_identifier(), provider_id))
         return providers, failed_ids
+
+    @property
+    def app_credentials(self):
+        """
+        A dictionary with keys 'client_id' and client_secret'
+        """
+        if self._app_credentials is None:
+            try:
+                self._app_credentials = self.credential_manager.get_app_credentials(self.__class__)
+                assert self._app_credentials is not None
+            except AssertionError:
+                raise IOError("No valid app credentials found!")
+        return self._app_credentials
 
     def start_connection(self):
         """

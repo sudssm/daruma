@@ -8,6 +8,7 @@ from StringIO import StringIO
 from requests.exceptions import ReadTimeout
 import json
 
+
 class BoxProvider(OAuthProvider):
     BOX_ROOT_ID = '0'  # The root of the Box system (per Box docs)
     MAX_BOX_LIMIT = 1000  # the maximum number of items returned from a Box request
@@ -25,18 +26,6 @@ class BoxProvider(OAuthProvider):
         self.id_cache, self._email, self._app_credentials = None, None, None
         self.access_token, self.refresh_token = None, None
         self.write_tokens = True
-
-    @property
-    def app_credentials(self):
-        """
-        A dictionary with keys 'client_id' and client_secret'
-        """
-        if self._app_credentials is None:
-            try:
-                self._app_credentials = self.credential_manager.get_app_credentials(self.__class__)
-            except (KeyError, TypeError):
-                raise IOError("No valid app credentials found!")
-        return self._app_credentials
 
     @contextmanager
     def exception_handler(self):
@@ -179,4 +168,3 @@ class BoxProvider(OAuthProvider):
                 raise
             finally:
                 self.id_cache = {}
-

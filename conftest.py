@@ -3,4 +3,7 @@ import shutil
 
 
 def pytest_sessionfinish(session, exitstatus):
-    shutil.rmtree("tmp")
+    try:
+        shutil.rmtree("tmp")
+    except:
+        pass
