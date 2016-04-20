@@ -8,6 +8,9 @@ def build_app():
     """
     def build_app_osx():
         subprocess.call(["python", "setup.py", "py2app"])
+        subprocess.call(["xcodebuild", "-target", "FileSyncClient"], cwd="gui/file_sync_status/osx")
+        subprocess.call(["mkdir", "dist/trustnoone.app/Contents/PlugIns"])
+        subprocess.call(["cp", "-r", "gui/file_sync_status/osx/build/Release/FileSyncClient.appex", "dist/trustnoone.app/Contents/PlugIns/"])
     if sys.platform.startswith('darwin'):
         build_app_osx()
     else:
