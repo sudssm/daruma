@@ -16,18 +16,12 @@ class OAuthProvider(BaseProvider):
                 cls.provider_identifier() + "/finish")
 
     @classmethod
-    def load_cached_providers(cls, credential_manager):
-        credentials = credential_manager.get_user_credentials(cls)
-        providers = []
-        failed_ids = []
-        for provider_id, credential in credentials.items():
-            provider = cls(credential_manager)
-            try:
-                provider._connect(credential)
-                providers.append(provider)
-            except:
-                failed_ids.append((cls.provider_identifier(), provider_id))
-        return providers, failed_ids
+    def load_from_credential(cls, credential_manager, provider_id):
+        credential = credential_manager.get_user_credentials(cls)[provider_id]
+        provider = cls(credential_manager)
+        provider._connect(credential)
+
+        return provider
 
     @property
     def app_credentials(self):

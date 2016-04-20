@@ -1,5 +1,6 @@
 from tools.utils import APP_NAME
 from custom_exceptions import exceptions
+from tools.utils import run_parallel
 
 
 class ProviderStatus:
@@ -22,8 +23,15 @@ class BaseProvider(object):
 
     ROOT_DIR = APP_NAME
 
-    @staticmethod
-    def load_cached_providers(credential_manager):
+    @classmethod
+    def load_from_credential(cls, credential_manager, provider_id):
+        """
+        Attempts to load a single provider with provider_id from the supplied credential manager
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def load_cached_providers(cls, credential_manager):
         """
         Attempts to load all Providers of this type that have user credential stored
         Returns:
@@ -31,7 +39,20 @@ class BaseProvider(object):
             providers: a list of functional Providers
             failed_identifiers: a list of uuids for the accounts that failed to load
         """
-        raise NotImplementedError
+        providers = []
+        failed_ids = []
+
+        def run_load(provider_id):
+            try:
+                provider = cls.load_from_credential(credential_manager, provider_id)
+                providers.append(provider)
+            except:
+                failed_ids.append((cls.provider_identifier(), provider_id))
+
+        credentials = credential_manager.get_user_credentials(cls)
+        run_parallel(run_load, map(lambda provider_id: [provider_id], credentials.keys()))
+
+        return providers, failed_ids
 
     def __init__(self, credential_manager):
         """
