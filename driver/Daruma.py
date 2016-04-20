@@ -362,3 +362,13 @@ class Daruma:
             if can_retry:
                 return self.delete(path)
             raise
+
+    @synchronized
+    def list_all_paths(self):
+        """
+        Returns a generator for the paths to all files and directories in the system.
+        Note that this method reads a cached version of the system manifest and
+        does not re-download it for verification.
+        This method is thread-safe.
+        """
+        return self.file_manager.path_generator()

@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "9A15B41EC7D48BA4101178150F94C1715DF170B0",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "33A082327182EDA59415ED7AECB6EBBEBDB6F753" : 0,
+    "9A15B41EC7D48BA4101178150F94C1715DF170B0" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "76F2B67B-AA90-4CD7-9D80-11ED6BB964F2",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "33A082327182EDA59415ED7AECB6EBBEBDB6F753" : "..",
+    "9A15B41EC7D48BA4101178150F94C1715DF170B0" : "FileSyncStatus\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "FileSyncStatus",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "client\/FileSyncStatus.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/sudssm\/trust-no-one.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "33A082327182EDA59415ED7AECB6EBBEBDB6F753"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/DoronShapiro\/FileSyncStatus.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "9A15B41EC7D48BA4101178150F94C1715DF170B0"
+    }
+  ]
+}

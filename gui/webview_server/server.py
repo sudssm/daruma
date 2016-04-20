@@ -1,24 +1,21 @@
-import sys
 import os
 from flask import Flask, redirect, render_template, request, send_file, jsonify
 import pkg_resources
 from custom_exceptions import exceptions
 import gui
-from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT
+from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT, get_resource_path
 from driver.Daruma import Daruma
 
 
-# Change the static and template folder locations depending on whether we're
-# running in an app and what the platform is.  Py2App sets the sys.frozen
-# attribute, so we're just testing for that now.  For compatibility with other
-# installers, inspect the value of the attribute.
-if getattr(sys, "frozen", None):
-    app = Flask(__name__,
-                static_folder=os.path.join(os.getcwd(), "static"),
-                template_folder=os.path.join(os.getcwd(), "templates"))
-else:
-    app = Flask(__name__)
+app = Flask(__name__,
+            static_folder=get_resource_path("static"),
+            template_folder=get_resource_path("templates"))
 global_app_state = None
+
+
+#########################
+# Primary GUI endpoints #
+#########################
 
 
 @app.route('/app_logo.png')
@@ -27,7 +24,7 @@ def download_logo():
     Serves a large version of the app logo.
     """
     icon_path = os.path.join("icons", "large.png")
-    return send_file(pkg_resources.resource_filename(gui.__name__, icon_path))
+    return send_file(pkg_resources.resource_stream(gui.__name__, icon_path))
 
 
 @app.route('/setup.html')
@@ -232,8 +229,8 @@ def try_provision_instance():
     """
     try:
         global_app_state.daruma = Daruma.provision(global_app_state.providers,
-                                                         len(global_app_state.providers) - 1,
-                                                         len(global_app_state.providers) - 1)
+                                                   len(global_app_state.providers) - 1,
+                                                   len(global_app_state.providers) - 1)
         return jsonify({"success": True})
     except exceptions.FatalOperationFailure as e:
         return jsonify({
@@ -252,6 +249,16 @@ def reprovision():
     global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
     global_app_state.needs_reprovision = False
     return ""
+
+
+@app.route('/iconstatus')
+def get_icon_statuses():
+    try:
+        status_dict = {path: 2 for path in global_app_state.secretbox.list_all_paths()}
+        status_dict[""] = 2
+    except AttributeError:
+        status_dict = {}
+    return jsonify(status_dict)
 
 
 def start_ui_server(native_app, app_state):

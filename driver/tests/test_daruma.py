@@ -239,3 +239,16 @@ def test_extra_providers():
     daruma, extra_providers = Daruma.load(providers)
     assert daruma.file_manager.providers == providers[:3]
     assert sorted(extra_providers) == sorted(providers[3:])
+
+
+def test_list_paths():
+    daruma = Daruma.provision(providers, 2, 2)
+
+    daruma.put("file1", "data1")
+    daruma.put("file2", "data2")
+    daruma.put("dir1/file3", "data3")
+    daruma.mk_dir("dir1/dir2")
+
+    expected_paths = ["file1", "file2", "dir1", "dir1/file3", "dir1/dir2"]
+
+    assert sorted(daruma.list_all_paths()) == sorted(expected_paths)

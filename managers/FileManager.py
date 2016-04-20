@@ -134,7 +134,7 @@ class FileManager:
             # change this when implementing manifest caching
             self.manifest.update_file(filename, codename, size, key)
 
-        failures = run_parallel(duplicate_file, map(lambda file_node: [file_node], self.manifest.generate_files_under("")))
+        failures = run_parallel(duplicate_file, map(lambda (path, node): [node], self.manifest.generate_nodes_under("")))
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
 
@@ -152,6 +152,13 @@ class FileManager:
         failures = run_parallel(delete_codename, map(lambda codename: [codename], old_files))
         if len(failures) > 0:
             raise exceptions.OperationFailure(failures, None)
+
+    def path_generator(self):
+        """
+        Yields the paths for all files and directories in the system.
+        """
+        for node_path, _ in self.manifest.generate_nodes_under(""):
+            yield node_path
 
     def ls(self, path):
         """
