@@ -51,8 +51,7 @@ class BoxProvider(OAuthProvider):
         except Exception:
             raise exceptions.ProviderOperationFailure(self)
         finally:
-            if self.access_token is not None:
-                self._persist_tokens()
+            self._persist_tokens()
 
     def start_connection(self):
         self.oauth = OAuth2(client_id=self.app_credentials["client_id"], client_secret=self.app_credentials["client_secret"])
@@ -90,7 +89,7 @@ class BoxProvider(OAuthProvider):
         self._connect(credentials)
 
     def _persist_tokens(self):
-        if (self.write_tokens):
+        if self.write_tokens and self.access_token is not None:
             user_credentials = {"access_token": self.access_token, "refresh_token": self.refresh_token}
             self.credential_manager.set_user_credentials(self.__class__, self.uid, user_credentials)
         self.write_tokens = False
