@@ -7,6 +7,7 @@ class OAuthProvider(BaseProvider):
     Stub for OAuthProviders, defining the flow for connection
     OAuth Providers use the value portion of the CredentialManager (key,value) store to store user tokens
     """
+    _app_credentials = None
 
     @classmethod
     def get_oauth_redirect_url(cls):

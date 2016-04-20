@@ -169,7 +169,7 @@ class ConfigureLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "DemoServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -331,7 +331,7 @@ class MainLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "DemoServer"
         """
         provider = add_provider(line)
         if provider is None:
