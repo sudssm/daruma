@@ -2,6 +2,7 @@ import onedrivesdk
 from onedrivesdk.error import ErrorCode, OneDriveError
 import pickle
 import json
+import requests
 from contextlib import contextmanager
 from providers.OAuthProvider import OAuthProvider
 from custom_exceptions import exceptions
@@ -111,14 +112,18 @@ class OneDriveProvider(OAuthProvider):
     def get(self, filename):
         with self.exception_handler():
             request = self._get_item(filename).content.request()
-            request.method = "GET"
-            response = request.send()
-            # result is returned in quotes; remove these
-            return response.content
+            self.client.auth_provider.authenticate_request(request)
+            response = requests.get(request.request_url, headers=request._headers)
+
+            # create a response. This will throw appropriate errors as needed
+            onedrivesdk.http_response.HttpResponse(response.status_code, response.headers, response.text)
+
+            return ''.join(response.iter_content())
 
     def put(self, filename, data):
         with self.exception_handler():
             request = self._get_item(filename).content.request()
+            request.append_option(onedrivesdk.options.HeaderOption("Content-Type", "application/octet-stream"))
             self.client.auth_provider.authenticate_request(request)
             self.client.http_provider.send("PUT", request._headers, request.request_url, data=data)
 
