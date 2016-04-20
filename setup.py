@@ -21,8 +21,9 @@ base_setup = dict(
         "appdirs==1.4.0",
         "google-api-python-client==1.4.2",
         "futures==3.0.5",
-        "watchdog==0.8.3",
         "onedrivesdk==1.0.5"
+        "boxsdk==1.5.1",
+        "watchdog==0.8.3"
     ],
     dependency_links=[
         "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@rss#egg=robustsecretsharing-0.1"
