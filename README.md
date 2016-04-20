@@ -1,4 +1,4 @@
-# trust-no-one [![Build Status](https://travis-ci.com/sudssm/trust-no-one.svg?token=9r7x75stRuvJScvvvedh&branch=master)](https://travis-ci.com/sudssm/trust-no-one)
+# Daruma [![Build Status](https://travis-ci.com/sudssm/daruma.svg?token=9r7x75stRuvJScvvvedh&branch=master)](https://travis-ci.com/sudssm/daruma)
 
 ## Installation
 
@@ -13,7 +13,7 @@ pip install --user -e . --process-dependency-links robustsecretsharing
 To run the command line REPL:
 
 ```
-python driver/sb_cli.py
+python driver/daruma_cli.py
 ```
 
 ### GUI App (OSX only)

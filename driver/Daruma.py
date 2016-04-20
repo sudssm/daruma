@@ -12,11 +12,11 @@ from tools.encryption import generate_key
 from tools.utils import generate_random_name
 
 
-class SecretBox:
+class Daruma:
 
     def __init__(self, bootstrap_manager, file_manager, resilience_manager):
         """
-        Construct a new SecretBox object
+        Construct a new Daruma object
         NB: In normal usage, one should use the static load or provision methods
         """
         self.lock = threading.RLock()
@@ -46,18 +46,18 @@ class SecretBox:
     @staticmethod
     def provision(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
         """
-        Create a new SecretBox.
+        Create a new Daruma.
         Warning: Deletes all files on all providers! Even if a FatalOperationFailure is thrown, files on all providers will be unstable or deleted.
         Args:
             providers: a list of providers
             bootstrap_reconstruction_threshold: the number of providers that need to be up to recover the key. Between 1 and len(providers)-1, inclusive
             file_reconstruction_threshold: the number of providers that need to be up to read files, given the key. Between 1 and len(providers)-1, inclusive
-        Returns a constructed SecretBox object
+        Returns a constructed Daruma object
         Raises:
             ValueError if arguments are invalid
             FatalOperationFailure if provisioning failed
         """
-        SecretBox._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
+        Daruma._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         # make a copy of providers so that changes to the external list doesn't affect this one
         providers = providers[:]
 
@@ -85,15 +85,15 @@ class SecretBox:
 
         file_manager = FileManager(providers, len(providers), file_reconstruction_threshold, master_key, manifest_name, setup=True)
         resilience_manager = ResilienceManager(providers, file_manager, bootstrap_manager)
-        return SecretBox(bootstrap_manager, file_manager, resilience_manager)
+        return Daruma(bootstrap_manager, file_manager, resilience_manager)
 
     @staticmethod
     def load(providers):
         """
-        Load an existing SecretBox
+        Load an existing Daruma
         Args: providers, a list of providers
-        Returns (secretbox, extra_providers)
-            secretbox: a constructed SecretBox object
+        Returns (Daruma, extra_providers)
+            Daruma: a constructed Daruma object
             extra_providers: a list of providers that were provided but not part of the loaded installation
         The client should decide whether to discard the extra_providers or to reprovision with them
         Raises FatalOperationFailure
@@ -117,9 +117,9 @@ class SecretBox:
         if len(failures) > 0:
             resilience_manager.diagnose_and_repair_bootstrap(failures)
 
-        secretbox = SecretBox(bootstrap_manager, file_manager, resilience_manager)
-        extra_providers = list(set(providers) - set(secretbox.file_manager.providers))
-        return secretbox, extra_providers
+        daruma = Daruma(bootstrap_manager, file_manager, resilience_manager)
+        extra_providers = list(set(providers) - set(daruma.file_manager.providers))
+        return daruma, extra_providers
 
     # TODO: update with other bad cases
     def _verify_parameters(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
@@ -189,7 +189,7 @@ class SecretBox:
         Raises:
             ValueError if arguments are invalid
         """
-        SecretBox._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
+        Daruma._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         # do nothing if params are the same
         if providers == self.file_manager.providers and \
            bootstrap_reconstruction_threshold == self.bootstrap_manager.bootstrap_reconstruction_threshold and \

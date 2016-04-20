@@ -1,5 +1,5 @@
 from tools.utils import parse_url
-from OAuthProvider import OAuthProvider
+from providers.OAuthProvider import OAuthProvider
 import httplib2
 from contextlib import contextmanager
 from apiclient import discovery, http
@@ -46,11 +46,8 @@ class GoogleDriveProvider(OAuthProvider):
             raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
-        try:
-            credentials = self.credential_manager.get_app_credentials(self.__class__)
-            client_id, client_secret = credentials["client_id"], credentials["client_secret"]
-        except (KeyError, TypeError):
-            raise IOError("No valid app credentials found!")
+        credentials = self.app_credentials
+        client_id, client_secret = credentials["client_id"], credentials["client_secret"]
 
         with self.exception_handler():
             self.flow = client.OAuth2WebServerFlow(client_id, client_secret, self.SCOPE, redirect_uri="http://localhost")

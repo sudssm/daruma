@@ -4,7 +4,7 @@ Command line interface for Daruma
 from providers.TestProvider import TestProviderState
 from providers.BaseProvider import ProviderStatus
 from managers.ProviderManager import ProviderManager
-from driver.SecretBox import SecretBox
+from driver.Daruma import Daruma
 from custom_exceptions import exceptions
 from contextlib import contextmanager
 import traceback
@@ -16,7 +16,7 @@ import colorama
 provider_manager = ProviderManager()
 oauth_providers, unauth_providers = provider_manager.get_provider_classes_by_kind()
 providers = []
-secret_box = None
+daruma = None
 
 
 @contextmanager
@@ -31,7 +31,7 @@ def exception_handler():
         print "Operation Failed! check status"
     except exceptions.ReadOnlyMode:
         print "The system is in read only mode!"
-        print "You are missing the following provider:", secret_box.get_missing_providers()
+        print "You are missing the following provider:", daruma.get_missing_providers()
         print "To be able to write, either 'add' more providers, or 'reprovision' with the existing ones."
     except:
         print traceback.format_exc()
@@ -47,7 +47,7 @@ def pp_providers():
 def add_provider(line):
     """
     add <provider type>
-    provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "DemoServer"
+    provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "DemoServer"
     """
     line = line.strip().lower()
 
@@ -163,13 +163,13 @@ class ConfigureLoop(cmd.Cmd):
 
     def postcmd(self, stop, line):
         print "Loaded providers:", pp_providers()
-        # we're done with this section when secretbox is defined
-        return secret_box is not None
+        # we're done with this section when Daruma is defined
+        return daruma is not None
 
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "DemoServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -199,12 +199,12 @@ class ConfigureLoop(cmd.Cmd):
         """
         Attempt to load Daruma from the added providers
         """
-        global secret_box
+        global daruma
         # if we were able to load at least 2 providers, attempt to load an existing instance
         # 2 because we may be trying to load a 3-provider instance in read only mode
         try:
             assert len(providers) >= 2
-            secret_box, extra_providers = SecretBox.load(providers)
+            daruma, extra_providers = Daruma.load(providers)
             print "Loaded an existing installation"
             if len(extra_providers) > 0:
                 print "Some providers were not part of the loaded installation:", map(lambda provider: provider.uuid, extra_providers)
@@ -221,12 +221,12 @@ class ConfigureLoop(cmd.Cmd):
         """
         Attempt to start a new Daruma on the added providers
         """
-        global secret_box
+        global daruma
         # if we were able to load at least 3 providers, attempt to load an existing instance
         try:
             assert len(providers) >= 3
             threshold = len(providers) - 1
-            secret_box = SecretBox.provision(providers, threshold, threshold)
+            daruma = Daruma.provision(providers, threshold, threshold)
             print "Created a new installation"
         except AssertionError:
             print "Looks like you need to add more providers! Type 'add' to get started."
@@ -236,12 +236,12 @@ class ConfigureLoop(cmd.Cmd):
 
 class MainLoop(cmd.Cmd):
     """
-    Main loop to interact with SecretBox
+    Main loop to interact with Daruma
     """
     prompt = "\nDaruma> "
 
     def preloop(self):
-        missing = secret_box.get_missing_providers()
+        missing = daruma.get_missing_providers()
         if len(missing) > 0:
             print "The system is in read only mode!"
             print "You are missing the following provider:", missing
@@ -252,7 +252,7 @@ class MainLoop(cmd.Cmd):
         ls [target]
         """
         with exception_handler():
-            files = secret_box.ls(target)
+            files = daruma.ls(target)
 
             if len(files) == 0:
                 print "EMPTY"
@@ -274,7 +274,7 @@ class MainLoop(cmd.Cmd):
         new_path = line[1]
 
         with exception_handler():
-            secret_box.move(old_path, new_path)
+            daruma.move(old_path, new_path)
 
     def do_mkdir(self, path):
         """
@@ -285,7 +285,7 @@ class MainLoop(cmd.Cmd):
             return
 
         with exception_handler():
-            secret_box.mk_dir(path)
+            daruma.mk_dir(path)
 
     def do_get(self, path):
         """
@@ -296,7 +296,7 @@ class MainLoop(cmd.Cmd):
             return
 
         with exception_handler():
-            print secret_box.get(path)
+            print daruma.get(path)
 
     def do_put(self, line):
         """
@@ -309,7 +309,7 @@ class MainLoop(cmd.Cmd):
         name = line[0]
         data = line[1]
         with exception_handler():
-            secret_box.put(name, data)
+            daruma.put(name, data)
 
     def do_del(self, path):
         """
@@ -320,7 +320,7 @@ class MainLoop(cmd.Cmd):
             return
 
         with exception_handler():
-            secret_box.delete(path)
+            daruma.delete(path)
 
     def do_status(self, line):
         """
@@ -331,7 +331,7 @@ class MainLoop(cmd.Cmd):
     def do_add(self, line):
         """
         add <provider type>
-        provider_type can be one of "Dropbox", "GoogleDrive", "Local", "Test", "TestServer"
+        provider_type can be one of "Dropbox", "GoogleDrive", "Box", "OneDrive", "Local", "Test", "DemoServer"
         """
         provider = add_provider(line)
         if provider is None:
@@ -343,7 +343,7 @@ class MainLoop(cmd.Cmd):
 
         providers.append(provider)
 
-        if secret_box.add_missing_provider(provider):
+        if daruma.add_missing_provider(provider):
             print "Thanks for adding the missing provider! You should be out of read only mode."
             return
 
@@ -372,7 +372,7 @@ class MainLoop(cmd.Cmd):
         """
         with exception_handler():
             threshold = len(providers) - 1
-            secret_box.reprovision(providers, threshold, threshold)
+            daruma.reprovision(providers, threshold, threshold)
 
             print "Successfully reprovisioned"
 

@@ -1,4 +1,4 @@
-# Exceptions used in SecretBox
+# Exceptions used in Daruma
 
 
 # general exceptions
