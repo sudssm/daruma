@@ -33,6 +33,7 @@ class FileManager:
         if setup:
             self.manifest = Manifest(self.providers)
             self.distribute_manifest()
+            self.missing_providers = []
         # else:
         # self.load_manifest()
 
@@ -153,7 +154,7 @@ class FileManager:
                 errors.append(e)
 
         if len(errors) > 0:
-            raise exceptions.OperationFailure(errors)
+            raise exceptions.OperationFailure(errors, None)
 
     def ls(self, path):
         """
