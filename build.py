@@ -15,8 +15,5 @@ def build_app():
         sys.exit(1)
 
 
-def launch_build():
-    build_app()
-
 if __name__ == "__main__":
-    launch_build()
+    build_app()
