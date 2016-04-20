@@ -8,6 +8,7 @@ from providers.TestProvider import TestProvider
 from providers.OAuthProvider import OAuthProvider
 from providers.UnauthenticatedProvider import UnauthenticatedProvider
 from demo_provider.client.TestServerProvider import TestServerProvider
+from tools.utils import run_parallel
 
 
 class ProviderManager():
@@ -53,8 +54,13 @@ class ProviderManager():
         def flatten(list_of_lists):
             return [item for sublist in list_of_lists for item in sublist]
 
+        providers_and_errors = []
+
+        def load_cached_by_class(provider_class):
+            providers_and_errors.append(provider_class.load_cached_providers(self.credential_manager))
+
         provider_classes = self.get_provider_classes()
-        providers_and_errors = map(lambda provider_class: provider_class.load_cached_providers(self.credential_manager), provider_classes)
+        run_parallel(load_cached_by_class, map(lambda provider_class: [provider_class], provider_classes))
 
         return tuple(map(flatten, zip(*providers_and_errors)))
 

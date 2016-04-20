@@ -3,6 +3,7 @@ from managers.CredentialManager import CredentialManager
 from custom_exceptions import exceptions
 from demo_provider.server import app
 from threading import Thread
+import zlib
 import pytest
 
 cm = CredentialManager()
@@ -33,8 +34,8 @@ def test_wipe():
 def test_roundtrip():
     FS = TestServerProvider(cm)
     FS.connect("http://127.0.0.1:5000")
-    FS.put("file1", "abc")
-    assert FS.get("file1") == "abc"
+    FS.put("file1", zlib.compress("abc"))
+    assert zlib.decompress(FS.get("file1")) == "abc"
 
 
 def test_exception_has_provider():

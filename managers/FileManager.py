@@ -3,7 +3,7 @@
 from custom_exceptions import exceptions
 from Distributor import FileDistributor
 from manifest import Manifest
-from tools.utils import generate_random_name
+from tools.utils import generate_random_name, run_parallel
 # TODO cache the manifest intelligently
 
 
@@ -33,6 +33,7 @@ class FileManager:
         if setup:
             self.manifest = Manifest(self.providers)
             self.distribute_manifest()
+            self.missing_providers = []
         # else:
         # self.load_manifest()
 
@@ -113,23 +114,18 @@ class FileManager:
         Constructs a new FileDistributor object with the new parameters
         NB: during the operation, the amount of space used on each provider doubles
         """
-        errors = []
         old_files = []
 
         # we use num_providers = len(providers) here, because we want to reprovision with all current providers
         new_distributor = FileDistributor(self.providers, len(self.providers), self.file_reconstruction_threshold)
 
-        for _, file_node in self.manifest.generate_nodes_under(""):
+        def duplicate_file(file_node):
             filename = file_node.name
             old_codename = file_node.code_name
             old_key = file_node.key
             size = file_node.size
 
-            try:
-                data = self.distributor.get(old_codename, old_key)
-            except exceptions.OperationFailure as e:
-                data = e.result
-                errors.append(e)
+            data = self.distributor.get(old_codename, old_key)
             old_files.append(old_codename)
 
             codename = generate_random_name()
@@ -137,6 +133,10 @@ class FileManager:
             # TODO this changes the manifest without being sure that distributor changes will work
             # change this when implementing manifest caching
             self.manifest.update_file(filename, codename, size, key)
+
+        failures = run_parallel(duplicate_file, map(lambda (path, node): [node], self.manifest.generate_nodes_under("")))
+        if len(failures) > 0:
+            raise exceptions.FatalOperationFailure(failures)
 
         old_distributor = self.distributor
         self.distributor = new_distributor
@@ -146,14 +146,12 @@ class FileManager:
 
         # TODO doing this step at the end means that we double in size
         # garbage collect
-        for codename in old_files:
-            try:
-                old_distributor.delete(codename)
-            except exceptions.OperationFailure as e:
-                errors.append(e)
+        def delete_codename(codename):
+            old_distributor.delete(codename)
 
-        if len(errors) > 0:
-            raise exceptions.OperationFailure(errors)
+        failures = run_parallel(delete_codename, map(lambda codename: [codename], old_files))
+        if len(failures) > 0:
+            raise exceptions.OperationFailure(failures, None)
 
     def path_generator(self):
         """
