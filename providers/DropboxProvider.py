@@ -16,11 +16,6 @@ class DropboxProvider(OAuthProvider):
         return "Dropbox"
 
     def __init__(self, credential_manager):
-        """
-        Initialize a dropbox provider.
-        Not functional until start_connection and finish_connection are called.
-        Args: credential_manager, a credential_manager with information about DropboxProviders
-        """
         super(DropboxProvider, self).__init__(credential_manager)
 
     @contextmanager
