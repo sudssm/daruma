@@ -3,6 +3,7 @@ from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from contextlib import contextmanager
 from struct import pack
 from random import randint, random, randrange
+import time
 
 
 class TestProviderState:
@@ -37,6 +38,8 @@ class TestProvider(LocalFilesystemProvider):
 
     @contextmanager
     def exception_handler(self, check_failing=True):
+        time.sleep(1)
+        print "done"
         self.state_timer -= 1
         if self.state_timer == 0:
             self.state = TestProviderState.ACTIVE
@@ -50,10 +53,12 @@ class TestProvider(LocalFilesystemProvider):
         yield
 
     def connect(self, provider_path):
+        print "connect"
         with self.exception_handler(check_failing=False):
             super(TestProvider, self).connect(provider_path)
 
     def get(self, filename):
+        print "get", filename
         with self.exception_handler():
             result = super(TestProvider, self).get(filename)
         if self.state == TestProviderState.CORRUPTING:
@@ -70,14 +75,17 @@ class TestProvider(LocalFilesystemProvider):
             return result
 
     def put(self, filename, data):
+        print "put", filename
         with self.exception_handler():
             return super(TestProvider, self).put(filename, data)
 
     def delete(self, filename):
+        print "delete", filename
         with self.exception_handler():
             return super(TestProvider, self).delete(filename)
 
     def wipe(self):
+        print "wipe"
         with self.exception_handler():
             return super(TestProvider, self).wipe()
 
