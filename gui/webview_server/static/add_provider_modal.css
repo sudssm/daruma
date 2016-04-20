@@ -13,6 +13,7 @@ body {
 h2 {
     font-weight: normal;
     font-size: 1.2em;
+    margin-top: 15px;
 }
 
 #provider-chooser-box {
@@ -23,6 +24,7 @@ h2 {
     width: 100%;
     height: initial;
     margin: 0;
+    margin-top: 10px;
     padding: 0;
     display: block;
     overflow: scroll;
@@ -52,6 +54,9 @@ h2 {
     height: 100%;
     width: 100%;
     display: block;
+    text-decoration: none;
+    color: DimGray;
+    font-weight: bold;
 }
 
 #provider-login-frame {
