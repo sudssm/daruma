@@ -3,7 +3,6 @@ from providers.LocalFilesystemProvider import LocalFilesystemProvider
 from contextlib import contextmanager
 from struct import pack
 from random import randint, random, randrange
-import time
 
 
 class TestProviderState:
@@ -38,7 +37,6 @@ class TestProvider(LocalFilesystemProvider):
 
     @contextmanager
     def exception_handler(self, check_failing=True):
-        time.sleep(1)
         print "done"
         self.state_timer -= 1
         if self.state_timer == 0:
