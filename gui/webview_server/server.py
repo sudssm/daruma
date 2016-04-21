@@ -212,8 +212,9 @@ def remove_provider():
     except KeyError:
         return ""
 
-    # we removed a provider, should reprovision
-    global_app_state.needs_reprovision = True
+    if global_app_state.daruma is not None:
+        # we removed a provider, should reprovision
+        global_app_state.needs_reprovision = True
     return ""
 
 

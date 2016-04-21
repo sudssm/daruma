@@ -77,14 +77,17 @@ h2 {
     padding-right: 20px;
     padding-top: 20px;
 }
-#header.status-green{
+.status-green{
     background-color: #65e765;
+    color: #65e765;
 }
-#header.status-yellow{
+.status-yellow{
     background-color: goldenrod;
+    color: goldenrod;
 }
-#header.status-red{
+.status-red{
     background-color: #FF7878;
+    color: red;
 }
 #app-logo {
     height: 100px;
@@ -132,3 +135,34 @@ h2 {
 }
 
 /* PROVIDERS */
+#providers {
+    width: 700px;
+    padding-left: 20px;
+    overflow: auto;
+}
+.provider-tile {
+    width: 180px;
+    height: 200px;
+    float: left;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 25px;
+    text-align: center;
+}
+.provider-icon-square {
+    height: 70px;
+}
+.provider-name {
+    margin-top: 0;
+    font-size: 20pt;
+    font-weight: bold;
+    color: #2E76BE;
+}
+.provider-username {
+    color: white;
+    font-size: 10pt;
+}
+.provider-status {
+    padding-top: 25px;
+    color: #555555;
+}
