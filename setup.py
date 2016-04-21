@@ -19,7 +19,7 @@ base_setup = dict(
         "colorama==0.2.5",
         "dropbox==4.0",
         "appdirs==1.4.0",
-        "google-api-python-client==1.4.2",
+        "google-api-python-client==1.5.0",
         "futures==3.0.5",
         "onedrivesdk==1.0.5",
         "boxsdk==1.5.1",
