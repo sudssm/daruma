@@ -1,8 +1,31 @@
+import fnmatch
 import os
 from contextlib import contextmanager
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 from custom_exceptions import exceptions
+
+REJECT_PATTERNS = ["*/.DS_Store"]
+
+
+@contextmanager
+def daruma_error_handler():
+    try:
+        yield
+    except exceptions.FatalOperationFailure:
+        # TODO
+        print "fatal operation failure"
+    except exceptions.ReadOnlyMode:
+        # TODO
+        print "read only mode"
+    except exceptions.InvalidPath:
+        # TODO
+        print "invalid path"
+    except exceptions.FileNotFound:
+        # TODO
+        print "file not found"
+    finally:
+        print "filesystem event finished"
 
 
 class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
@@ -13,27 +36,18 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
     def __init__(self, path, app_state):
         self.path = path
         self.app_state = app_state
-        super(DarumaFileSystemEventHandler, self).__init__(ignore_patterns=[path, "*/.DS_Store"])
+        ignore_patterns = REJECT_PATTERNS[:]
+        ignore_patterns.append(path)
+        super(DarumaFileSystemEventHandler, self).__init__(ignore_patterns=ignore_patterns)
 
     @contextmanager
     def get_safe_daruma(self):
-        try:
-            yield self.app_state.daruma
-        except AttributeError:
-            # daruma was None due to not being initialized yet
-            pass
-        except exceptions.FatalOperationFailure:
-            # TODO
-            print "fatal operation failure"
-        except exceptions.ReadOnlyMode:
-            # TODO
-            print "read only mode"
-        except exceptions.InvalidPath:
-            # TODO
-            print "invalid path"
-        except exceptions.FileNotFound:
-            # TODO
-            print "file not found"
+        with daruma_error_handler():
+            try:
+                yield self.app_state.daruma
+            except AttributeError:
+                # daruma was None due to not being initialized yet
+                pass
 
     def sanitize(self, path):
         """
@@ -106,6 +120,8 @@ class FilesystemWatcher():
             path: the file path to recursively watch for changes on.
             app_state: the currently ApplicationState instance.
         """
+        self.path = path
+        self.app_state = app_state
         event_handler = DarumaFileSystemEventHandler(path, app_state)
         self.observer = Observer()
         self.observer.schedule(event_handler, path, recursive=True)
@@ -122,3 +138,26 @@ class FilesystemWatcher():
         """
         self.observer.stop()
         self.observer.join()
+
+    def bulk_update_from_filesystem(self):
+        def to_daruma_path(system_path):
+            return system_path[len(self.path) + 1:]
+
+        def path_is_allowed(path):
+            for pattern in REJECT_PATTERNS:
+                if fnmatch.fnmatch(path, pattern):
+                    return False
+            return True
+        if self.app_state.daruma is not None:
+            daruma = self.app_state.daruma
+            with daruma_error_handler():
+                all_paths = set(daruma.list_all_paths())
+                for dirpath, dirnames, filenames in os.walk(self.path):
+                    for filename in filenames:
+                        system_path = os.path.join(dirpath, filename)
+                        if not path_is_allowed(system_path):
+                            continue
+                        daruma_path = to_daruma_path(system_path)
+                        if daruma_path not in all_paths:
+                            with open(system_path) as src_file:
+                                daruma.put(to_daruma_path(system_path), src_file.read())

@@ -22,6 +22,7 @@ class ApplicationState(object):
         self.provider_manager = ProviderManager()
         self.providers = []
         self.needs_reprovision = False
+        self.filesystem_watcher = None
 
 
 def platform_specific_setup():
@@ -52,15 +53,16 @@ def launch_gui(app_state):
 
     # Start filesystem watcher
     make_app_folder()
-    filesystem_watcher = FilesystemWatcher(get_app_folder(), app_state)
-    filesystem_watcher_thread = threading.Thread(target=filesystem_watcher.start(),
+    app_state.filesystem_watcher = FilesystemWatcher(get_app_folder(), app_state)
+    app_state.filesystem_watcher.bulk_update_from_filesystem()
+    filesystem_watcher_thread = threading.Thread(target=app_state.filesystem_watcher.start(),
                                                  name="filesytem_watcher_thread")
     filesystem_watcher_thread.daemon = True
     filesystem_watcher_thread.start()
 
     # Start native UI
     app_menu.MainLoop()
-    filesystem_watcher.stop()
+    app_state.filesystem_watcher.stop()
 
 
 if __name__ == "__main__":
