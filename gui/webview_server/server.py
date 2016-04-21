@@ -11,6 +11,7 @@ app = Flask(__name__,
             static_folder=get_resource_path("static"),
             template_folder=get_resource_path("templates"))
 global_app_state = None
+global_native_app = None
 
 
 #########################
@@ -225,6 +226,8 @@ def try_provision_instance():
         global_app_state.daruma = Daruma.provision(global_app_state.providers,
                                                    len(global_app_state.providers) - 1,
                                                    len(global_app_state.providers) - 1)
+        global_native_app.mark_setup_complete()
+        global_app_state.filesystem_watcher.bulk_update_filesystem()
         return jsonify({"success": True})
     except exceptions.FatalOperationFailure as e:
         return jsonify({
@@ -266,4 +269,6 @@ def start_ui_server(native_app, app_state):
     global global_app_state
     global_app_state = app_state
     global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
+    global global_native_app
+    global_native_app = native_app
     app.run(host=INTERNAL_SERVER_HOST, port=INTERNAL_SERVER_PORT, debug=True, use_reloader=False)

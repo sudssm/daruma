@@ -268,6 +268,16 @@ def test_remove_provider_and_decrement_k():
     assert excinfo.value.result == "data"
 
 
+def test_get_directory():
+    FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
+    FM.load_manifest()
+
+    FM.mk_dir("dir1")
+
+    with pytest.raises(exceptions.FileNotFound):
+        FM.get("dir1")
+
+
 def test_path_generator():
     FM = FileManager(providers, len(providers), 3, master_key, manifest_name, setup=True)
     FM.load_manifest()

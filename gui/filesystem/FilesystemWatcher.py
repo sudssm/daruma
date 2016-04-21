@@ -1,8 +1,31 @@
+import fnmatch
 import os
 from contextlib import contextmanager
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 from custom_exceptions import exceptions
+
+REJECT_PATTERNS = ["*/.DS_Store"]
+
+
+@contextmanager
+def daruma_error_handler():
+    try:
+        yield
+    except exceptions.FatalOperationFailure:
+        # TODO
+        print "fatal operation failure"
+    except exceptions.ReadOnlyMode:
+        # TODO
+        print "read only mode"
+    except exceptions.InvalidPath:
+        # TODO
+        print "invalid path"
+    except exceptions.FileNotFound:
+        # TODO
+        print "file not found"
+    finally:
+        print "filesystem event finished"
 
 
 class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
@@ -13,27 +36,18 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
     def __init__(self, path, app_state):
         self.path = path
         self.app_state = app_state
-        super(DarumaFileSystemEventHandler, self).__init__(ignore_patterns=[path, "*/.DS_Store"])
+        ignore_patterns = REJECT_PATTERNS[:]
+        ignore_patterns.append(path)
+        super(DarumaFileSystemEventHandler, self).__init__(ignore_patterns=ignore_patterns)
 
     @contextmanager
     def get_safe_daruma(self):
-        try:
-            yield self.app_state.daruma
-        except AttributeError:
-            # daruma was None due to not being initialized yet
-            pass
-        except exceptions.FatalOperationFailure:
-            # TODO
-            print "fatal operation failure"
-        except exceptions.ReadOnlyMode:
-            # TODO
-            print "read only mode"
-        except exceptions.InvalidPath:
-            # TODO
-            print "invalid path"
-        except exceptions.FileNotFound:
-            # TODO
-            print "file not found"
+        with daruma_error_handler():
+            try:
+                yield self.app_state.daruma
+            except AttributeError:
+                # daruma was None due to not being initialized yet
+                pass
 
     def sanitize(self, path):
         """
@@ -106,6 +120,8 @@ class FilesystemWatcher():
             path: the file path to recursively watch for changes on.
             app_state: the currently ApplicationState instance.
         """
+        self.path = path
+        self.app_state = app_state
         event_handler = DarumaFileSystemEventHandler(path, app_state)
         self.observer = Observer()
         self.observer.schedule(event_handler, path, recursive=True)
@@ -122,3 +138,49 @@ class FilesystemWatcher():
         """
         self.observer.stop()
         self.observer.join()
+
+    def bulk_update_filesystem(self):
+        """
+        Syncs Daruma state with filesystem state
+        """
+        def to_daruma_path(system_path):
+            return system_path[len(self.path) + 1:]
+
+        def to_system_path(daruma_path):
+            return os.path.join(self.path, daruma_path)
+
+        def path_is_allowed(path):
+            for pattern in REJECT_PATTERNS:
+                if fnmatch.fnmatch(path, pattern):
+                    return False
+            return True
+        if self.app_state.daruma is not None:
+            daruma = self.app_state.daruma
+            with daruma_error_handler():
+                all_paths = set(daruma.list_all_paths())
+
+                # First upload new files
+                for dirpath, dirnames, filenames in os.walk(self.path):
+                    for filename in filenames:
+                        system_path = os.path.join(dirpath, filename)
+                        if not path_is_allowed(system_path):
+                            continue
+                        daruma_path = to_daruma_path(system_path)
+                        if daruma_path not in all_paths:
+                            with open(system_path) as src_file:
+                                daruma.put(to_daruma_path(system_path), src_file.read())
+
+                # Then download existing files
+                for filepath in all_paths:
+                    system_path = to_system_path(filepath)
+                    if not os.path.exists(system_path):
+                        system_parent = os.path.dirname(system_path)
+                        if not os.path.isdir(system_parent):
+                            os.makedirs(system_parent)
+                        try:
+                            file_contents = daruma.get(filepath)
+                        except exceptions.FileNotFound:
+                            pass
+                        else:
+                            with open(system_path, "w") as dst_file:
+                                dst_file.write(file_contents)
