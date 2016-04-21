@@ -54,6 +54,7 @@ if sys.platform == "darwin":
         data_files=["gui/webview_server/templates", 'gui/webview_server/static'],
         options={
             "py2app": {
+                "iconfile": "gui/icons/daruma.icns",
                 "optimize": 2,
                 "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib', 'onedrivesdk'],
                 "plist": {

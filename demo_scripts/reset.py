@@ -4,6 +4,7 @@ from demo_provider.client.TestServerProvider import TestServerProvider
 from managers.ProviderManager import ProviderManager
 from managers.CredentialManager import CredentialManager
 from custom_exceptions import exceptions
+from tools.utils import run_parallel
 
 def main(args):
    provider_manager = ProviderManager()
@@ -12,11 +13,12 @@ def main(args):
 
    providers, errors = provider_manager.load_all_providers_from_credentials()
 
-   for provider in providers:
+   def wipe(provider):
       try:
-         provider.wipe()
+        provider.wipe()
       except Exception:
          print "failed to wipe provider: " + provider.provider_name()
+   run_parallel(wipe, map(lambda provider: [provider], providers))
 
    behavior = args[0]
    cm.clear_user_credentials(provider_class=None, account_identifier=None)  # clear the file

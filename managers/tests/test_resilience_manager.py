@@ -87,8 +87,8 @@ def test_wiped_provider():
 
 def test_temporary_offline_put():
     daruma = Daruma.provision(providers, 3, 3)
-    # failing for 5 turns
-    providers[0].set_state(TestProviderState.FAILING, 5)
+    # failing for 2 turns
+    providers[0].set_state(TestProviderState.FAILING, 2)
     daruma.put("test", "data")
 
     assert daruma.get("test") == "data"

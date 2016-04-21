@@ -34,14 +34,6 @@ body {
     text-align: initial;
 }
 
-.added-provider-name {
-    font-weight: bold;
-}
-
-.added-username {
-    color: #555555;
-}
-
 .tooltip {
     position: relative;
 }

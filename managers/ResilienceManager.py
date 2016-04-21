@@ -2,7 +2,7 @@ from custom_exceptions import exceptions
 from tools.encryption import generate_key
 from tools.utils import generate_random_name
 from managers.BootstrapManager import Bootstrap
-from providers.BaseProvider import ProviderStatus
+from providers.BaseProvider import ProviderStatus, BaseProvider
 
 
 class ResilienceManager:
@@ -20,8 +20,8 @@ class ResilienceManager:
         """
         Update the provider to reflect a successful operation
         """
-        # 1 success should bring the provider out of red
-        provider.score = self.DECAY_RATE * provider.score + (1-self.DECAY_RATE)
+        # 1 success should bring the provider out of red, and never over 1
+        provider.score = min(1, max(self.DECAY_RATE * provider.score + (1-self.DECAY_RATE), BaseProvider.RED_THRESHOLD + .1))
 
     def log_success(self):
         """

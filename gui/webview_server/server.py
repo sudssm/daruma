@@ -210,10 +210,11 @@ def remove_provider():
         del global_app_state.provider_uuids_map[(identifier, uid)]
         global_app_state.providers.remove(provider)
     except KeyError:
-        return ""
+        return "remove key error"
 
-    # we removed a provider, should reprovision
-    global_app_state.needs_reprovision = True
+    if global_app_state.daruma is not None:
+        # we removed a provider, should reprovision
+        global_app_state.needs_reprovision = True
     return ""
 
 
@@ -240,7 +241,9 @@ def try_provision_instance():
 def reprovision():
     try:
         global_app_state.daruma.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
-    except:
+    except Exception as e:
+        print "reprovision failed"
+        print e
         pass
     global_app_state.providers = global_app_state.daruma.get_providers()
     global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}
