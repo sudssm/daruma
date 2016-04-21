@@ -139,9 +139,15 @@ class FilesystemWatcher():
         self.observer.stop()
         self.observer.join()
 
-    def bulk_update_from_filesystem(self):
+    def bulk_update_filesystem(self):
+        """
+        Syncs Daruma state with filesystem state
+        """
         def to_daruma_path(system_path):
             return system_path[len(self.path) + 1:]
+
+        def to_system_path(daruma_path):
+            return os.path.join(self.path, daruma_path)
 
         def path_is_allowed(path):
             for pattern in REJECT_PATTERNS:
@@ -152,6 +158,8 @@ class FilesystemWatcher():
             daruma = self.app_state.daruma
             with daruma_error_handler():
                 all_paths = set(daruma.list_all_paths())
+
+                # First upload new files
                 for dirpath, dirnames, filenames in os.walk(self.path):
                     for filename in filenames:
                         system_path = os.path.join(dirpath, filename)
@@ -161,3 +169,18 @@ class FilesystemWatcher():
                         if daruma_path not in all_paths:
                             with open(system_path) as src_file:
                                 daruma.put(to_daruma_path(system_path), src_file.read())
+
+                # Then download existing files
+                for filepath in all_paths:
+                    system_path = to_system_path(filepath)
+                    if not os.path.exists(system_path):
+                        system_parent = os.path.dirname(system_path)
+                        if not os.path.isdir(system_parent):
+                            os.makedirs(system_parent)
+                        try:
+                            file_contents = daruma.get(filepath)
+                        except exceptions.FileNotFound:
+                            pass
+                        else:
+                            with open(system_path, "w") as dst_file:
+                                dst_file.write(file_contents)

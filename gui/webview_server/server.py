@@ -227,7 +227,7 @@ def try_provision_instance():
                                                    len(global_app_state.providers) - 1,
                                                    len(global_app_state.providers) - 1)
         global_native_app.mark_setup_complete()
-        global_app_state.filesystem_watcher.bulk_update_from_filesystem()
+        global_app_state.filesystem_watcher.bulk_update_filesystem()
         return jsonify({"success": True})
     except exceptions.FatalOperationFailure as e:
         return jsonify({

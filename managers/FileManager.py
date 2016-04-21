@@ -279,7 +279,11 @@ class FileManager:
         except exceptions.InvalidPath:
             raise exceptions.FileNotFound
 
-        codename = node.code_name
+        try:
+            codename = node.code_name
+        except AttributeError:
+            # This was a directory
+            raise exceptions.FileNotFound
         key = node.key
 
         return self.distributor.get(codename, key)

@@ -54,7 +54,7 @@ def launch_gui(app_state):
     # Start filesystem watcher
     make_app_folder()
     app_state.filesystem_watcher = FilesystemWatcher(get_app_folder(), app_state)
-    app_state.filesystem_watcher.bulk_update_from_filesystem()
+    app_state.filesystem_watcher.bulk_update_filesystem()
     filesystem_watcher_thread = threading.Thread(target=app_state.filesystem_watcher.start(),
                                                  name="filesytem_watcher_thread")
     filesystem_watcher_thread.daemon = True
