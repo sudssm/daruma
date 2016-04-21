@@ -154,10 +154,10 @@ class FileDistributor:
         data, bad_shares = self._recover(shares, key)
 
         for bad_share in bad_shares:
-            failures.append(exceptions.InvalidShareFailure(shares_map[bad_share]))
+            failures.append(exceptions.InvalidShareFailure(shares_map[bad_share]), "distributor invalid share")
 
         if data is None:
-            raise exceptions.FatalOperationFailure(failures)
+            raise exceptions.FatalOperationFailure(failures, "data was none, with %s shares" % len(shares))
 
         if len(failures) > 0:
             raise exceptions.OperationFailure(failures, data)
