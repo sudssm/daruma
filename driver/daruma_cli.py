@@ -11,6 +11,7 @@ import traceback
 import cmd
 import shlex
 import colorama
+import logging
 
 
 provider_manager = ProviderManager()
@@ -389,5 +390,6 @@ class MainLoop(cmd.Cmd):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='daruma_run.log', filemode='w', level=logging.DEBUG)
     ConfigureLoop().cmdloop()
     MainLoop().cmdloop()

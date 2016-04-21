@@ -1,41 +1,53 @@
 # Exceptions used in Daruma
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class DarumaException(Exception):
+    def __init__(self, message=None):
+        self.message = message
+        if self.message is not None:
+            logger.error(message)
 
 
 # general exceptions
-class LibraryException(Exception):
+class LibraryException(DarumaException):
     """
     Indicates a non-recoverable error generated in a call to an external library
     """
 
 
-class IllegalArgumentException(Exception):
+class IllegalArgumentException(DarumaException):
     """
     Passed invalid arguments to a constructor or method
     """
 
 
-class NetworkException(Exception):
+class NetworkException(DarumaException):
     """
     Not connected to the internet
     """
 
 
 # tools exceptions
-class SandboxProcessFailure(Exception):
+class SandboxProcessFailure(DarumaException):
     """
     A function run in the process sandbox exited with an unsuccessful exit code.
     The exit code is stored in the exitcode field.
     """
-    def __init__(self, exitcode):
+    def __init__(self, exitcode, message=None):
+        super(SandboxProcessFailure, self).__init__(message)
         self.exitcode = exitcode
 
 
 # provider exceptions
-class ProviderFailure(Exception):
+class ProviderFailure(DarumaException):
     """
     Class of exceptions that capture an individual provider failing
     """
-    def __init__(self, provider):
+    def __init__(self, provider, message=None):
+        super(ProviderFailure, self).__init__(message)
         self.provider = provider
         provider.log_error(self)
 
@@ -74,45 +86,45 @@ class InvalidShareFailure(ProviderFailure):
 
 
 # crypto exceptions
-class DecryptError(Exception):
+class DecryptError(DarumaException):
     """
     Exception for errors in decryption and/or authentication
     """
 
 
-class DecodeError(Exception):
+class DecodeError(DarumaException):
     """
     Exception for errors in decoding an erasure code
     """
 
 
-class ReconstructionError(Exception):
+class ReconstructionError(DarumaException):
     """
     Exception for errors in reconstructing Shamir-Shared secrets
     """
 
 
 # manifest exceptions
-class ParseException(Exception):
+class ParseException(DarumaException):
     """
     Argument provided could not be parsed by the relevant regex
     """
 
 
-class FileNotFound(Exception):
+class FileNotFound(DarumaException):
     """
     User requests a file by name that cannot be located in the manifest
     """
 
 
-class InvalidPath(Exception):
+class InvalidPath(DarumaException):
     """
     User provides an invalid fully-defined path
     """
 
 
 # manager exceptions
-class OperationFailure(Exception):
+class OperationFailure(DarumaException):
     """
     A multi-provider operation had some failure, but was not fatal
     Must contain the result of the operation, and the list of failures
@@ -121,24 +133,26 @@ class OperationFailure(Exception):
     (this only happens when the operation updates a cache)
     failures - a list of ProviderFailures
     """
-    def __init__(self, failures, result):
+    def __init__(self, failures, result, message=None):
+        super(OperationFailure, self).__init__(message)
         self.failures = failures
         self.result = result
 
 
-class FatalOperationFailure(Exception):
+class FatalOperationFailure(DarumaException):
     """
     A multi-provider operation had some failure that was fatal
     failures - a list of ProviderFailures
     """
-    def __init__(self, failures):
+    def __init__(self, failures, message=None):
+        super(FatalOperationFailure, self).__init__(message)
         self.failures = failures
 
     def __str__(self):
         return str(map(str, self.failures))
 
 
-class ReadOnlyMode(Exception):
+class ReadOnlyMode(DarumaException):
     """
     Thrown when the system is in readonly mode because some providers are missing
     """

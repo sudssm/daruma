@@ -3,6 +3,7 @@
 # TODO note to self: think about caching
 # make a daemon to periodically garbage collect and ping / reload manifest
 
+import logging
 import threading
 from managers.ResilienceManager import ResilienceManager
 from managers.BootstrapManager import BootstrapManager, Bootstrap
@@ -10,6 +11,8 @@ from managers.FileManager import FileManager
 from custom_exceptions import exceptions
 from tools.encryption import generate_key
 from tools.utils import generate_random_name, run_parallel
+
+logger = logging.getLogger(__name__)
 
 
 class Daruma:
@@ -39,8 +42,8 @@ class Daruma:
         """
         makes sure the reconstruction thresholds are within a suitable range (1 through len(providers)-1, inclusive) and that we have at least 3 providers
         """
-        if bootstrap_reconstruction_threshold < 1 or bootstrap_reconstruction_threshold >= len(providers) or \
-           file_reconstruction_threshold < 1 or file_reconstruction_threshold >= len(providers) or \
+        if bootstrap_reconstruction_threshold < 2 or bootstrap_reconstruction_threshold >= len(providers) or \
+           file_reconstruction_threshold < 2 or file_reconstruction_threshold >= len(providers) or \
            len(providers) < 3:
             raise ValueError("Invalid parameters!")
 
@@ -58,6 +61,7 @@ class Daruma:
             ValueError if arguments are invalid
             FatalOperationFailure if provisioning failed
         """
+        logger.debug("provisioning: brt=%d, frt=%d", bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         Daruma._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         # make a copy of providers so that changes to the external list doesn't affect this one
         providers = providers[:]
@@ -96,6 +100,7 @@ class Daruma:
         The client should decide whether to discard the extra_providers or to reprovision with them
         Raises FatalOperationFailure
         """
+        logger.debug("loading")
         providers = providers[:]
         bootstrap_manager = BootstrapManager(providers)
         failures = []
@@ -133,6 +138,7 @@ class Daruma:
         Cycle the master key and rebootstrap
         This method is thread-safe.
         """
+        logger.debug("updating master key")
         # diagnose with no errors. repairing the bootstrap will also cycle the master key
         self.resilience_manager.diagnose_and_repair_bootstrap([])
 
@@ -147,6 +153,7 @@ class Daruma:
         Returns:
             True if the supplied missing_provider is one of the the missing providers, False otherwise
         """
+        logger.debug("adding a missing provider")
         if not self.file_manager.add_missing_provider(missing_provider):
             return False
         # this was a correct missing provider; we can add it to the bootstrap_manager
@@ -160,6 +167,7 @@ class Daruma:
         To be called after a core parameter change (change in provider or threshold)
         Raises FatalOperationFailure if there was an unrecoverable write error
         """
+        logger.debug("_resetting")
         self._load_manifest()
         try:
             self.file_manager.reset()
@@ -187,6 +195,7 @@ class Daruma:
         Raises:
             ValueError if arguments are invalid
         """
+        logger.debug("reprovisioning: brt=%d, frt=%d", bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         Daruma._assert_valid_params(providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold)
         # do nothing if params are the same
         if providers == self.file_manager.providers and \
@@ -217,6 +226,7 @@ class Daruma:
         Args: If discard_extra_providers is True, will discard any providers not in the manifest
         Raises FatalOperationFailure if the load was not successful
         """
+        logger.debug("loading manifest")
         # TODO handle manifest caching
         try:
             self.file_manager.load_manifest(discard_extra_providers)
@@ -240,6 +250,7 @@ class Daruma:
         To get out of read only mode, either call add_missing_providers or reprovision
         This method is thread-safe.
         """
+        logger.debug("getting missing providers")
         return self.file_manager.get_missing_providers()
 
     @synchronized
@@ -247,6 +258,7 @@ class Daruma:
         """
         This method is thread-safe.
         """
+        logger.debug("getting providers")
         return self.file_manager.providers[:]
 
     @synchronized
@@ -265,6 +277,7 @@ class Daruma:
         This method is thread-safe.
         Raises InvalidPath.
         """
+        logger.debug("ls-ing %s", path)
         return self.file_manager.ls(path)
 
     @synchronized
@@ -275,6 +288,7 @@ class Daruma:
         Raises InvalidPath or FatalOperationFailure if unsuccessful
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
+        logger.debug("making a directory: %s", path)
         self._load_manifest()
         self.file_manager.mk_dir(path)
 
@@ -287,6 +301,7 @@ class Daruma:
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         Raises FatalOperationFailure if unsuccessful
         """
+        logger.debug("moving %s to %s", old_path, new_path)
         self._load_manifest()
         self.file_manager.move(old_path, new_path)
 
@@ -302,6 +317,7 @@ class Daruma:
         Raises FileNotFound if path is invalid
         Raises FatalOperationFailure if unsuccessful
         """
+        logger.debug("getting %s", path)
         try:
             result = self.file_manager.get(path)
             self.resilience_manager.log_success()
@@ -325,6 +341,7 @@ class Daruma:
         Raises FatalOperationFailure if unsuccessful
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
+        logger.debug("putting into %s", path)
         self._load_manifest()
 
         try:
@@ -348,6 +365,7 @@ class Daruma:
         Raises FatalOperationFailure if unsuccessful
         Raises ReadOnlyMode if the system is in ReadOnlyMode
         """
+        logger.debug("deleting %s", path)
         self._load_manifest()
 
         try:
@@ -371,4 +389,5 @@ class Daruma:
         does not re-download it for verification.
         This method is thread-safe.
         """
+        logger.debug("listing all paths")
         return self.file_manager.path_generator()
