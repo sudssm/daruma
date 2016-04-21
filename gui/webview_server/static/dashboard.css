@@ -14,18 +14,6 @@ body {
             flex-direction: column;
 }
 
-.status-green {
-    color: green;
-}
-
-.status-yellow {
-    color: goldenrod;
-}
-
-.status-red {
-    color: red;
-}
-
 .status-list {
     list-style-type: none;
     line-height: 150%;
@@ -56,15 +44,6 @@ body {
     margin-top: 10px;
 }
 
-.provider-icon-square {
-    height: 70px;
-    margin-right: 25px;
-}
-
-.provider-name {
-    font-size: 18pt;
-    font-weight: bold;
-}
 
 .provider-controls {
     margin-left: auto;

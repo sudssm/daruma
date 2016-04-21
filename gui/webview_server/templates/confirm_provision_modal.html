@@ -5,6 +5,19 @@
         <meta charset="utf-8">
         <title>Daruma | Provision Confirmation</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='add_provider_modal.css') }}">
+        <style>
+        .spin {
+            width: 100px;
+            height: 100px;
+            -webkit-animation:spin 4s linear infinite;
+            -moz-animation:spin 4s linear infinite;
+            animation:spin 4s linear infinite;
+        }
+        @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+        @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+        @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+        </style>
         <script type=text/javascript src="{{ url_for('static', filename='jquery-2.2.2.min.js') }}"></script>
         <script type="text/javascript">
             "use strict";
@@ -31,13 +44,16 @@
     </head>
 
     <body>
-        <h2>We could not find an existing installation with those providers.</h2>
+        <h2 style="text-align: center">Daruma didn't find any existing installations.<br>Start a new one?</h2>
         
         <div id="error_message">
-            If you've used Daruma before, please try adding more providers. If this is your first time or you want to start fresh, click the button below. <strong>Note that this will clear any existing Daruma installations on these providers.</strong>
+            Note that this will clear any existing Daruma installations on these providers.
         </div>
 
         <button class="big-button" type="button" onclick="provision()">Provision</button>
-        <p id="loading" style="display: none">Hang tight, we're setting things up! GIF! </p>
+        <p></p>
+        <div id="loading" style="display: none; text-align: center">Hang tight, we're setting things up!<br><br>
+        <img class="spin" src="/images/daruma-circle.png">
+        </div>
     </body>
 </html>

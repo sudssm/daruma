@@ -120,10 +120,14 @@ class FileManager:
         new_distributor = FileDistributor(self.providers, len(self.providers), self.file_reconstruction_threshold)
 
         def duplicate_file(file_node):
-            filename = file_node.name
-            old_codename = file_node.code_name
-            old_key = file_node.key
-            size = file_node.size
+            try:
+                filename = file_node.name
+                old_codename = file_node.code_name
+                old_key = file_node.key
+                size = file_node.size
+            except AttributeError:
+                # this is a directory
+                return
 
             data = self.distributor.get(old_codename, old_key)
             old_files.append(old_codename)
