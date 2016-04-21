@@ -134,7 +134,14 @@ class FileManager:
             # change this when implementing manifest caching
             self.manifest.update_file(filename, codename, size, key)
 
-        failures = run_parallel(duplicate_file, map(lambda (path, node): [node], self.manifest.generate_nodes_under("")))
+        dup_failures = run_parallel(duplicate_file, map(lambda (path, node): [node], self.manifest.generate_nodes_under("")))
+        failures = []
+        for failure in dup_failures:
+            try:
+                failures = failures + failure.failures
+            except AttributeError:
+                failurs.append(failure)
+
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
 
