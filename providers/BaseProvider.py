@@ -18,7 +18,7 @@ class BaseProvider(object):
     """
     Stub for a provider
     """
-    RED_THRESHOLD = .1
+    RED_THRESHOLD = .5
     YELLOW_THRESHOLD = .95
 
     ROOT_DIR = APP_NAME
