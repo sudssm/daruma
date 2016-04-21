@@ -124,14 +124,6 @@ class Daruma:
         extra_providers = list(set(providers) - set(daruma.file_manager.providers))
         return daruma, extra_providers
 
-    # TODO: update with other bad cases
-    def _verify_parameters(self, providers, bootstrap_reconstruction_threshold, file_reconstruction_threshold):
-        return bootstrap_reconstruction_threshold >= 2 and \
-            file_reconstruction_threshold >= 2 and \
-            len(providers) >= 2 and \
-            bootstrap_reconstruction_threshold < len(providers) and \
-            file_reconstruction_threshold < len(providers)
-
     @synchronized
     def update_master_key(self):
         """
