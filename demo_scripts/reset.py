@@ -34,7 +34,7 @@ def main(args):
          cm.load()  # reload the credential manager with updated store
 
          ip_block = args[1]
-         url = ''.join("http://165.123.239." + ip_block + ":5000")
+         url = ''.join("http://158.130.104." + ip_block + ":5000")
          demo_server = TestServerProvider(cm)
 
          try: 
