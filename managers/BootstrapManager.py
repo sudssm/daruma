@@ -96,7 +96,7 @@ class BootstrapManager:
             # so, a group of defectors larger than k are outside threat model
             # just ensure that the largest group is size at least k
             if winning_vote is None or largest_group_size < threshold:
-                raise exceptions.FatalOperationFailure([])
+                raise exceptions.FatalOperationFailure([], "didn't reach bootstrap vote consensus")
 
             failed_providers = []
             # add all providers who misvoted to failures
@@ -119,7 +119,7 @@ class BootstrapManager:
                 vote_map[(int(threshold_vote), int(n_vote), version)].append(provider)
                 provider_id_map[provider_id].append(provider)
             except ValueError:
-                raise exceptions.InvalidShareFailure(provider)
+                raise exceptions.InvalidShareFailure(provider, "Got invalid boostrap share from " + str(provider))
 
         def get_bootstrap_share(provider):
             try:
@@ -199,7 +199,7 @@ class BootstrapManager:
 
         if secret is None:
             # None of them worked
-            raise exceptions.FatalOperationFailure([])
+            raise exceptions.FatalOperationFailure([], "could not recover a secret")
 
         # we successfully found a working set
         bad_providers = []
@@ -247,7 +247,7 @@ class BootstrapManager:
         try:
             secret, shamir_failures = self._reconstruct_shares(provider_id_map, shares_map)
         except exceptions.FatalOperationFailure as e:
-            raise exceptions.FatalOperationFailure(failures + e.failures)
+            raise exceptions.FatalOperationFailure(failures + e.failures, "could not recover bootstrap")
 
         failures += shamir_failures
 
