@@ -50,7 +50,7 @@ class GoogleDriveProvider(OAuthProvider):
         client_id, client_secret = credentials["client_id"], credentials["client_secret"]
 
         with self.exception_handler():
-            self.flow = client.OAuth2WebServerFlow(client_id, client_secret, self.SCOPE, redirect_uri="http://localhost")
+            self.flow = client.OAuth2WebServerFlow(client_id, client_secret, self.SCOPE, redirect_uri=self.get_oauth_redirect_url())
             authorize_url = self.flow.step1_get_authorize_url()
 
         return authorize_url
