@@ -235,7 +235,7 @@ def try_provision_instance():
     except exceptions.FatalOperationFailure as e:
         return jsonify({
             "success": False,
-            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.provider_uid), e.failures)
+            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.uid), e.failures)
         })
 
 
