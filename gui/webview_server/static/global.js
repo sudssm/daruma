@@ -45,7 +45,7 @@ function buildProviderString(provider){
 
 function refresh_providers(data){
     var new_providers = data["providers"];
-    if (new_providers.length != providers.length){
+    if (new_providers != providers){
         $("#provider-count").html(new_providers.length)
         $("#providers").html("")
         $.each(new_providers, function(i, provider){
