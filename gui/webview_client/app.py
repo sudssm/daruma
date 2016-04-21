@@ -38,21 +38,30 @@ class WindowManager(object):
 
 
 class MainAppMenu(wx.TaskBarIcon):
-    def __init__(self, app_frame, host):
+    def __init__(self, app_frame, host, setup_complete):
         """
         Args:
             app_frame: A frame for the enclosing app (to be closed on exit).
             host: The (hostname, port) tuple for the UI server.
+            setup_complete: Whether a Daruma object has been created
         """
+        def popup_window():
+            if self.setup_complete:
+                self.generate_webview_handler("dashboard.html")(None)
+            else:
+                self.generate_webview_handler("setup.html")(None)
         super(MainAppMenu, self).__init__()
         self.app_frame = app_frame
         self.host = host
+        self.setup_complete = setup_complete
 
         icon_stream = pkg_resources.resource_stream(gui.__name__, ICON_NAME)
         icon = wx.IconFromBitmap(wx.ImageFromStream(icon_stream).ConvertToBitmap())
         self.SetIcon(icon, ICON_HOVERTEXT)
 
         self.window_manager = WindowManager()
+
+        wx.CallAfter(popup_window)
 
     def CreatePopupMenu(self):
         """
@@ -165,8 +174,7 @@ class DarumaApp(wx.App):
         """
         frame = wx.Frame(parent=None)
         self.SetTopWindow(frame)
-        self.menu = MainAppMenu(frame, self.host)
-        self.menu.setup_complete = self.setup_complete
+        self.menu = MainAppMenu(frame, self.host, self.setup_complete)
         return True
 
     def mark_setup_complete(self, is_complete=True):
