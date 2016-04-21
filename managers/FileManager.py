@@ -140,7 +140,7 @@ class FileManager:
             try:
                 failures = failures + failure.failures
             except AttributeError:
-                failurs.append(failure)
+                failures.append(failure)
 
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
