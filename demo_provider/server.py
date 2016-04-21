@@ -1,6 +1,7 @@
 from flask import Flask, request, make_response
 import os
 import shutil
+import base64
 
 app = Flask(__name__)
 
@@ -11,7 +12,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 @app.route('/')
 def home():
-    return ""
+    return "working"
 
 
 @app.route('/put', methods=["POST"])
@@ -19,7 +20,9 @@ def put():
     if len(request.files) == 0:
         return "", 400
     filename, file = request.files.items()[0]
-    file.save(os.path.join(UPLOAD_FOLDER, filename))
+    with open(os.path.join(UPLOAD_FOLDER, filename), 'w+') as out:
+        out.write(base64.b64encode(file.read()))
+    # file.save(os.path.join(UPLOAD_FOLDER, filename))
     return ""
 
 
@@ -29,8 +32,10 @@ def get(filename):
     if not os.path.exists(path):
         return "", 400
     try:
-        return make_response(open(path, 'r').read())
-    except:
+        return make_response(base64.b64decode(open(path, 'r').read()))
+    except Exception as e:
+        print "there was an error"
+        print e
         return "", 400
 
 
