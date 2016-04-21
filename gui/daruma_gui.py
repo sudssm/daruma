@@ -1,3 +1,4 @@
+import logging
 import sys
 import threading
 from custom_exceptions import exceptions
@@ -63,6 +64,8 @@ def launch_gui(app_state):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='daruma_run.log', filemode='w', level=logging.DEBUG)
+
     platform_specific_setup()
 
     app_state = ApplicationState()
