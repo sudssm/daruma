@@ -166,3 +166,13 @@ h2 {
     padding-top: 25px;
     color: #555555;
 }
+.remove-provider-button {
+    border-radius: 50%;
+    background-color: red;
+    color: white;
+    position: relative;
+    margin-left: 100px;
+    margin-top: -15px;
+    margin-right: -10px;
+    float: right;
+}
