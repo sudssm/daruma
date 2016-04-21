@@ -55,7 +55,7 @@ if sys.platform == "darwin":
         options={
             "py2app": {
                 "optimize": 2,
-                "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib'],
+                "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib', 'onedrivesdk'],
                 "plist": {
                     "LSUIElement": True,
                 }
