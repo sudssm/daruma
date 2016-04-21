@@ -229,7 +229,7 @@ def try_provision_instance():
     except exceptions.FatalOperationFailure as e:
         return jsonify({
             "success": False,
-            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.provider_uid), e.failures)
+            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.uid), e.failures)
         })
 
 
@@ -248,7 +248,7 @@ def reprovision():
 @app.route('/iconstatus')
 def get_icon_statuses():
     try:
-        status_dict = {path: 2 for path in global_app_state.secretbox.list_all_paths()}
+        status_dict = {path: 2 for path in global_app_state.daruma.list_all_paths()}
         status_dict[""] = 2
     except AttributeError:
         status_dict = {}
