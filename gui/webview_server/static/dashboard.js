@@ -52,11 +52,12 @@ function buildProviderString(provider){
 
 var providers = []
 
-setInterval(function(){
+function refresh(){
     $.getJSON("/get_state")
     .done(function(data){
         var new_providers = data["providers"];
         if (new_providers.length != providers.length){
+            $("#provider-count").html(new_providers.length)
             $("#provider-list").html("")
             $.each(new_providers, function(i, provider){
                 $("#provider-list").append(buildProviderString(provider))
@@ -84,8 +85,11 @@ setInterval(function(){
             reprovision()
         }
         $("#system-status").html(statusMessage)
-        $("#system-status").removeClass()
-        $("#system-status").addClass('status-' + data["instance"]["status"].toLowerCase())
+        $("#header").removeClass()
+        $("#header").addClass('status-' + data["instance"]["status"].toLowerCase())
 
     })
-}, 1000)
+}
+
+refresh()
+setInterval(refresh, 1000)

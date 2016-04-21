@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 from tools.utils import APP_NAME
 from appdirs import user_config_dir
 from collections import defaultdict
@@ -19,6 +20,7 @@ class CredentialManager:
         self.config_dir = user_config_dir(APP_NAME)
         self.user_creds_file = os.path.join(self.config_dir, "user_credentials.json")
         self.app_creds_file = "app_credentials.json"
+        self.lock = threading.RLock()
 
     def load(self):
         """
@@ -26,7 +28,8 @@ class CredentialManager:
         Raises ValueError if valid credentials files cannot be loaded
         """
         self._load_app_creds()
-        self._load_user_creds()
+        with self.lock:
+            self._load_user_creds()
 
     def _load_app_creds(self):
         """
@@ -75,7 +78,8 @@ class CredentialManager:
             The credentials for the specified provider, or [] if unavailable
             credentials is a dictionary of provider_identifier to credential values that have been stored in this manager
         """
-        return deepcopy(self.user_creds[provider_class.provider_identifier()])
+        with self.lock:
+            return deepcopy(self.user_creds[provider_class.provider_identifier()])
 
     def get_app_credentials(self, provider_class):
         """
@@ -96,8 +100,9 @@ class CredentialManager:
                                  for identification (e.g. username)
             credentials: a JSON-ifyable dictionary or string to store
         """
-        self.user_creds[provider_class.provider_identifier()][account_identifier] = credentials
-        self._write_user_creds()
+        with self.lock:
+            self.user_creds[provider_class.provider_identifier()][account_identifier] = credentials
+            self._write_user_creds()
 
     def clear_user_credentials(self, provider_class=None, account_identifier=None):
         """
@@ -109,13 +114,14 @@ class CredentialManager:
             account_identifier: a value unique across all providers of this type
                                  for identification (e.g. username)
         """
-        try:
-            if provider_class is None:
-                self.user_creds = defaultdict(dict)
-            elif account_identifier is None:
-                del self.user_creds[provider_class.provider_identifier()]
-            else:
-                del self.user_creds[provider_class.provider_identifier()][account_identifier]
-            self._write_user_creds()
-        except KeyError:
-            return
+        with self.lock:
+            try:
+                if provider_class is None:
+                    self.user_creds = defaultdict(dict)
+                elif account_identifier is None:
+                    del self.user_creds[provider_class.provider_identifier()]
+                else:
+                    del self.user_creds[provider_class.provider_identifier()][account_identifier]
+                self._write_user_creds()
+            except KeyError:
+                return

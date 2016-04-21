@@ -19,7 +19,7 @@ base_setup = dict(
         "colorama==0.2.5",
         "dropbox==4.0",
         "appdirs==1.4.0",
-        "google-api-python-client==1.4.2",
+        "google-api-python-client==1.5.0",
         "futures==3.0.5",
         "onedrivesdk==1.0.5",
         "boxsdk==1.5.1",
@@ -55,7 +55,7 @@ if sys.platform == "darwin":
         options={
             "py2app": {
                 "optimize": 2,
-                "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib'],
+                "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib', 'onedrivesdk'],
                 "plist": {
                     "LSUIElement": True,
                 }

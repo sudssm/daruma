@@ -18,14 +18,13 @@ global_native_app = None
 # Primary GUI endpoints #
 #########################
 
-
-@app.route('/app_logo.png')
-def download_logo():
+@app.route('/images/<image>')
+def download_image(image):
     """
-    Serves a large version of the app logo.
+    Serves images
     """
-    icon_path = os.path.join("icons", "large.png")
-    return send_file(pkg_resources.resource_stream(gui.__name__, icon_path))
+    icon_path = os.path.join("icons", image)
+    return send_file(pkg_resources.resource_filename(gui.__name__, icon_path))
 
 
 @app.route('/setup.html')
@@ -37,24 +36,14 @@ def show_setup_page():
     return render_template('setup.html')
 
 
-@app.route('/setup_add_providers.html')
-def show_setup_add_page():
-    """
-    This page is shown to allow users to add providers before loading or
-    creating an instance.
-    """
-    return render_template('setup_add_providers.html',
-                           available_providers=global_app_state.provider_manager.get_provider_classes())
-
-
-@app.route('/providers.html')
+@app.route('/dashboard.html')
 def show_provider_status():
     """
     This page is shown as a dashboard to see the current state of providers and
     the system.
     """
     # TODO show something if we are in read only mode
-    return render_template('providers.html')
+    return render_template('dashboard.html')
 
 
 @app.route('/providers/add.html')
@@ -116,12 +105,16 @@ def finish_adding_provider(provider_name):
             new_provider = provider_manager.finish_oauth_connection(provider_class, request.url)
         except exceptions.ProviderOperationFailure:
             return redirect("providers/add_failure.html")
+        except:
+            return redirect("providers/add_failure.html")
     else:
         try:
             provider_class = unauth_providers[provider_name]
             provider_id = request.args.get("id")
             new_provider = provider_manager.make_unauth_provider(provider_class, provider_id)
         except (KeyError, exceptions.ProviderOperationFailure):
+            return redirect("providers/add_failure.html")
+        except:
             return redirect("providers/add_failure.html")
 
     # new_provider has been set
@@ -145,13 +138,14 @@ def try_load_instance():
     Attempts to load Daruma instance from active providers
     Redirects to either status or confirmation page
     """
+    # TODO make this asynchronous
+    # TODO spinning daruma?
     if len(global_app_state.providers) < 3:
-        return redirect("setup_add_providers.html")
-
+        return redirect("setup.html")
     try:
         # TODO handle extra providers
         global_app_state.daruma, extra_providers = Daruma.load(global_app_state.providers)
-        return redirect("providers.html")
+        return redirect("dashboard.html")
     except exceptions.FatalOperationFailure:
         return redirect("modal/show/confirm_provision")
 
@@ -237,7 +231,7 @@ def try_provision_instance():
     except exceptions.FatalOperationFailure as e:
         return jsonify({
             "success": False,
-            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.provider_uid), e.failures)
+            "errors": map(lambda failure: (failure.provider.provider_name(), failure.provider.uid), e.failures)
         })
 
 
@@ -256,7 +250,7 @@ def reprovision():
 @app.route('/iconstatus')
 def get_icon_statuses():
     try:
-        status_dict = {path: 2 for path in global_app_state.secretbox.list_all_paths()}
+        status_dict = {path: 2 for path in global_app_state.daruma.list_all_paths()}
         status_dict[""] = 2
     except AttributeError:
         status_dict = {}

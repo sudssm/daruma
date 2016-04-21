@@ -5,14 +5,15 @@ function onAddProviderButtonClick() {
 
 var providers = []
 
-setInterval(function(){
+function refresh(){
     $.getJSON("/get_state")
     .done(function(data){
         if (data["instance"] != null){
-            window.location.href = "providers.html"
+            window.location.href = "dashboard.html"
         }
         var new_providers = data["providers"];
         if (new_providers.length != providers.length){
+            $("#provider-count").html(new_providers.length)
             for (var i = providers.length; i < new_providers.length; i ++){
                 var provider = new_providers[i];
                 var li = "<li>" +
@@ -32,4 +33,7 @@ setInterval(function(){
             }
         }
     })
-}, 1000)
+}
+
+refresh()
+setInterval(refresh, 1000)

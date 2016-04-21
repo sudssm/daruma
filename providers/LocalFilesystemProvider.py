@@ -45,7 +45,7 @@ class LocalFilesystemProvider(UnauthenticatedProvider):
             os.makedirs(translated_root_dir, DIRECTORY_MODE)
         except (IOError, OSError) as error:
             if error.errno is not errno.EEXIST:
-                raise exceptions.ConnectionFailure(self)
+                raise exceptions.ConnectionFailure(self, "errno was %d in connect" % error.errno)
         self.credential_manager.set_user_credentials(self.__class__, self.uid, None)
 
     @property
