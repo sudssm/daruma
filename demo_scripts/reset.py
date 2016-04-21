@@ -13,12 +13,15 @@ def main(args):
    providers, errors = provider_manager.load_all_providers_from_credentials()
 
    for provider in providers:
-      provider.wipe()
+      try:
+         provider.wipe()
+      except Exception:
+         print "failed to wipe provider: " + provider.provider_name()
 
    behavior = args[0]
-   if behavior == "empty":
-      cm.clear_user_credentials(provider_class=None, account_identifier=None)  # clear the file
-   elif behavior == "setup":
+   cm.clear_user_credentials(provider_class=None, account_identifier=None)  # clear the file
+
+   if behavior == "setup":
       # copy in default credentials (Dropbox, GoogleDrive, OneDrive)
       default_credentials = os.path.join(cm.config_dir, "default_credentials.json")
       current_credentials = os.path.join(cm.config_dir, "user_credentials.json")
