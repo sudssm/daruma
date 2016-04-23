@@ -3,7 +3,7 @@ import wx.html2 as webview
 
 
 class WebviewWindow(wx.Dialog):
-    def __init__(self, url=None, size=(700, 700)):
+    def __init__(self, url=None, size=(700, 800)):
         """
         Constructs a new webview window to give the illusion of a native
         window.  In particular, this view doesn't have "back" functionality and

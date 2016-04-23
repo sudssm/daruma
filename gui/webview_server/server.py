@@ -24,7 +24,7 @@ def download_image(image):
     Serves images
     """
     icon_path = os.path.join("icons", image)
-    return send_file(pkg_resources.resource_filename(gui.__name__, icon_path))
+    return send_file(pkg_resources.resource_stream(gui.__name__, icon_path))
 
 
 @app.route('/setup.html')

@@ -8,6 +8,9 @@ from gui.webview_server.server import start_ui_server
 from gui.webview_client.app import DarumaApp
 from managers.ProviderManager import ProviderManager
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT, get_app_folder, make_app_folder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ApplicationState(object):
@@ -71,7 +74,8 @@ if __name__ == "__main__":
     platform_specific_setup()
 
     app_state = ApplicationState()
-    providers, _ = app_state.provider_manager.load_all_providers_from_credentials()
+    providers, errors = app_state.provider_manager.load_all_providers_from_credentials()
+    logging.error("loading errors" + str(errors))
     try:
         assert len(providers) >= 2
         app_state.daruma, extra_providers = Daruma.load(providers)
