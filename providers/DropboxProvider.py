@@ -4,6 +4,7 @@ from tools.utils import parse_url
 from contextlib import contextmanager
 from custom_exceptions import exceptions
 from providers.OAuthProvider import OAuthProvider
+import io
 
 
 class DropboxProvider(OAuthProvider):
@@ -78,7 +79,16 @@ class DropboxProvider(OAuthProvider):
 
     def put(self, filename, data):
         with self.exception_handler():
-            self.client.put_file(filename, data, overwrite=True)
+            max_chunk_size = 157286400  # 150 mb
+            size = len(data)
+            if size < max_chunk_size:
+                self.client.put_file(filename, data, overwrite=True)
+            else:
+                fh = io.BytesIO(data)
+                uploader = self.client.get_chunked_uploader(fh, size)
+                while uploader.offset < size:
+                    uploader.upload_chunked()
+                uploader.finish(filename)
 
     def get_capacity(self):
         with self.exception_handler():
