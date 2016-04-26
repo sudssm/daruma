@@ -158,6 +158,12 @@ class BoxProvider(OAuthProvider):
             box_file.delete()
             self.id_cache.pop(filename, None)
 
+    def get_capacity(self):
+        user = self.client.user(user_id='me').get()
+        total_allocated_space = user.space_amount
+        used_space = user.space_used
+        return used_space, total_allocated_space
+
     def wipe(self):
         with self.exception_handler():
             try:
