@@ -212,8 +212,11 @@ def remove_provider():
     except KeyError:
         return "remove key error"
 
-    if global_app_state.daruma is not None:
-        # we removed a provider, should reprovision
+    if global_app_state.daruma is None:
+        # instance, wiple the provider
+        provider.remove()
+    else:
+        # we removed a provider from a live instance, should reprovision
         global_app_state.needs_reprovision = True
     return ""
 
@@ -240,6 +243,7 @@ def try_provision_instance():
 @app.route('/reprovision')
 def reprovision():
     try:
+        print "reprovisioning"
         global_app_state.daruma.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
     except Exception as e:
         print "reprovision failed"
