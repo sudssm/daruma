@@ -10,7 +10,8 @@ from managers.ProviderManager import ProviderManager
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT, get_app_folder, make_app_folder
 import logging
 
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger("daruma")
 
 
 class ApplicationState(object):
@@ -69,7 +70,9 @@ def launch_gui(app_state):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='daruma_run.log', filemode='w', level=logging.DEBUG)
+    logging.basicConfig(filename='daruma_run.log', filemode='w', level=logging.ERROR)
+    logging.getLogger("daruma").setLevel(logging.DEBUG)
+
 
     platform_specific_setup()
 
