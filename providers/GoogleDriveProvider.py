@@ -112,7 +112,7 @@ class GoogleDriveProvider(OAuthProvider):
 
     def get_capacity(self):
         with self.exception_handler():
-            about = gd.service.about().get(fields='storageQuota').execute()
+            about = self.service.about().get(fields='storageQuota').execute()
             storageInfo = about['storageQuota']
 
             used_space = int(storageInfo['usage'])

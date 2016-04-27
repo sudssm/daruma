@@ -77,6 +77,11 @@ class TestProvider(LocalFilesystemProvider):
         with self.exception_handler():
             return super(TestProvider, self).put(filename, data)
 
+    def get_capacity(self):
+        print "get capacity"
+        with self.exception_handler():
+            return super(TestProvider, self).get_capacity()
+
     def delete(self, filename):
         print "delete", filename
         with self.exception_handler():

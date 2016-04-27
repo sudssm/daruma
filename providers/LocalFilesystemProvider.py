@@ -68,6 +68,16 @@ class LocalFilesystemProvider(UnauthenticatedProvider):
         except (IOError, OSError):
             raise exceptions.ProviderOperationFailure(self)
 
+    def get_capacity(self):
+        try:
+            # using root path to get total space on disk
+            st = os.statvfs('/')
+            total_allocated_space = st.f_blocks * st.f_frsize
+            used_space = (st.f_blocks - st.f_bfree) * st.f_frsize
+            return used_space, total_allocated_space
+        except (IOError, OSError):
+            raise exceptions.ProviderOperationFailure(self)
+
     def delete(self, filename):
         translated_filepath = self._get_translated_filepath(filename)
         try:
