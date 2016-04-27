@@ -3,6 +3,10 @@ from tools.encryption import generate_key
 from tools.utils import generate_random_name
 from managers.BootstrapManager import Bootstrap
 from providers.BaseProvider import ProviderStatus, BaseProvider
+import logging
+
+
+logger = logging.getLogger("daruma")
 
 
 class ResilienceManager:
@@ -48,7 +52,10 @@ class ResilienceManager:
             else:
                 # TODO implement average of window method
                 # score = alpha*score + (1-alpha)*(new_score=0)
-                failure.provider.score = self.DECAY_RATE * failure.provider.score
+                try:
+                    failure.provider.score = self.DECAY_RATE * failure.provider.score
+                except:
+                    logger.error("Error parsing failure in diagnose")
             failed_providers.add(failure.provider)
 
         no_red_providers = True

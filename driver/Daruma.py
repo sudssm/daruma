@@ -174,7 +174,7 @@ class Daruma:
             self.resilience_manager.log_success()
         except exceptions.OperationFailure as e:
             # this should never occur
-            pass
+            logger.error("Unexpected Operation Failure in _reset")
         except exceptions.FatalOperationFailure as e:
             can_retry = self.resilience_manager.diagnose(e.failures)
             if can_retry:
