@@ -12,7 +12,7 @@ from custom_exceptions import exceptions
 from tools.encryption import generate_key
 from tools.utils import generate_random_name, run_parallel
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("daruma")
 
 
 class Daruma:
