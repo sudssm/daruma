@@ -4,6 +4,10 @@ from contextlib import contextmanager
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 from custom_exceptions import exceptions
+import logging
+
+
+logger = logging.getLogger("daruma")
 
 REJECT_PATTERNS = ["*/.DS_Store"]
 
@@ -14,18 +18,18 @@ def daruma_error_handler():
         yield
     except exceptions.FatalOperationFailure:
         # TODO
-        print "fatal operation failure"
+        logger.error("fatal operation failure")
     except exceptions.ReadOnlyMode:
         # TODO
-        print "read only mode"
+        logger.error("read only mode")
     except exceptions.InvalidPath:
         # TODO
-        print "invalid path"
+        logger.error("invalid path")
     except exceptions.FileNotFound:
         # TODO
-        print "file not found"
+        logger.error("file not found")
     finally:
-        print "filesystem event finished"
+        logger.info("filesystem event finished")
 
 
 class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
@@ -60,7 +64,7 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
         super(DarumaFileSystemEventHandler, self).on_moved(event)
 
         what = 'directory' if event.is_directory else 'file'
-        print "Moved", what, "from", event.src_path, "to", event.dest_path
+        logger.info("Moved " + what + " from " + event.src_path + " to " + event.dest_path)
 
         with self.get_safe_daruma() as daruma:
             if event.is_directory:
@@ -77,7 +81,7 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
         super(DarumaFileSystemEventHandler, self).on_created(event)
 
         what = 'directory' if event.is_directory else 'file'
-        print "Created", what, ":", event.src_path
+        logger.info("Created " + what + " : " + event.src_path)
 
         with self.get_safe_daruma() as daruma:
             if event.is_directory:
@@ -91,7 +95,7 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
         super(DarumaFileSystemEventHandler, self).on_deleted(event)
 
         what = 'directory' if event.is_directory else 'file'
-        print "Deleted", what, ":", event.src_path
+        logger.info("Deleted " + what + " : " + event.src_path)
 
         with self.get_safe_daruma() as daruma:
             daruma.delete(self.sanitize(event.src_path))
@@ -99,7 +103,7 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
     def on_modified(self, event):
         super(DarumaFileSystemEventHandler, self).on_modified(event)
 
-        print "Modified", event.src_path
+        logger.info("Modified " + event.src_path)
         with self.get_safe_daruma() as daruma:
             if not event.is_directory:
                 with open(event.src_path) as src_file:

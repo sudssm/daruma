@@ -5,6 +5,10 @@ from custom_exceptions import exceptions
 import gui
 from tools.utils import INTERNAL_SERVER_HOST, INTERNAL_SERVER_PORT, get_resource_path
 from driver.Daruma import Daruma
+import logging
+
+
+logger = logging.getLogger("daruma")
 
 
 app = Flask(__name__,
@@ -213,7 +217,7 @@ def remove_provider():
         return "remove key error"
 
     if global_app_state.daruma is None:
-        # instance, wiple the provider
+        # no instance, just remove the provider
         provider.remove()
     else:
         # we removed a provider from a live instance, should reprovision
@@ -243,11 +247,11 @@ def try_provision_instance():
 @app.route('/reprovision')
 def reprovision():
     try:
-        print "reprovisioning"
+        logger.info("reprovisioning")
         global_app_state.daruma.reprovision(global_app_state.providers, len(global_app_state.providers) - 1, len(global_app_state.providers) - 1)
     except Exception as e:
-        print "reprovision failed"
-        print e
+        logger.error("reprovision failed")
+        logger.error(e)
         pass
     global_app_state.providers = global_app_state.daruma.get_providers()
     global_app_state.provider_uuids_map = {provider.uuid: provider for provider in global_app_state.providers}

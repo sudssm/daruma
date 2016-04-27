@@ -1,7 +1,7 @@
 # Exceptions used in Daruma
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("daruma")
 
 
 class DarumaException(Exception):
