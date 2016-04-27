@@ -158,8 +158,9 @@ class OneDriveProvider(OAuthProvider):
         # TODO
         with self.exception_handler():
             drive = self.client.drive.get()
-            total = drive.quota.total
-            used = drive.quota.used
+            total_allocated_space = drive.quota.total
+            used_space = drive.quota.used
+            return used_space, total_allocated_space
 
     def delete(self, filename):
         with self.exception_handler():

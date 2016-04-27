@@ -152,6 +152,13 @@ class BoxProvider(OAuthProvider):
                 new_file = self.app_folder.upload_stream(data_stream, filename)
                 self.id_cache[filename] = new_file.object_id
 
+    def get_capacity(self):
+        with self.exception_handler():
+            user = self.client.user(user_id='me').get()
+            total_allocated_space = user.space_amount
+            used_space = user.space_used
+            return used_space, total_allocated_space
+
     def delete(self, filename):
         with self.exception_handler():
             box_file = self.client.file(self.id_cache[filename])

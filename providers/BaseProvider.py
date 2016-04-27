@@ -90,6 +90,17 @@ class BaseProvider(object):
         """
         raise NotImplementedError
 
+    def get_capacity(self):
+        """
+        Get quota and capacity information
+        Raises: ProviderOperationFailure if unable to get information
+        Returns:
+            (used_space, total_allocated_space)
+            used_space: The amount of space used
+            total_allocated_space: The total usable space
+        """
+        raise NotImplementedError
+
     def delete(self, filename):
         """
         Deletes a file from the provider
