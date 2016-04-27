@@ -62,7 +62,7 @@ class FileManager:
         if discard_extra_providers:
             # remove any extra providers
             self.providers = filter(lambda provider: provider.uuid in expected_providers, self.providers)
-            self.distributor.providers = self.providers
+            self.distributor.providers = self.providers[:]
 
         if failures is not None:
             raise exceptions.OperationFailure(failures, None)
@@ -112,6 +112,7 @@ class FileManager:
         Refresh all files on the filesystem by re-encrypting, sharing, and distributing all files and manifest
         To be called after changing either providers or file_reconstruction_threshold
         Constructs a new FileDistributor object with the new parameters
+        Will not report failures on the old set of providers; rather, will only throw errors for fatal operations with new providers
         NB: during the operation, the amount of space used on each provider doubles
         """
         old_files = []
@@ -129,7 +130,12 @@ class FileManager:
                 # this is a directory
                 return
 
-            data = self.distributor.get(old_codename, old_key)
+            try:
+                data = self.distributor.get(old_codename, old_key)
+            except exceptions.OperationFailure as e:
+                # don't penalize for operations on the old distributor
+                data = e.result
+
             old_files.append(old_codename)
 
             codename = generate_random_name()
@@ -139,12 +145,9 @@ class FileManager:
             self.manifest.update_file(filename, codename, size, key)
 
         dup_failures = run_parallel(duplicate_file, map(lambda (path, node): [node], self.manifest.generate_nodes_under("")))
-        failures = []
-        for failure in dup_failures:
-            try:
-                failures = failures + failure.failures
-            except AttributeError:
-                failures.append(failure)
+
+        # combine all FatalOperation failures together
+        failures = [failure for fatal_failure in dup_failures for failure in fatal_failure.failures]
 
         if len(failures) > 0:
             raise exceptions.FatalOperationFailure(failures)
@@ -160,9 +163,7 @@ class FileManager:
         def delete_codename(codename):
             old_distributor.delete(codename)
 
-        failures = run_parallel(delete_codename, map(lambda codename: [codename], old_files))
-        if len(failures) > 0:
-            raise exceptions.OperationFailure(failures, None)
+        run_parallel(delete_codename, map(lambda codename: [codename], old_files))
 
     def path_generator(self):
         """

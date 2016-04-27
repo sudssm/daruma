@@ -148,10 +148,18 @@ class Daruma:
         logger.debug("adding a missing provider")
         if not self.file_manager.add_missing_provider(missing_provider):
             return False
-        # this was a correct missing provider; we can add it to the bootstrap_manager
-        self.bootstrap_manager.providers = self.file_manager.providers
+        # this was a correct missing provider; we can use it
+        self._set_all_internal_providers(self.file_manager.providers)
 
         return True
+
+    def _set_all_internal_providers(self, providers):
+        """
+        Sets the internal provider objects for all submanagers
+        """
+        self.file_manager.providers = providers
+        self.bootstrap_manager.providers = providers
+        self.resilience_manager.providers = providers
 
     def _reset(self):
         """
@@ -160,14 +168,13 @@ class Daruma:
         Raises FatalOperationFailure if there was an unrecoverable write error
         """
         logger.debug("_resetting")
-        self._load_manifest()
         try:
             self.file_manager.reset()
             self.update_master_key()
             self.resilience_manager.log_success()
         except exceptions.OperationFailure as e:
-            # don't try to repair - if we are here, all files got successfully refreshed
-            self.resilience_manager.diagnose(e.failures)
+            # this should never occur
+            pass
         except exceptions.FatalOperationFailure as e:
             can_retry = self.resilience_manager.diagnose(e.failures)
             if can_retry:
@@ -197,9 +204,7 @@ class Daruma:
 
         old_providers = self.file_manager.providers
 
-        self.file_manager.providers = providers
-        self.bootstrap_manager.providers = providers
-        self.resilience_manager.providers = providers
+        self._set_all_internal_providers(providers)
 
         self.bootstrap_manager.bootstrap_reconstruction_threshold = bootstrap_reconstruction_threshold
         self.file_manager.file_reconstruction_threshold = file_reconstruction_threshold
@@ -232,7 +237,7 @@ class Daruma:
             raise
 
         if discard_extra_providers:
-            self.bootstrap_manager.providers = self.file_manager.providers
+            self._set_all_internal_providers(self.file_manager.providers)
 
     @synchronized
     def get_missing_providers(self):
@@ -340,6 +345,10 @@ class Daruma:
             result = self.file_manager.put(path, data)
             self.resilience_manager.log_success()
             return result
+        except exceptions.OperationFailure as e:
+            self.resilience_manager.diagnose(e.failures)
+            self.resilience_manager.garbage_collect()
+            return e.result
         except exceptions.FatalOperationFailure as e:
             can_retry = self.resilience_manager.diagnose(e.failures)
             if can_retry:
@@ -367,7 +376,7 @@ class Daruma:
             self.resilience_manager.diagnose(e.failures)
             self.resilience_manager.garbage_collect()
             return e.result
-        except exceptions.FatalOperationFailure:
+        except exceptions.FatalOperationFailure as e:
             can_retry = self.resilience_manager.diagnose(e.failures)
             if can_retry:
                 return self.delete(path)
