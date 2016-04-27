@@ -1,6 +1,6 @@
 from driver.Daruma import Daruma
 from custom_exceptions import exceptions
-from providers.LocalFilesystemProvider import LocalFilesystemProvider
+from providers.TestProvider import TestProvider, TestProviderState
 from managers.CredentialManager import CredentialManager
 import pytest
 
@@ -8,8 +8,14 @@ cm = CredentialManager()
 cm.load()
 
 
+def setup_function(function):
+    for provider in providers:
+        provider.set_state(TestProviderState.ACTIVE)
+        provider.errors = 0
+
+
 def make_local(cm, path):
-    provider = LocalFilesystemProvider(cm)
+    provider = TestProvider(cm)
     provider.connect(path)
     return provider
 
@@ -154,7 +160,7 @@ def test_read_only_mode():
     with pytest.raises(exceptions.ReadOnlyMode):
         daruma.put("test", "something else")
 
-    assert daruma.get_missing_providers() == map(lambda provider: provider.uuid, providers[3:])
+    assert sorted(daruma.get_missing_providers()) == sorted(map(lambda provider: provider.uuid, providers[3:]))
 
     # check that we can still read
     assert daruma.get("test") == "file"
@@ -170,7 +176,7 @@ def test_read_only_mode_fix_by_adding():
         daruma.put("test", "file")
 
     missing_providers = providers[3:]
-    assert daruma.get_missing_providers() == map(lambda provider: provider.uuid, missing_providers)
+    assert sorted(daruma.get_missing_providers()) == sorted(map(lambda provider: provider.uuid, missing_providers))
 
     # try an invalid add_missing_provider call
     assert daruma.add_missing_provider(providers[0]) is False
@@ -229,6 +235,46 @@ def test_reprovision_bad_threshold():
     daruma = Daruma.provision(providers[:3], 2, 2)
     with pytest.raises(ValueError):
         daruma.reprovision(providers[3:], 2, 2)
+
+
+def test_reprovision_remove_bad():
+    daruma = Daruma.provision(providers, 4, 4)
+    daruma.put("test", "data")
+
+    providers[-1].set_state(TestProviderState.OFFLINE)
+
+    daruma.reprovision(providers[:-1], 3, 3)
+
+    assert daruma.get("test") == "data"
+
+    # check that we can bootstrap
+    daruma, _ = Daruma.load(providers[0:-1])
+    assert daruma.get("test") == "data"
+
+    # check that k has been changed
+    providers[0].wipe()
+
+    assert daruma.get("test") == "data"
+
+
+def test_reprovision_with_bad():
+    daruma = Daruma.provision(providers, 4, 4)
+    daruma.put("test", "data")
+
+    providers[0].set_state(TestProviderState.OFFLINE)
+
+    with pytest.raises(exceptions.FatalOperationFailure):
+        daruma.reprovision(providers[:-1], 3, 3)
+
+
+def test_reprovision_add_bad():
+    daruma = Daruma.provision(providers[:-1], 3, 3)
+    daruma.put("test", "data")
+
+    providers[-1].set_state(TestProviderState.OFFLINE)
+
+    with pytest.raises(exceptions.FatalOperationFailure):
+        daruma.reprovision(providers, 4, 4)
 
 
 def test_extra_providers():
