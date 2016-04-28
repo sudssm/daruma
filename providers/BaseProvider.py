@@ -1,7 +1,9 @@
+import logging
 from tools.utils import APP_NAME
 from custom_exceptions import exceptions
 from tools.utils import run_parallel
 
+logger = logging.getLogger("daruma")
 
 class ProviderStatus:
     """
@@ -46,7 +48,8 @@ class BaseProvider(object):
             try:
                 provider = cls.load_from_credential(credential_manager, provider_id)
                 providers.append(provider)
-            except:
+            except Exception as e:
+                logger.debug("Exception loading cached providers from %s: %s", cls, e)
                 failed_ids.append((cls.provider_identifier(), provider_id))
 
         credentials = credential_manager.get_user_credentials(cls)

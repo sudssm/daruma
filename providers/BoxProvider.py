@@ -23,7 +23,7 @@ class BoxProvider(OAuthProvider):
 
     def __init__(self, credential_manager):
         super(BoxProvider, self).__init__(credential_manager)
-        self.id_cache, self._email, self._app_credentials = None, None, None
+        self.id_cache, self._email, self._app_credentials = None, "", None
         self.access_token, self.refresh_token = None, None
         self.write_tokens = True
 

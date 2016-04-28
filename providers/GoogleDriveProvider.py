@@ -1,3 +1,4 @@
+import logging
 from tools.utils import parse_url
 from providers.OAuthProvider import OAuthProvider
 import httplib2
@@ -9,6 +10,7 @@ from apiclient.http import MediaIoBaseUpload
 from apiclient.errors import HttpError
 import io
 
+logger = logging.getLogger("daruma")
 
 class GoogleDriveProvider(OAuthProvider):
     SCOPE = ['https://www.googleapis.com/auth/drive.appfolder']
@@ -29,6 +31,7 @@ class GoogleDriveProvider(OAuthProvider):
         Args: credential_manager, a credential_manager with information about GoogleDriveProviders
         """
         super(GoogleDriveProvider, self).__init__(credential_manager)
+        self.email = ""
 
     @contextmanager
     def exception_handler(self):
@@ -37,12 +40,15 @@ class GoogleDriveProvider(OAuthProvider):
         except exceptions.ProviderFailure:
             raise
         except HttpError as e:
+            logger.error("HttpError in GoogleDriveProvider: %s", e)
             if e.resp.status in [401, 403]:
                 raise exceptions.AuthFailure(self)
             raise exceptions.ProviderOperationFailure(self)
-        except httplib2.ServerNotFoundError:
+        except httplib2.ServerNotFoundError as e:
+            logger.error("ServerNotFoundError in GoogleDriveProvider: %s", e)
             raise exceptions.ConnectionFailure(self)
-        except Exception:
+        except Exception as e:
+            logger.error("General error in GoogleDriveProvider: %s", e)
             raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
@@ -88,6 +94,7 @@ class GoogleDriveProvider(OAuthProvider):
 
         files = self.service.files().list(q=query, spaces=self.ROOT_DIR).execute()["files"]
         if len(files) == 0:
+            logger.error("Error in GoogleDriveProvider: no file with id %s", filename)
             raise exceptions.ProviderOperationFailure(self)
 
         # assume that there is only one file with given name and type
@@ -114,6 +121,7 @@ class GoogleDriveProvider(OAuthProvider):
         with self.exception_handler():
             file_id = self._get_id(filename)
             if file_id is None:
+                logger.error("Error in GoogleDriveProvider delete: no file with name %s", filename)
                 raise exceptions.ProviderOperationFailure(self)
 
             self.service.files().delete(fileId=file_id).execute()
