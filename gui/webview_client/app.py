@@ -94,7 +94,7 @@ class MainAppMenu(wx.TaskBarIcon):
 
         def on_click(event):
             requests.get(url)
-        return on_click()
+        return on_click
 
     def generate_webview_handler(self, endpoint):
         def on_open_webview(event):

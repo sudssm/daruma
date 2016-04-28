@@ -46,29 +46,6 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
         self.watching = True
         super(DarumaFileSystemEventHandler, self).__init__(ignore_patterns=ignore_patterns)
 
-    def pause(self):
-        self.watching = False
-
-    def resume(self):
-        self.watching = True
-
-    def wipe_filesystem(self):
-        """
-        Removes all files in the watched directory
-        """
-        for the_file in os.listdir(self.path):
-            file_path = os.path.join(self.path, the_file)
-            if os.path.isfile(file_path):
-                try:
-                    os.unlink(file_path)
-                except:
-                    pass
-            elif os.path.isdir(file_path):
-                try:
-                    shutil.rmtree(file_path)
-                except:
-                    pass
-
     @contextmanager
     def get_safe_daruma(self):
         with daruma_error_handler():
@@ -159,9 +136,9 @@ class FilesystemWatcher():
         """
         self.path = path
         self.app_state = app_state
-        event_handler = DarumaFileSystemEventHandler(path, app_state)
+        self.event_handler = DarumaFileSystemEventHandler(path, app_state)
         self.observer = Observer()
-        self.observer.schedule(event_handler, path, recursive=True)
+        self.observer.schedule(self.event_handler, path, recursive=True)
 
     def start(self):
         """
@@ -175,6 +152,29 @@ class FilesystemWatcher():
         """
         self.observer.stop()
         self.observer.join()
+
+    def pause(self):
+        self.event_handler.watching = False
+
+    def resume(self):
+        self.event_handler.watching = True
+
+    def wipe_filesystem(self):
+        """
+        Removes all files in the watched directory
+        """
+        for the_file in os.listdir(self.path):
+            file_path = os.path.join(self.path, the_file)
+            if os.path.isfile(file_path):
+                try:
+                    os.unlink(file_path)
+                except:
+                    pass
+            elif os.path.isdir(file_path):
+                try:
+                    shutil.rmtree(file_path)
+                except:
+                    pass
 
     def bulk_update_filesystem(self):
         """
