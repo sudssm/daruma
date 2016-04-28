@@ -1,3 +1,4 @@
+import logging
 import onedrivesdk
 from onedrivesdk.error import ErrorCode, OneDriveError
 import pickle
@@ -9,6 +10,7 @@ from custom_exceptions import exceptions
 from tools.utils import parse_url
 import io
 
+logger = logging.getLogger("daruma")
 
 class OneDriveProvider(OAuthProvider):
     SCOPES = ['wl.emails', 'onedrive.readwrite', 'wl.offline_access']
@@ -25,6 +27,7 @@ class OneDriveProvider(OAuthProvider):
         super(OneDriveProvider, self).__init__(credential_manager)
         self._app_credentials = None
         self.client = None
+        self.email = ""
 
     @contextmanager
     def exception_handler(self):
@@ -49,8 +52,10 @@ class OneDriveProvider(OAuthProvider):
         try:
             yield
         except OneDriveError as e:
+            logger.error("OneDriveError in OneDriveProvider: %s", e)
             raise error_map.get(e.message.split()[0], exceptions.ProviderOperationFailure)(self)
-        except:
+        except Exception as e:
+            logger.error("General error in OneDriveProvider: %s", e)
             raise exceptions.ProviderOperationFailure(self)
 
     def start_connection(self):
