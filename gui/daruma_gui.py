@@ -72,7 +72,6 @@ if __name__ == "__main__":
     logging.basicConfig(filename='daruma_run.log', filemode='w', level=logging.ERROR)
     logging.getLogger("daruma").setLevel(logging.DEBUG)
 
-
     platform_specific_setup()
 
     app_state = ApplicationState()
