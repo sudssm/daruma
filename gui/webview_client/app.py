@@ -1,4 +1,5 @@
 import os
+import requests
 import pkg_resources
 import wx
 import gui
@@ -73,6 +74,10 @@ class MainAppMenu(wx.TaskBarIcon):
         if self.setup_complete:
             providers_item = menu.Append(wx.ID_ANY, "Providers")
             menu.Bind(wx.EVT_MENU, self.generate_webview_handler("dashboard.html"), providers_item)
+
+            menu.AppendSeparator()
+            resync_item = menu.Append(wx.ID_ANY, "Resync Files")
+            menu.Bind(wx.EVT_MENU, self.make_get_request_callback("resync"), resync_item)
         else:
             setup_item = menu.Append(wx.ID_ANY, "Continue setup")
             menu.Bind(wx.EVT_MENU, self.generate_webview_handler("setup.html"), setup_item)
@@ -83,6 +88,13 @@ class MainAppMenu(wx.TaskBarIcon):
         menu.Bind(wx.EVT_MENU, self.on_exit, exit_item)
 
         return menu
+
+    def make_get_request_callback(self, endpoint):
+        url = get_url_for_host(self.host, endpoint)
+
+        def on_click(event):
+            requests.get(url)
+        return on_click()
 
     def generate_webview_handler(self, endpoint):
         def on_open_webview(event):
