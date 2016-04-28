@@ -5,6 +5,7 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 from custom_exceptions import exceptions
 import logging
+import shutil
 
 
 logger = logging.getLogger("daruma")
@@ -42,6 +43,7 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
         self.app_state = app_state
         ignore_patterns = REJECT_PATTERNS[:]
         ignore_patterns.append(path)
+        self.watching = True
         super(DarumaFileSystemEventHandler, self).__init__(ignore_patterns=ignore_patterns)
 
     @contextmanager
@@ -62,6 +64,8 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
 
     def on_moved(self, event):
         super(DarumaFileSystemEventHandler, self).on_moved(event)
+        if not self.watching:
+            return
 
         what = 'directory' if event.is_directory else 'file'
         logger.info("Moved " + what + " from " + event.src_path + " to " + event.dest_path)
@@ -79,6 +83,8 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
 
     def on_created(self, event):
         super(DarumaFileSystemEventHandler, self).on_created(event)
+        if not self.watching:
+            return
 
         what = 'directory' if event.is_directory else 'file'
         logger.info("Created " + what + " : " + event.src_path)
@@ -93,6 +99,8 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
 
     def on_deleted(self, event):
         super(DarumaFileSystemEventHandler, self).on_deleted(event)
+        if not self.watching:
+            return
 
         what = 'directory' if event.is_directory else 'file'
         logger.info("Deleted " + what + " : " + event.src_path)
@@ -102,6 +110,8 @@ class DarumaFileSystemEventHandler(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         super(DarumaFileSystemEventHandler, self).on_modified(event)
+        if not self.watching:
+            return
 
         logger.info("Modified " + event.src_path)
         with self.get_safe_daruma() as daruma:
@@ -126,9 +136,9 @@ class FilesystemWatcher():
         """
         self.path = path
         self.app_state = app_state
-        event_handler = DarumaFileSystemEventHandler(path, app_state)
+        self.event_handler = DarumaFileSystemEventHandler(path, app_state)
         self.observer = Observer()
-        self.observer.schedule(event_handler, path, recursive=True)
+        self.observer.schedule(self.event_handler, path, recursive=True)
 
     def start(self):
         """
@@ -142,6 +152,29 @@ class FilesystemWatcher():
         """
         self.observer.stop()
         self.observer.join()
+
+    def pause(self):
+        self.event_handler.watching = False
+
+    def resume(self):
+        self.event_handler.watching = True
+
+    def wipe_filesystem(self):
+        """
+        Removes all files in the watched directory
+        """
+        for the_file in os.listdir(self.path):
+            file_path = os.path.join(self.path, the_file)
+            if os.path.isfile(file_path):
+                try:
+                    os.unlink(file_path)
+                except:
+                    pass
+            elif os.path.isdir(file_path):
+                try:
+                    shutil.rmtree(file_path)
+                except:
+                    pass
 
     def bulk_update_filesystem(self):
         """
@@ -159,6 +192,7 @@ class FilesystemWatcher():
                     return False
             return True
         if self.app_state.daruma is not None:
+            self.pause()
             daruma = self.app_state.daruma
             with daruma_error_handler():
                 all_paths = set(daruma.list_all_paths())
@@ -188,3 +222,5 @@ class FilesystemWatcher():
                         else:
                             with open(system_path, "w") as dst_file:
                                 dst_file.write(file_contents)
+
+            self.resume()

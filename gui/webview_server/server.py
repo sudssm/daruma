@@ -269,6 +269,12 @@ def get_icon_statuses():
     return jsonify(status_dict)
 
 
+@app.route('/resync')
+def resync():
+    global_app_state.filesystem_watcher.wipe_filesystem()
+    global_app_state.filesystem_watcher.bulk_update_filesystem()
+    return ""
+
 def start_ui_server(native_app, app_state):
     """
     Begins running the UI webserver.
