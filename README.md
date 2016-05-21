@@ -1,4 +1,4 @@
-# Daruma [![Build Status](https://travis-ci.com/sudssm/daruma.svg?token=9r7x75stRuvJScvvvedh&branch=master)](https://travis-ci.com/sudssm/daruma)
+# Daruma [![Build Status](https://travis-ci.org/sudssm/daruma.svg?branch=master)](https://travis-ci.org/sudssm/daruma)
 
 ## Installation
 
