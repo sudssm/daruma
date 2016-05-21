@@ -56,7 +56,7 @@ if sys.platform == "darwin":
             "py2app": {
                 "iconfile": "gui/icons/daruma.icns",
                 "optimize": 2,
-                "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib', 'onedrivesdk'],
+                "packages": ['jinja2', 'flask', 'cffi', 'dropbox', 'pyeclib', 'onedrivesdk', 'apiclient', 'oauth2client', 'httplib2', 'requests'],
                 "plist": {
                     "LSUIElement": True,
                 }
