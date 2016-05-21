@@ -26,7 +26,7 @@ base_setup = dict(
         "watchdog==0.8.3"
     ],
     dependency_links=[
-        "git+ssh://git@github.com/michsoch/robust-secret-sharing.git@rss#egg=robustsecretsharing-0.1"
+        "git+https://github.com/michsoch/robust-secret-sharing.git@rss#egg=robustsecretsharing-0.1"
     ],
     extras_require={
         "gui": [
