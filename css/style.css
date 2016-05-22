@@ -337,8 +337,10 @@ strong {
   background: #2F77BF;
   border-color: transparent;
 }
-
-
+#home .feature-icon {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
 /*
   solution section
 ===================== */
