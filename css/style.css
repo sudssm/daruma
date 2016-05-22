@@ -243,6 +243,10 @@ strong {
 /*
   navigation section
 ===================== */
+#main-logo {
+    height: 50px;
+    margin-top: 10px;
+}
 .sticky-navigation {
     opacity: 0;
   }
