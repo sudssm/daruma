@@ -345,6 +345,9 @@ strong {
     margin-top: 50px;
     margin-bottom: 50px;
 }
+#home .feature-icon img {
+    height: 100px;
+}
 /*
   solution section
 ===================== */
