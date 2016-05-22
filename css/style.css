@@ -589,6 +589,9 @@ footer p {
   .navbar-default .navbar-brand {
     line-height: 18px;
   }
+  #main-logo {
+    margin-top: 0;
+  }
 }
 
 @media (max-width: 460px) {
@@ -611,5 +614,8 @@ footer p {
   #contact .medium-icon {
     display: block;
     margin-bottom: 24px;
+  }
+  #main-logo {
+    margin-top: 0;
   }
 }
