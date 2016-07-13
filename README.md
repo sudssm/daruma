@@ -29,3 +29,6 @@ The newly built app will be in the `dist` directory.
 `py.test` will automatically run all available test cases.
 
 Note that on OSX, a system message may pop up saying "Python quit unexpectedly".  As long as the tests run to completion, this is expected and an indication of successful behavior.
+
+## License
+This software is licensed under the GPL license. If you would like an alternative license, please contact us.
