@@ -8,7 +8,6 @@ While in the project directory:
 ```
 pip install --user -e . --process-dependency-links robustsecretsharing
 ```
-(Note: this assumes that ssh keys are configured for git)
 
 To run the command line REPL:
 
@@ -24,6 +23,9 @@ pip install --user -e \.\[gui] --process-dependency-links robustsecretsharing
 python build.py
 ```
 The newly built app will be in the `dist` directory.
+
+### Dependencies
+Daruma depends on libnacl, libffi, and liberasurecode. 
 
 ## Testing
 `py.test` will automatically run all available test cases.
