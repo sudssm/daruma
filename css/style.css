@@ -523,6 +523,15 @@ footer p {
   }
 }
 
+@media (min-width: 992px) and (max-width: 1200px){
+  #youtube {
+    padding-top: 85px;
+  }
+  #overview-title {
+    padding-left: 400px;
+  }
+}
+
 .fa {
   color: white;
 }
@@ -535,3 +544,4 @@ footer p {
   height: 100px;
   padding-bottom: 20px;
 }
+
