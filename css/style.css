@@ -36,6 +36,7 @@ p {
 
 a {
   outline: none !important;
+  font-weight: bold;
 }
 
 hr {
@@ -62,7 +63,9 @@ strong {
 #screenshot,
 #testimonial,
 #pricing, 
-#contact {
+#contact,
+#risks,
+#guarantees {
    padding-top: 100px;
   padding-bottom: 100px;
 }
@@ -71,7 +74,9 @@ strong {
 #team, 
 #screenshot,
 #testimonial,
-#pricing {
+#pricing,
+#risks,
+#guarantees {
   text-align: center;
 }
 
@@ -98,7 +103,7 @@ strong {
   color: #ffffff;
 }
 
-#team, footer {
+#guarantees, footer {
   background: #00284A;
   color: #ffffff;
 }
@@ -358,12 +363,39 @@ strong {
 #solution h3 {
   font-size: 16px;
 }
-#solution {
-    background-color: #445CAD;
+#solution, #team, #risks {
+    background-color: #00457F;
     color: #ffffff;
 }
 
-#solution a{
+#solution a, #team a, #risks a{
+    color: #C6E2F9;
+}
+
+/*
+  risks section
+===================== */
+#risks .col-md-12 {
+  padding-top: 30px;
+  padding-bottom: 40px;
+}
+#risks h3 {
+  font-size: 16px;
+}
+
+
+/*
+  guarantees section
+===================== */
+#guarantees .col-md-12 {
+  padding-top: 30px;
+  padding-bottom: 40px;
+}
+#guarantees h3 {
+  font-size: 16px;
+}
+
+#guarantees a{
     color: #C6E2F9;
 }
 
@@ -378,7 +410,7 @@ strong {
   padding: 10px;
 }
 #team h3 {
-  color: #2F77BF;
+  color: #C6E2F9;
   font-size: 14px;
   font-weight: bold;
 }
@@ -399,142 +431,6 @@ strong {
     width: 400px;
 }
 
-
-/*
-  screenshot section
-===================== */
-#screenshot .col-md-3 {
-  display: block;
-  width: 100%;
-  padding-bottom: 1rem;
-}
-
-
-/*
-  pricing section
-===================== */
-#pricing .plan {
-  background: #2F77BF;
-  padding: 40px 0px 60px 0px;
-  margin-top: 60px;
-  margin-bottom: 32px;
-}
-#pricing .plan .plan_title {
-  background: #C6E2F9;
-  border-radius: 50%;
-  width: 180px;
-  height: 180px;
-  margin: 0 auto;
-}
-#pricing h2 {
-  border-bottom: 1px solid #bbc1bf;
-}
-#pricing .plan h3 {
-  font-size: 16px;
-  font-weight: bold;
-  line-height: 180px;
-}
-#pricing .plan h2 {
-  font-weight: bold;
-  padding: 30px;
-}
-#pricing .plan ul {
-  padding: 0px;
-}
-#pricing .plan ul li {
-  display: block;
-  font-weight: bold;
-  font-size: 16px;
-  letter-spacing: 2px;
-  padding: 30px 0px 10px 0px;
-}
-#pricing .plan .btn {
-  background: #ffffff;
-  border: none;
-  border-radius: 0px;
-  color: #00284A;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 16px 60px;
-  transition: all 0.4s ease-in;
-  margin-top: 20px;
-  text-transform: uppercase;
-}
-#pricing .plan .btn:hover {
-  background: #eeeeee;
-}
-
-
-/*
-  contact section
-===================== */
-#contact {
-  background: #C6E2F9;
-  padding-bottom: 0;
-}
-#contact .contact-address {
-  color: #ffffff;
-  position: relative;
-  top: 140px;
-}
-#contact .contact-address p {
-  line-height: 16px;
-}
-#contact .contact-email,
-#contact .contact-phone, #contact .contact-website {
-  padding: 100px;
-}
-#contact .contact-email {
-  background: #2F77BF;
-}
-#contact .contact-phone {
-  background: #00284A;
-}
-#contact .contact-website {
-  background: #2F77BF;
-}
-#contact h3 {
-  font-size: 16px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  padding-bottom: 12px;
-}
-#contact .medium-icon {
-  color: #ffffff;
-  font-size: 28px !important;
-}
-#contact .contact-info div {
-  padding-top: 14px;
-  padding-bottom: 14px;
-}
-#contact .form-control {
-  background: none;
-  border-radius: 0;
-  border-top: 0;
-  border-right: 0;
-  border-left: 0;
-  border-bottom: 2px solid #2F77BF;
-  box-shadow: none;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  transition: all 0.4s ease-in;
-}
-#contact .form-control:focus {
-  border-bottom-color: #202020;
-}
-#contact input {
-  height: 60px;
-}
-#contact input[type="submit"] {
-  border: 2px solid #009988;
-  color: #00284A;
-  font-weight: bold;
-  letter-spacing: 1px;
-  margin-top: 18px;
-}
-#contact input[type="submit"]:hover {
-  background: #009988;
-}
 
 
 /*
@@ -620,6 +516,22 @@ footer p {
   }
 
 }
+
+@media (min-width: 768px) and (max-width: 990px){
+  .col-sm-6 {
+      width: 49%;
+  }
+}
+
 .fa {
   color: white;
+}
+
+.navbar-fixed-top .navbar-collapse {
+  max-height: 500px;
+}
+
+.medium-icon img {
+  height: 100px;
+  padding-bottom: 20px;
 }

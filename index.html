@@ -25,6 +25,8 @@
 
 <body data-spy="scroll" data-target=".navbar-collapse" data-offset="50">
 
+<a href="https://github.com/sudssm/daruma" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
 
 <!-- preloader section -->
 <div class="preloader">
@@ -62,9 +64,11 @@
 			<ul class="nav navbar-nav navbar-right main-navigation">
 				<li class="active current"><a href="#home" class="smoothScroll">HOME</a></li>
 				<li class=""><a href="#overview" class="smoothScroll">OVERVIEW</a></li>
+                <li class=""><a href="#risks" class="smoothScroll">RISKS</a></li>
+                <li class=""><a href="#guarantees" class="smoothScroll">GUARANTEES</a></li>
                 <li class=""><a href="#solution" class="smoothScroll">SOLUTION</a></li>
+                <li class=""><a href="#poster" class="smoothScroll">POSTER</a></li>
 				<li class=""><a href="#team" class="smoothScroll">TEAM</a></li>
-				<li class=""><a href="#poster" class="smoothScroll">POSTER</a></li>
 			</ul>
 		</div>
 
@@ -78,13 +82,9 @@
 		<div class="row">
 
 			<div class="col-md-12 col-sm-12">
-                <img width="200px" class="wow bounceIn animated" style="visibility: visible; animation-name: bounceIn;" src='img/daruma-circle.png'/>
-				<h3 class="wow bounceIn animated" style="visibility: visible; animation-name: bounceIn;">DARUMA</h3>
-				<h2><span class="bold">SAFETY IN CLOUD STORAGE</span></h2>
-
-                <div class="col-md-4 col-sm-4 wow fadeInUp animated feature-icon" style="visibility: visible; animation-delay: 1.0s; animation-name: fadeInUp;"><img src='img/read.png'/></div>
-                <div class="col-md-4 col-sm-4 wow fadeInUp animated feature-icon" style="visibility: visible; animation-delay: 1.2s; animation-name: fadeInUp;"><img src='img/edit.png'/></div>
-                <div class="col-md-4 col-sm-4 wow fadeInUp animated feature-icon" style="visibility: visible; animation-delay: 1.4s; animation-name: fadeInUp;"><img src='img/delete.png'/></div>
+                <img width="200px" class="wow bounceIn animated" data-wow-delay="1s" style="visibility: visible; animation-name: bounceIn;" src='img/daruma-circle.png'/>
+				<h3 class="wow bounceIn animated" style="visibility: visible; animation-name: bounceIn;" data-wow-delay="1.2s">DARUMA</h3>
+				<h2 class="wow bounceIn animated" style="visibility: visible; animation-name: bounceIn;" data-wow-delay="1.4s"><span class="bold">SAFETY IN CLOUD STORAGE</span></h2>
             </div>
 
 		</div>
@@ -99,23 +99,17 @@
 
             <div class="col-md-6 col-sm-10 wow fadeInLeft animated" data-wow-delay="0.6s" style="visibility: visible; animation-delay: 0.6s; animation-name: fadeInLeft;">
                 <div class="section-title">
+                    <div id="overview-title"
                     <h1 class="heading bold">OVERVIEW</h1>
                     <hr>
-                    <ul>
-                        <li>Users trust cloud storage providers (Dropbox, Google Drive, OneDrive, Box, etc) to keep important documents safe, secure, and available.</li>
-                        <li>Providers cannot guarantee this
-                        <ul>
-                            <li>Downtime is inevitable.</li>
-                            <li>Hackers or software bugs can compromise data.</li>
-                            <li>Providers or governments may read user files.</li>
-                        </ul>
-                        <li>Daruma provides strong new guarantees: <b>no one provider can <span class="accentblue">read</span>, <span class="accentblue">change</span>, or <span class="accentblue">delete</span> user files.</b></li>
-                        <li>Daruma stores files on several of the user's existing cloud accounts. Security and availability are guaranteed by advanced cryptography and redundancy algorithms.</li>
-                        <li>Daruma provides the <b>benefits of cloud storage without its inherent risks</b>, through a standard and familiar interface.</li>
+                </div>
+                <p>Users of cloud storage services, like Dropbox, Google Drive, or OneDrive, face many risks that could compromise file security or availability. </p>
+                <p>Daruma uses advanced cryptography and redundancy algorithms to protect against these risks while still providing the benefits of these services.</p>
+                <p>By storing user files on several existing cloud accounts, Daruma makes strong security guarantees and provides competitive speed and storage.</p>
                 </div>
             </div>
 
-            <div class="col-md-6 col-sm-10 wow fadeInRight animated" data-wow-delay="0.9s" style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInRight;">
+            <div id="youtube" class="col-md-6 col-sm-10 wow fadeInRight animated" data-wow-delay="0.9s" style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInRight;">
                 <div class="embed-responsive embed-responsive-16by9">
                     <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/QW-xIzS3pjg" allowfullscreen=""></iframe>
                 </div>
@@ -125,6 +119,75 @@
     </div>
 </section>
 
+<!-- risks section -->
+<section id="risks">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-md-12 col-sm-12">
+                <div class="section-title">
+                    <h1 class="heading bold">RISKS WITH EXISTING CLOUD STORAGE</h1>
+                    <hr>
+                </div>
+                <p align="center">You trust providers like Dropbox, Google Drive, and OneDrive to keep your files safe and secure. 
+                <br>However, these services cannot make the guarantees you need.</p>
+            </div>
+
+            <div class="col-lg-4 col-md-4 col-sm-6 wow fadeInUp animated" data-wow-delay="0.6s" style="visibility: visible; animation-delay: 0.6s; animation-name: fadeInUp;">
+                <div class="col-md-12 col-sm-12">
+                    <h1><i class="fa fa-power-off"></i></h1>
+                    <p>Even with the best hardware,<br> downtime is inevitable.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-6 wow fadeInUp animated" data-wow-delay="0.8s" style="visibility: visible; animation-delay: 0.8s; animation-name: fadeInUp;">
+                <div class="col-md-12 col-sm-12">
+                    <h1><i class="fa fa-user-secret"></i></h1>
+                    <p>Hackers or software bugs can<br> attack and compromise data.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-6 wow fadeInUp animated" data-wow-delay="1s" style="visibility: visible; animation-delay: 1s; animation-name: fadeInUp;">
+                <div class="col-md-12 col-sm-12">
+                    <h1><i class="fa fa-search"></i></h1>
+                    <p>Providers and governments have <br>access to and may read user files.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- guarantees section -->
+<section id="guarantees">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-md-12 col-sm-12">
+                <div class="section-title">
+                    <h1 class="heading bold">OUR GUARANTEES</h1>
+                    <hr>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-4 col-sm-6 wow fadeInUp animated" data-wow-delay="0.6s" style="visibility: visible; animation-delay: 0.6s; animation-name: fadeInUp;">
+                <div class="col-md-12 col-sm-12">
+                    <i class="icon-cloud medium-icon"><img src="img/read.png"/></i>
+                    <p>If a provider is compromised, malicious parties will be unable to read or learn any information about files stored in the cloud.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-6 wow fadeInUp animated" data-wow-delay="0.8s" style="visibility: visible; animation-delay: 0.8s; animation-name: fadeInUp;">
+                <div class="col-md-12 col-sm-12">
+                    <i class="icon-cloud medium-icon"><img src="img/edit.png"/></i>
+                    <p>Providers, hackers, and buggy software are unable to modify or corrupt files stored on the cloud through Daruma.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-6 wow fadeInUp animated" data-wow-delay="1s" style="visibility: visible; animation-delay: 1s; animation-name: fadeInUp;">
+                <div class="col-md-12 col-sm-12">
+                    <i class="icon-cloud medium-icon"><img src="img/delete.png"/></i>
+                    <p>When a provider experiences downtime - whether permanently out of business or temporarily offline, all files are accessible.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- solution section -->
 <section id="solution">
@@ -191,6 +254,26 @@
 </section>
 
 
+<!-- poster section -->
+<section id="poster">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-sm-10 wow fadeInLeft animated" data-wow-delay="0.6s" style="visibility: visible; animation-delay: 0.6s; animation-name: fadeInLeft;">
+                <div class="section-title">
+                    <h1 class="heading bold">POSTER</h1>
+                    <hr>
+                    Daruma was conceived as part of the <a href="https://www.cis.upenn.edu/index.php" target="_blank">University of Pennsylvania Computer Science</a> Senior Design Competition, where it won first place. Click the thumbnail for the competition poster, which contains more information about the software's design and the cryptography algorithms used to provide our guarantees.
+                </div>
+            </div>
+
+            <div class="col-md-6 col-sm-10 wow fadeInRight animated" data-wow-delay="0.9s" style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInRight;" align="center">
+                <a href="Poster.pdf" target="_blank"><img src="img/Poster.jpg" style="padding-top: 25px; height: 170px" /></a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
 
 <!-- team section -->
 <section id="team">
@@ -250,28 +333,6 @@
         </div>
     </div>
 </section>
-
-<!-- resources section -->
-<section id="poster">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 col-sm-10 wow fadeInLeft animated" data-wow-delay="0.6s" style="visibility: visible; animation-delay: 0.6s; animation-name: fadeInLeft;">
-                <div class="section-title">
-                    <h1 class="heading bold">POSTER</h1>
-                    <hr>
-                    Daruma was conceived as part of the <a href="https://www.cis.upenn.edu/index.php" target="_blank">University of Pennsylvania Computer Science</a> Senior Design Competition, where it won first place. Click the thumbnail for the competition poster, which contains more information about the software's design.
-                </div>
-            </div>
-
-            <div class="col-md-6 col-sm-10 wow fadeInRight animated" data-wow-delay="0.9s" style="visibility: visible; animation-delay: 0.9s; animation-name: fadeInRight;" align="center">
-                <a href="Poster.pdf" target="_blank"><img src="img/Poster.jpg" width="200px" /></a>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
 
 <!-- footer section -->
 <footer>
