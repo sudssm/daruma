@@ -14,9 +14,6 @@ Best of all, Daruma is highly space efficient and is faster and more scalable th
 ## Installation
 Currently, the Daruma executable (with all GUI features) only supports OSX El Capitan. Users of other Linux-based operating systems can use the command line version, or attempt to build their own executable. Daruma currently doesn't support Windows because one of our dependencies (liberasurecode) doesn't compile on Windows.
 
-### GUI Application (OSX El Capitan)
-(TODO)
-
 ### Command Line (OSX & Linux)
 Install dependencies - Python 2.7, Pip, libnacl, libffi, haveged, liberasurecode.
 On Ubuntu, these needed libraries can be installed with
@@ -31,7 +28,7 @@ While in the project directory:
 pip install --user . --process-dependency-links robustsecretsharing
 ```
 
-### Building the GUI Application (Other OSX versions, but only known to work with El Capitan)
+### Building the GUI Application (Tested on OSX El Capitan)
 While in the project directory:
 
 ```
@@ -43,7 +40,7 @@ The newly built app will be in the `dist` directory.
 ## Running
 
 ### GUI
-Simply execute the packaged Daruma executable
+Simply execute the packaged Daruma executable.  To see status badges in the OSX Finder, you may need to explicitly enable the app as a Finder Extension, which can be done in the Extensions pane of System Preferences.
 
 ### Command Line
 To run the command line REPL:
